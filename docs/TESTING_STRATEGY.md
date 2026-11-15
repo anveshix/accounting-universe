@@ -36,7 +36,7 @@
 * All of the above in one command: `tools/check-all.sh`.
 
 ## Lint and format
-`npm --prefix tools/lint ci` once, then `npm run lint` (ESLint, 0 errors; engine sources may not use `parseFloat`/`Math.round`/`toFixed`) and `npm run format:check` (Prettier ratchet, see AGENTS.md). Both are part of `tools/check-all.sh` when installed. They are not running in CI (D12).
+`npm --prefix tools/lint ci` once, then `npm run lint` (ESLint, 0 errors; engine sources may not use `parseFloat`/`Math.round`/`toFixed`) and `npm run format:check` (Prettier ratchet, see AGENTS.md). Both are part of `tools/check-all.sh` when installed. CI (`.github/workflows/ci.yml`) runs them too.
 
 ## Running
 
@@ -52,7 +52,7 @@ NODE_PATH="$(npm root -g)" node e2e/legacy-simulator-regression.cjs
 
 ## Known gaps
 
-No CI is *running* (an example workflow is in `docs/ci/`; the token used here cannot create workflow files). No coverage measurement.
+CI exists (`.github/workflows/ci.yml`) but has not been observed running; the token used here may be unable to push workflow files. No coverage measurement.
 Accessibility: axe-core runs on 5 views in `web-app-v1` (zero serious/critical); the other routes still rely on hand-written DOM assertions. No screen-reader test. No Lighthouse run. Chromium only; no real devices. The tutor proxy has never
 talked to the live API. Lab result values are verified in the engine tests and by 11 browser spot checks, not for every lab number in the browser.
 Concept-card text is original and reviewed by me, not by a teacher.

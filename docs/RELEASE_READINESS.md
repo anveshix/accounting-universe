@@ -21,7 +21,7 @@ the review files are unsigned (D11) and the Hindi is unreviewed (D10).
 Also done since: four more skills (`ledger-side` RU, `tb-side` RU, `journal-error` AEC, `case-ledger` AEC competency case), so every V1 clause has items in at
 least two typology bands and ledger has all three; the Debit & Credit Trainer now draws on the migrated bank (hand-written items + verified legacy scenes whose
 accounts exist in the starter chart); the Hinglish-card toggle no longer switches the whole app to Hindi.
-T0.1 is partly done: npm workspaces, ESLint and Prettier (ratchet) are in and verified from a clean copy; symlink removal (D9), the CI workflow (D12) and deleting the old per-package lockfiles still wait for you. Not done: T0.1 remainder, T0.9 preview deploy (D8a), a multi-line `ENTRY` part kind (journal items are
+T0.1 is done except one item: npm workspaces, ESLint, Prettier (ratchet), symlink removal (D9) and the CI workflow (D12) are in and verified locally from a clean copy; the workflow has not yet been observed running on GitHub, and deleting the old per-package lockfiles still waits for your approval. Not done: T0.1 remainder, T0.9 preview deploy (D8a), a multi-line `ENTRY` part kind (journal items are
 single debit / single credit; `journal-error` tests recognising mistakes instead), the Equation Visualizer reading the migrated m1 bank (the practice
 skill `eq-impact` does), Hindi for labs, concept text and the wrong-answer explanations, rules and equation clauses still have only one or two bands
 (rules = RU only; equation = RU + AP), 5 legacy items held for an inventory-model decision.
@@ -29,7 +29,7 @@ skill `eq-impact` does), Hindi for labs, concept text and the wrong-answer expla
 ## Not done / not verified (read before releasing)
 * **AI tutor is not live.** Code, guard and tests exist (`apps/tutor-proxy`) but it was never run against the real API, is not deployed, and needs your API key and a host (D4). The app works fully without it.
 * **No accounts, sync or central teacher view** (D5): teachers work from files students hand over. By design, nothing about minors leaves the device.
-* **No CI running** — example workflow in `docs/ci/`. 
+* **CI is written but unobserved** — `.github/workflows/ci.yml` (D12) mirrors `tools/check-all.sh`; it has not yet been seen running on GitHub. 
 * **Board-exam blueprint mock paper** (Class XII: 34 questions, 1/3/4/6-mark mix) is not built; Board *mode* gives single skill questions, not a full paper.
 * **Dissolution** is a calculator, not a step-by-step realisation simulation. Animation controls exist only on the ledger page.
 * **Directive items deliberately not done:** debenture *redemption* entries (not prescribed in 2026-27, D2); segment reports (listed only as a project aspect).

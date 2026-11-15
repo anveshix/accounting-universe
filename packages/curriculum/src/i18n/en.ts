@@ -1,7 +1,8 @@
 /** English UI strings for the V1 slice (handoff T0.4). `hi.ts` must have exactly the same keys. */
 export const EN = {
   'lang.toggle': 'हिन्दी (मसौदा)',
-  'lang.toggle.aria': 'Switch to Hindi (draft, not yet reviewed)',
+  // the visible text must be part of the accessible name (WCAG 2.5.3 Label in Name)
+  'lang.toggle.aria': 'हिन्दी (मसौदा) — switch to Hindi (draft, not yet reviewed)',
   'draft.title': 'Hindi draft — not yet reviewed.',
   'draft.body': 'Hindi draft — not yet reviewed by a teacher. If a term looks wrong, use the English version.',
   'practice.noHindi': 'This question is not yet available in Hindi; it is shown in English.',

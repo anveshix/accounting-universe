@@ -2,7 +2,7 @@
 import type { Key } from './en';
 export const HI: Record<Key, string> = {
   'lang.toggle': 'English',
-  'lang.toggle.aria': 'अंग्रेज़ी में बदलें (Switch to English)',
+  'lang.toggle.aria': 'English — अंग्रेज़ी में बदलें (switch to English)',
   'draft.title': 'हिन्दी मसौदा — समीक्षा लंबित। ',
   'draft.body': 'Hindi draft — not yet reviewed by a teacher. If a term looks wrong, use the English version. (यदि कोई शब्द गलत लगे तो अंग्रेज़ी संस्करण देखें।)',
   'practice.noHindi': 'इस प्रश्न का हिन्दी संस्करण अभी उपलब्ध नहीं है; प्रश्न अंग्रेज़ी में दिखाया गया है।',

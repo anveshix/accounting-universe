@@ -53,6 +53,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     ok(opts.length === 2, 'tb-agree: side has exactly two options');
     await axe('practice (EN)');
 
+    ok((await page.getAttribute('[data-lang-toggle]', 'aria-label')).includes(await page.textContent('[data-lang-toggle]')), 'language button: accessible name contains its visible text (WCAG 2.5.3)');
     // ── Hindi draft toggle: persists, renders Devanagari with a draft badge, values stay English
     await page.click('[data-lang-toggle]');
     await page.waitForSelector('html[data-lang="hi"]');

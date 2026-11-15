@@ -15,8 +15,8 @@ Accounting Universe: CBSE Class XI/XII Accountancy (2026-27), learned by doing. 
 ## Setup and commands (npm workspaces)
 `npm ci` at the repo root installs `packages/*` and `apps/*` together (one lockfile). Then: `npm run check` (typecheck + unit tests of every workspace), `npm run build` (web), `npm run check:all` (everything incl. browsers).
 Lint and format live in `tools/lint` and are **not** a workspace (typescript-eslint needs the TypeScript JS API; the workspaces use TypeScript 7, which has none). Install once with `npm --prefix tools/lint ci`, then `npm run lint` and `npm run format:check`.
-Prettier is a ratchet: files listed in `tools/lint/prettier-baseline.txt` keep their dense hand-written style; every other file must be Prettier-clean, and a baseline file that becomes clean must be removed from the list. The old per-package `package-lock.json` files in `packages/engine` and `apps/web` are superseded by the root lockfile and are kept only until the owner approves deleting them.
-The tracked symlink `packages/curriculum/node_modules` is still in place (decision D9); `npm ci` works with it.
+Prettier is a ratchet: files listed in `tools/lint/prettier-baseline.txt` keep their dense hand-written style; every other file must be Prettier-clean, and a baseline file that becomes clean must be removed from the list. The old per-package `package-lock.json` files in `packages/engine` and `apps/web` are superseded by the root lockfile and are kept only until the owner approves deleting them (they are not used by CI).
+The old tracked symlink `packages/curriculum/node_modules` has been removed (D9). CI (`.github/workflows/ci.yml`, D12) runs install, lint, format, unit tests, build and every browser suite; it was written but has not yet been seen running on GitHub.
 
 ## Rules that must not be broken
 1. **Money is never a float.** Use `Money`/`Fraction` with an explicit rounding mode; a test forbids `parseFloat/toFixed/Math.round` in engine source.

@@ -6,7 +6,7 @@
 - npm workspaces (`packages/*`, `apps/*`) with one root `package-lock.json`; `npm ci && npm run check` works from a fresh checkout (verified in a clean copy: 378 + 222 + 12 tests, web build).
 - ESLint 10 + typescript-eslint and Prettier 3 in `tools/lint` (outside the workspaces, see AGENTS.md). ESLint enforces AGENTS rule 1 in engine source (no `parseFloat`, `Math.round`, `toFixed`).
   Existing code was brought to zero lint errors (unused imports, needless escapes, an empty interface, one `let`→`const`; no behaviour change). Prettier runs as a ratchet over a 105-file baseline instead of reformatting the dense existing code.
-- `.gitignore` added (`node_modules/`, `dist/`). NOT done: symlink removal (D9), CI workflow (D12), deleting the superseded per-package lockfiles.
+- `.gitignore` added (`node_modules/`, `dist/`). Owner-approved afterwards: the tracked symlink `packages/curriculum/node_modules` is removed (D9) and `.github/workflows/ci.yml` is added (D12: install, lint, format, typecheck/unit tests, build, all browser suites incl. axe). NOT done: deleting the superseded per-package lockfiles.
 
 ### P0 — vertical V1 (Class XI: equation → rules → journal → ledger → trial balance), handoff T0.2–T0.8
 - **Learning outcomes (T0.2):** `outcomes.ts` — the 77 official unit learning outcomes transcribed from the 2026-27 PDF, mapped to clauses

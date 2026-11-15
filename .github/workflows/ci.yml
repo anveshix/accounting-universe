@@ -1,0 +1,51 @@
+# Runs on every push and pull request. Same steps as tools/check-all.sh, split so a failure names its stage.
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tools/lint/package-lock.json
+      - name: Install workspaces
+        run: npm ci
+      - name: Install lint tooling
+        run: npm --prefix tools/lint ci
+      - name: Lint (ESLint, incl. the no-floats rule for engine sources)
+        run: npm run lint
+      - name: Format (Prettier ratchet)
+        run: npm run format:check
+      - name: Typecheck and unit tests (engine, curriculum, tutor proxy)
+        run: npm run check
+      - name: Build web app
+        run: npm run build
+      - name: Install browser tooling
+        run: |
+          npm i -g playwright http-server
+          npx playwright install --with-deps chromium
+      - name: Browser - web app
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app.cjs
+      - name: Browser - web app (extra)
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-extra.cjs
+      - name: Browser - state machines
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-states.cjs
+      - name: Browser - tutor panel and proxy
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-tutor.cjs
+      - name: Browser - V1 slice (skills, Hindi draft, outcomes, axe)
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-v1.cjs
+      - name: Browser - legacy app
+        run: NODE_PATH="$(npm root -g)" node e2e/legacy-smoke.cjs && NODE_PATH="$(npm root -g)" node e2e/legacy-simulator-regression.cjs

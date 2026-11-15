@@ -1,4 +1,4 @@
-# Copy to .github/workflows/ci.yml. It is kept here because the token used to build this repo cannot create workflow files.
+# SUPERSEDED: the real workflow is now .github/workflows/ci.yml (D12). Kept only as history. Originally: copy to .github/workflows/ci.yml. It is kept here because the token used to build this repo cannot create workflow files.
 name: ci
 on: [push, pull_request]
 jobs:
