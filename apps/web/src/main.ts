@@ -91,7 +91,11 @@ async function boot() {
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } }, '☰ Menu');
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, menu),
+    h('header', { class: 'top' },
+      h('div', { class: 'brand' }, h('div', { class: 'brand-mark', 'aria-hidden': 'true' }, 'A∑'), h('div', {}, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.'))),
+      h('div', { style: 'display:flex;align-items:center;gap:.7rem;flex-wrap:wrap' },
+        h('span', { style: 'font-size:.78rem;opacity:.85;letter-spacing:.02em;font-weight:600;' }, 'CBSE 2026-27  ·  XI · XII'),
+        net), menu),
     banner, nav, main);
   await ready();
   drawBanner(); storage.subscribe(drawBanner);
