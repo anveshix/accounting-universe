@@ -6,6 +6,7 @@ import { Machine } from '../../../packages/engine/src';
 import { APP_BOOT, NETWORK } from '../../../packages/curriculum/src';
 import { register, runDisposers } from './machine-dom';
 import { state } from './state';
+import { t } from '../../../packages/curriculum/src/i18n';
 import { getProfile, ready, setProfile, storage } from './store';
 import { labById } from './labs';
 import { homePage } from './pages/home';
@@ -27,6 +28,14 @@ import { CARDS } from '../../../packages/curriculum/src';
 const main = h('main', { id: 'main', tabindex: -1 });
 const nav = h('nav', { id: 'nav', 'aria-label': 'Main' });
 const net = h('span', { class: 'net', role: 'status' });
+const langBtn = h('button', { type: 'button', class: 'lang', 'data-lang-toggle': '', onclick: () => { void setLang(state.lang === 'hi' ? 'en' : 'hi'); } });
+function drawLang() {
+  langBtn.textContent = t(state.lang, 'lang.toggle');
+  langBtn.setAttribute('lang', state.lang === 'hi' ? 'en' : 'hi');
+  langBtn.setAttribute('aria-label', t(state.lang, 'lang.toggle.aria'));
+  root.setAttribute('data-lang', state.lang);
+}
+async function setLang(l: 'en' | 'hi') { state.lang = l; state.profile = { ...state.profile, lang: l }; drawLang(); render(); await setProfile(state.profile); }
 
 function drawNav(active: string | null) {
   clear(nav);
@@ -91,12 +100,13 @@ async function boot() {
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } }, '☰ Menu');
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, menu),
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, langBtn, menu),
     banner, nav, main);
   await ready();
   drawBanner(); storage.subscribe(drawBanner);
   const p = await getProfile();
-  if (p) state.profile = p; else await setProfile(state.profile);
+  if (p) { state.profile = p; state.lang = p.lang ?? 'en'; } else await setProfile(state.profile);
+  drawLang();
   window.addEventListener('hashchange', () => { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); render(); });
   window.addEventListener('online', drawNet); window.addEventListener('offline', drawNet);
   drawNet(); render();

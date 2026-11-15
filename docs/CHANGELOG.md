@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### P0 — vertical V1 (Class XI: equation → rules → journal → ledger → trial balance), handoff T0.2–T0.8
+- **Learning outcomes (T0.2):** `outcomes.ts` — the 77 official unit learning outcomes transcribed from the 2026-27 PDF, mapped to clauses
+  (mapping pending academic review, D11). Shown on each lab's Learn tab. Gap recorded: `XI.3.incomplete` has no official outcome.
+- **Legacy bank migration (T0.5):** `tools/extract-legacy-banks.mjs` reads `index.html` (read-only) into `banks/legacy-v1.ts`
+  (m1 50, m2 69, m4 49, m5 25, TB 25 + 41, BAL 14). Every item is re-checked by the engine and an independently written account
+  classification (`banks/accounts-xi.ts`, 106 names): 0 errors, 5 items held for review (inventory-model mix, F-4), 133 "why" sentences rule-checked.
+- **Assessment (T0.3):** six new skills — `eq-impact` (RU), `eq-balance` (AP), `drcr-choose` (RU), `journal-entry` (AP),
+  `ledger-balance` (AP), `tb-agree` (AEC); new part kind `CHOICE`; `typology` on every generator (existing 30 tagged AP as a proposal).
+- **Feedback (T0.6):** every wrong account option in `drcr-choose`/`journal-entry` gets a rule-based explanation, including
+  drawings-as-expense, furniture-as-purchases, personal-vs-nominal and swapped sides.
+- **Hindi draft (T0.4):** Devanagari text for every V1 question, EN/HI UI catalogue (`i18n/en.ts`, `i18n/hi.ts`), NCERT-style glossary,
+  header toggle saved in the profile, "Hindi draft — not yet reviewed" badge wherever Hindi appears (`HINDI_REVIEWED = false`, D10).
+- **Teacher report by learning outcome (T0.7):** table + CSV on the teacher dashboard.
+- **Review + accessibility (T0.8):** `docs/academic-review/` template and five UNSIGNED clause files; axe-core in the new `e2e/web-app-v1.cjs`;
+  fixed a colour-contrast failure on `.eyebrow` labels (light theme).
+
 ### Added
 - `docs/` Phase 0 discovery set (syllabus matrix, app audit, architecture, repository research, roadmap).
 - `packages/engine` v0.1: exact `Money`, closed chart of accounts, validated + frozen journal, ledger with

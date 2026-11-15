@@ -1,6 +1,7 @@
 # Accounting Univers 2.0 — Planning Audit & Implementation Handoff
 
 > **Status:** planning deliverable. No source code was changed to produce it.
+> **Update 2026-11-15:** P0 tasks T0.2–T0.8 implemented on branch `claude/accounting-universe-errors-merge-v0y0kv` except the owner-gated parts; see `docs/RELEASE_READINESS.md` → "P0 vertical V1 status" for exactly what is done, tested and still open.
 > **Prepared:** 2026-11-15, against `main` @ `c7cf6ca` (PR #5 merged; feature branch `claude/accounting-universe-errors-merge-v0y0kv` has no unmerged commits).
 > **Audience:** the coding agent (or engineer) who implements the approved work, without access to the planning conversation.
 > **Rule for the implementer:** every statement marked *[verified]* was checked by a command shown in §0.3. Re-run them before you start; if a result differs, the repo has moved and this plan must be re-checked first.

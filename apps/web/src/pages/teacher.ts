@@ -1,4 +1,4 @@
-import { SKILLS, classReport, clauseById, heatmap, makeAssignment, remedial, reportToCsv, type ClassReport } from '../../../../packages/curriculum/src';
+import { OUTCOME_MAPPING_STATUS, outcomeCsv, outcomeReport, SKILLS, classReport, clauseById, heatmap, makeAssignment, remedial, reportToCsv, type ClassReport } from '../../../../packages/curriculum/src';
 import { h, mount } from '../dom';
 import { labsOfClause, hrefOf, titleOf } from '../labs';
 import { download } from './progress';
@@ -35,6 +35,13 @@ export function teacherPage(): HTMLElement {
       h('section', { class: 'panel' }, h('h3', {}, 'Topics across the class'), r.clauses.length === 0 ? h('p', { class: 'empty' }, 'No practice recorded yet.') : h('div', { class: 'tablewrap' }, h('table', { class: 'data' }, h('thead', {}, h('tr', {}, ['Topic', 'Students', 'Accuracy', 'Struggling', 'Most common mistake'].map((t, i) => h('th', { scope: 'col', class: i >= 1 && i <= 3 ? 'num' : '' }, t)))),
         h('tbody', {}, ...r.clauses.map(c => h('tr', { class: c.strugglingStudents > 0 ? 'flag' : '' }, h('th', { scope: 'row' }, clauseById(c.clause)?.title ?? c.clause), h('td', { class: 'num' }, String(c.students)), h('td', { class: 'num' }, c.accuracy === null ? '—' : `${Math.round(c.accuracy * 100)}%`), h('td', { class: 'num' }, String(c.strugglingStudents)), h('td', {}, c.topMistake ?? '—')))))),
         h('div', { class: 'actions' }, h('button', { type: 'button', onclick: () => last && download('class-report.csv', reportToCsv(last), 'text/csv') }, '⬇ Download CSV'))),
+      (() => { const rows = outcomeReport(files); return h('section', { class: 'panel', 'data-report': 'outcomes' }, h('h3', {}, 'By learning outcome'),
+        h('p', { class: 'hint' }, `Official CBSE 2026-27 learning outcomes, reached through the topics mapped to them (mapping ${OUTCOME_MAPPING_STATUS}). “Struggling” = at least 2 attempts and below 60% on the last 10.`),
+        rows.length === 0 ? h('p', { class: 'empty' }, 'No practice on a mapped outcome yet.') : h('div', { class: 'tablewrap' }, h('table', { class: 'data' },
+          h('thead', {}, h('tr', {}, ...['Outcome', 'Students', 'Attempts', 'Accuracy', 'Struggling'].map(t => h('th', { scope: 'col' }, t)))),
+          h('tbody', {}, ...rows.map(o => h('tr', { class: o.struggling > 0 ? 'flag' : '', 'data-outcome': o.outcome }, h('th', { scope: 'row' }, h('code', {}, o.outcome), ' ', o.text),
+            h('td', { class: 'num' }, String(o.students)), h('td', { class: 'num' }, String(o.attempts)), h('td', { class: 'num' }, o.accuracy === null ? '—' : `${Math.round(o.accuracy * 100)}%`), h('td', { class: 'num' }, String(o.struggling))))))),
+        h('div', { class: 'actions' }, h('button', { type: 'button', onclick: () => download('outcome-report.csv', outcomeCsv(rows), 'text/csv') }, '⬇ Download outcome CSV'))); })(),
       (() => { const hm = heatmap(files); if (hm.students.length === 0 || hm.clauses.length === 0) return null;
         const cls = (x: number | null) => (x === null ? 'hm-none' : x >= 0.8 ? 'hm-good' : x >= 0.6 ? 'hm-ok' : 'hm-bad');
         return h('section', { class: 'panel' }, h('h3', {}, 'Heat-map: who is stuck where'), h('p', { class: 'hint' }, 'Each cell is a student’s accuracy on a topic. Red below 60%, amber 60–79%, green 80%+; a dash means not attempted.'),

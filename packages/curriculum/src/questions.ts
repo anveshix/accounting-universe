@@ -10,9 +10,14 @@ import {
   costOfRevenueFromOperations, goodwillOnRatioChange, cashBook, provisionDoubtful, openingEntry, revaluation, loanSchedule, callsInAdvance, type BrsKind,
 } from '../../engine/src';
 import { Rng } from './rng';
+import { V1_GENERATORS } from './questions-v1';
 
-export type PartKind = 'MONEY' | 'FRACTION' | 'TEXT';
-export interface Part { readonly label: string; readonly kind: PartKind; readonly answer: string; readonly marks: number; readonly unit?: string; }
+export type PartKind = 'MONEY' | 'FRACTION' | 'TEXT' | 'CHOICE';
+export interface Part { readonly label: string; readonly kind: PartKind; readonly answer: string; readonly marks: number; readonly unit?: string; /** CHOICE only: the options shown (the answer is one of them). */ readonly options?: readonly string[]; }
+/** CBSE 2026-27 question typology (paper design): Remembering & Understanding 40 %, Applying 30 %, Analysing / Evaluating / Creating 30 %. */
+export type Typology = 'RU' | 'AP' | 'AEC';
+/** Hindi (Devanagari) text for a question. DRAFT until reviewed (handoff D10). Arrays are index-aligned with the English ones. */
+export interface HindiText { readonly stem: string; readonly parts: readonly string[]; readonly hints: readonly string[]; readonly working: readonly string[]; readonly options?: readonly (readonly string[] | undefined)[] }
 export interface Distractor { readonly part: number; readonly value: string; readonly mistake: string; readonly fix: string; }
 export interface Question {
   readonly id: string; readonly skill: string; readonly clause: string; readonly seed: number;
@@ -23,9 +28,12 @@ export interface Question {
   readonly working: readonly string[];
   readonly distractors: readonly Distractor[];
   readonly marks: number;
+  readonly typology: Typology;
+  /** Optional Hindi version (draft — see HindiText). */
+  readonly hi?: HindiText;
 }
 
-type Gen = { skill: string; clause: string; title: string; make: (r: Rng, seed: number) => Omit<Question, 'id' | 'skill' | 'clause' | 'seed' | 'marks'> };
+export type Gen = { skill: string; clause: string; title: string; typology: Typology; make: (r: Rng, seed: number) => Omit<Question, 'id' | 'skill' | 'clause' | 'seed' | 'marks' | 'typology'> };
 const M = (n: number | string) => (typeof n === 'number' ? Money.rupees(n) : Money.parse(n));
 const R = (m: Money) => m.format();
 const part = (label: string, answer: string, marks = 1, kind: PartKind = 'MONEY', unit?: string): Part => (unit ? { label, kind, answer, marks, unit } : { label, kind, answer, marks });
@@ -35,7 +43,7 @@ const names = ['A', 'B', 'C'];
 export const GENERATORS: readonly Gen[] = [
   // ───────────────────────────── Class XI ─────────────────────────────
   {
-    skill: 'dep-wdv', clause: 'XI.2.depreciation', title: 'Written Down Value method',
+    skill: 'dep-wdv', clause: 'XI.2.depreciation', title: 'Written Down Value method', typology: 'AP',
     make: r => {
       const years = r.int(2, 3), rate = r.pick([10, 15, 20]), cost = r.multiple(20000, 200000, 10 ** (2 * years - 2));
       const rows = depreciationSchedule({ cost: M(cost), method: 'WDV', rate: pct(rate), years });
@@ -50,7 +58,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'dep-slm', clause: 'XI.2.depreciation', title: 'Straight Line method',
+    skill: 'dep-slm', clause: 'XI.2.depreciation', title: 'Straight Line method', typology: 'AP',
     make: r => {
       const life = r.pick([4, 5, 8, 10]), cost = r.multiple(50000, 400000, 10000), scrap = r.multiple(0, 20000, 5000);
       const annual = M(cost).sub(M(scrap)).mulRatio(1n, BigInt(life), 'HALF_UP');
@@ -64,7 +72,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'disposal', clause: 'XI.2.depreciation', title: 'Sale of an asset',
+    skill: 'disposal', clause: 'XI.2.depreciation', title: 'Sale of an asset', typology: 'AP',
     make: r => {
       const cost = r.multiple(60000, 300000, 10000), rate = r.pick([10, 20]), years = 2;
       const rows = depreciationSchedule({ cost: M(cost), method: 'WDV', rate: pct(rate), years });
@@ -82,7 +90,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'brs', clause: 'XI.2.brs', title: 'Bank reconciliation',
+    skill: 'brs', clause: 'XI.2.brs', title: 'Bank reconciliation', typology: 'AP',
     make: r => {
       const cb = r.multiple(40000, 120000, 1000), unpres = r.multiple(2000, 12000, 500), charges = r.multiple(100, 900, 50);
       const items = [{ kind: 'CHEQUE_ISSUED_NOT_PRESENTED' as BrsKind, amount: M(unpres) }, { kind: 'BANK_CHARGES_NOT_IN_CASH_BOOK' as BrsKind, amount: M(charges) }];
@@ -97,7 +105,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'gst', clause: 'XI.2.subsidiary', title: 'Invoice with trade discount, freight and GST',
+    skill: 'gst', clause: 'XI.2.subsidiary', title: 'Invoice with trade discount, freight and GST', typology: 'AP',
     make: r => {
       const list = r.multiple(10000, 80000, 1000), td = r.pick([5, 10, 20]), g = r.pick([5, 12, 18]);
       let fr = r.multiple(200, 1500, 100);
@@ -114,7 +122,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'suspense', clause: 'XI.2.errors', title: 'Suspense account',
+    skill: 'suspense', clause: 'XI.2.errors', title: 'Suspense account', typology: 'AP',
     make: r => {
       const dr = r.multiple(300000, 900000, 1000), diff = r.multiple(500, 9000, 500), debitShort = r.next() < 0.5;
       const d = debitShort ? dr - diff : dr, c = debitShort ? dr : dr - diff;
@@ -129,7 +137,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'pdd', clause: 'XI.3.adjustments', title: 'Provision for doubtful debts',
+    skill: 'pdd', clause: 'XI.3.adjustments', title: 'Provision for doubtful debts', typology: 'AP',
     make: r => {
       const debtors = r.multiple(80000, 300000, 10000), bad = r.multiple(2000, 10000, 1000), rate = r.pick([2, 5, 10]), old = r.multiple(1000, 5000, 500);
       const base = M(debtors).sub(M(bad));
@@ -148,7 +156,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'soa', clause: 'XI.3.incomplete', title: 'Profit by Statement of Affairs',
+    skill: 'soa', clause: 'XI.3.incomplete', title: 'Profit by Statement of Affairs', typology: 'AP',
     make: r => {
       const open = r.multiple(100000, 300000, 10000), close = open + r.multiple(20000, 90000, 5000), drawings = r.multiple(10000, 40000, 5000);
       let fresh = r.multiple(0, 30000, 10000);
@@ -165,7 +173,7 @@ export const GENERATORS: readonly Gen[] = [
   },
   // ───────────────────────────── Class XII · Partnership ─────────────────────────────
   {
-    skill: 'guarantee', clause: 'XII.1.guarantee', title: 'Guarantee of profit',
+    skill: 'guarantee', clause: 'XII.1.guarantee', title: 'Guarantee of profit', typology: 'AP',
     make: r => {
       const w = r.pick([[4, 3, 3], [5, 3, 2], [2, 2, 1]]), profit = r.multiple(30000, 60000, 5000), min = profit + r.multiple(10000, 30000, 5000);
       const sh = Object.fromEntries(names.map((n, i) => [n, Fraction.fromRatio(w)[i]!]));
@@ -181,7 +189,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'int-drawings', clause: 'XII.1.appropriation', title: 'Interest on drawings',
+    skill: 'int-drawings', clause: 'XII.1.appropriation', title: 'Interest on drawings', typology: 'AP',
     make: r => {
       const dr = r.multiple(20000, 120000, 10000), rate = r.pick([6, 8, 10, 12]);
       const i = interestPA(M(dr), BigInt(rate), 6n);
@@ -195,7 +203,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'goodwill-avg', clause: 'XII.1.goodwill', title: 'Goodwill — average profit',
+    skill: 'goodwill-avg', clause: 'XII.1.goodwill', title: 'Goodwill — average profit', typology: 'AP',
     make: r => {
       // exam-style numbers: the three profits add up to a multiple of 3, so the average is exact (no paise ambiguity)
       const p1 = r.multiple(80000, 200000, 10000), p2 = r.multiple(80000, 200000, 10000);
@@ -214,7 +222,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'goodwill-super', clause: 'XII.1.goodwill', title: 'Goodwill — super profit',
+    skill: 'goodwill-super', clause: 'XII.1.goodwill', title: 'Goodwill — super profit', typology: 'AP',
     make: r => {
       const ce = r.multiple(500000, 1500000, 100000), nr = r.pick([8, 10, 12]), avg = Math.round(ce * nr / 100) + r.multiple(20000, 80000, 10000), yrs = r.pick([2, 3, 4]);
       const g = goodwillSuperProfit(M(avg), M(ce), BigInt(nr), BigInt(yrs));
@@ -228,7 +236,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'sacrifice', clause: 'XII.1.ratio-change', title: 'Sacrificing and gaining ratio',
+    skill: 'sacrifice', clause: 'XII.1.ratio-change', title: 'Sacrificing and gaining ratio', typology: 'AP',
     make: r => {
       const oldW = r.pick([[4, 3, 3], [5, 3, 2], [3, 2, 1]]); let newW = r.pick([[3, 2, 5], [1, 1, 1], [2, 3, 5]]);
       if (oldW.join() === newW.join()) newW = [1, 1, 1];
@@ -245,7 +253,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'admission-premium', clause: 'XII.1.admission', title: 'Admission — premium for goodwill',
+    skill: 'admission-premium', clause: 'XII.1.admission', title: 'Admission — premium for goodwill', typology: 'AP',
     make: r => {
       const gw = r.multiple(60000, 240000, 20000), sh = r.pick([[1, 4], [1, 5], [1, 6]]), w = r.pick([[3, 2], [2, 1], [3, 1]]);
       const a = admission({
@@ -262,7 +270,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'exit-goodwill', clause: 'XII.1.retirement', title: 'Retirement — goodwill paid by gaining partners',
+    skill: 'exit-goodwill', clause: 'XII.1.retirement', title: 'Retirement — goodwill paid by gaining partners', typology: 'AP',
     make: r => {
       const w = r.pick([[5, 3, 2], [3, 2, 1], [5, 4, 1]]), gw = r.multiple(60000, 300000, 30000);   // B ≠ C, so 'split equally' is genuinely wrong
       const os = Object.fromEntries(names.map((n, i) => [n, Fraction.fromRatio(w)[i]!]));
@@ -278,7 +286,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'dissolution', clause: 'XII.1.dissolution', title: 'Dissolution — realisation',
+    skill: 'dissolution', clause: 'XII.1.dissolution', title: 'Dissolution — realisation', typology: 'AP',
     make: r => {
       const book = r.multiple(200000, 400000, 20000), loss = r.multiple(10000, 40000, 10000), w = r.pick([[3, 2], [1, 1], [2, 1]]);
       const cap = { A: M(150000), B: M(100000) };
@@ -294,7 +302,7 @@ export const GENERATORS: readonly Gen[] = [
   },
   // ───────────────────────────── Class XII · Companies ─────────────────────────────
   {
-    skill: 'pro-rata', clause: 'XII.2.issue', title: 'Pro-rata allotment',
+    skill: 'pro-rata', clause: 'XII.2.issue', title: 'Pro-rata allotment', typology: 'AP',
     make: r => {
       // choose numbers that give WHOLE shares: ratio = offered ÷ pro-rata applications, applicant applies for a multiple of its denominator
       const [offered, pro] = r.pick([[50000, 60000], [80000, 100000], [30000, 40000], [60000, 80000]] as const);
@@ -313,7 +321,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'forfeit', clause: 'XII.2.forfeiture', title: 'Forfeiture of shares',
+    skill: 'forfeit', clause: 'XII.2.forfeiture', title: 'Forfeiture of shares', typology: 'AP',
     make: r => {
       const n = r.pick([100, 200, 500, 1000]), prem = r.pick([1, 2]), appPer = r.pick([3, 4]);
       const called = [{ name: 'Application', face: M(appPer), premium: M(prem) }, { name: 'Allotment', face: M(4), premium: M(0) }];
@@ -328,7 +336,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'reissue', clause: 'XII.2.forfeiture', title: 'Re-issue of forfeited shares',
+    skill: 'reissue', clause: 'XII.2.forfeiture', title: 'Re-issue of forfeited shares', typology: 'AP',
     make: r => {
       const n = r.pick([2000, 3000, 4000]), re = n / 2, forf = r.pick([3, 4, 5]), price = r.pick([8, 9]);
       const x = reissue({ reissued: BigInt(re), price: M(price), faceValue: M(10), forfeitedPerShare: M(forf) });
@@ -342,7 +350,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'debenture-issue', clause: 'XII.2.debentures', title: 'Issue of debentures with terms of redemption',
+    skill: 'debenture-issue', clause: 'XII.2.debentures', title: 'Issue of debentures with terms of redemption', typology: 'AP',
     make: r => {
       const n = r.pick([500, 750, 1000]), disc = r.pick([5, 10]), rp = disc === 5 ? 10 : r.pick([5, 15]);   // discount ≠ redemption premium, so the two answers differ
       const d = issueDebentures({ rate: '10%', count: BigInt(n), face: M(100), issuePrice: M(100 - disc), redemptionPrice: M(100 + rp) });
@@ -357,7 +365,7 @@ export const GENERATORS: readonly Gen[] = [
   },
   // ───────────────────────────── Class XII · Analysis & cash flow ─────────────────────────────
   {
-    skill: 'ratio-liquidity', clause: 'XII.3.liquidity', title: 'Current and quick ratio',
+    skill: 'ratio-liquidity', clause: 'XII.3.liquidity', title: 'Current and quick ratio', typology: 'AP',
     make: r => {
       const cl = r.multiple(40000, 120000, 10000), inv = r.multiple(20000, 80000, 10000), pre = r.multiple(2000, 8000, 1000), liquid = r.multiple(60000, 200000, 10000);
       const ca = liquid + inv + pre;
@@ -372,7 +380,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'ratio-activity', clause: 'XII.3.activity', title: 'Inventory turnover',
+    skill: 'ratio-activity', clause: 'XII.3.activity', title: 'Inventory turnover', typology: 'AP',
     make: r => {
       const open = r.multiple(10000, 40000, 5000), close = open + r.multiple(5000, 20000, 5000), purchases = r.multiple(200000, 500000, 50000), direct = r.multiple(10000, 50000, 10000);
       const cost = costOfRevenueFromOperations({ openingInventory: M(open), purchases: M(purchases), directExpenses: M(direct), closingInventory: M(close) });
@@ -387,7 +395,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'ratio-solvency', clause: 'XII.3.solvency', title: 'Debt-equity and interest coverage',
+    skill: 'ratio-solvency', clause: 'XII.3.solvency', title: 'Debt-equity and interest coverage', typology: 'AP',
     make: r => {
       const debt = r.multiple(200000, 600000, 50000), eq = r.multiple(400000, 1000000, 100000), pbit = r.multiple(100000, 300000, 20000), int = r.multiple(20000, 60000, 10000);
       const de = debtEquityRatio(M(debt), M(eq)), ic = interestCoverageRatio(M(pbit), M(int));
@@ -401,7 +409,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'cfo', clause: 'XII.4.preparation', title: 'Cash from operating activities (indirect method)',
+    skill: 'cfo', clause: 'XII.4.preparation', title: 'Cash from operating activities (indirect method)', typology: 'AP',
     make: r => {
       const pbt = r.multiple(100000, 300000, 10000), dep = r.multiple(10000, 40000, 5000), gain = r.multiple(5000, 20000, 5000), rec = r.multiple(5000, 25000, 5000), tax = r.multiple(10000, 40000, 5000);
       const c = cashFlowStatement({
@@ -419,7 +427,7 @@ export const GENERATORS: readonly Gen[] = [
   },
   // ───────────────────────────── added: remaining practice skills ─────────────────────────────
   {
-    skill: 'pdd-provision', clause: 'XI.2.provisions', title: 'Provision for doubtful debts',
+    skill: 'pdd-provision', clause: 'XI.2.provisions', title: 'Provision for doubtful debts', typology: 'AP',
     make: r => {
       const debtors = r.multiple(100000, 500000, 10000), bad = r.multiple(2000, 10000, 1000), rate = r.pick([5, 10]), old = r.multiple(2000, 9000, 1000);
       const res = provisionDoubtful({ debtors: M(debtors), additionalBadDebts: M(bad), pddPercent: BigInt(rate), oldPdd: M(old) });
@@ -434,7 +442,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'cashbook', clause: 'XI.2.cashbook', title: 'Cash book with bank column',
+    skill: 'cashbook', clause: 'XI.2.cashbook', title: 'Cash book with bank column', typology: 'AP',
     make: r => {
       const cash = r.multiple(20000, 50000, 5000), bank = r.multiple(30000, 90000, 5000), recv = r.multiple(5000, 20000, 5000), dep = r.multiple(5000, 15000, 5000), pay = r.multiple(10000, 40000, 5000), wd = r.multiple(2000, 6000, 1000);
       const cb = cashBook({ cash: M(cash), bank: M(bank) }, [
@@ -450,7 +458,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'opening-capital', clause: 'XI.3.concepts', title: 'Opening entry and capital',
+    skill: 'opening-capital', clause: 'XI.3.concepts', title: 'Opening entry and capital', typology: 'AP',
     make: r => {
       const cash = r.multiple(10000, 60000, 5000), stock = r.multiple(40000, 150000, 10000), furn = r.multiple(20000, 80000, 10000), cred = r.multiple(10000, 60000, 5000), loan = r.multiple(20000, 90000, 10000);
       const o = openingEntry({ assets: [{ name: 'Cash', amount: M(cash) }, { name: 'Stock', amount: M(stock) }, { name: 'Furniture', amount: M(furn) }], liabilities: [{ name: 'Creditors', amount: M(cred) }, { name: 'Bank Loan', amount: M(loan) }] });
@@ -465,7 +473,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'revaluation', clause: 'XII.1.ratio-change', title: 'Revaluation account',
+    skill: 'revaluation', clause: 'XII.1.ratio-change', title: 'Revaluation account', typology: 'AP',
     make: r => {
       const stockDown = r.multiple(2000, 9000, 1000), buildUp = r.multiple(10000, 30000, 5000), owing = r.multiple(1000, 4000, 1000), a = r.pick([3, 2, 5]), b = r.pick([2, 1, 3]);
       const rv = revaluation([{ name: 'Stock', kind: 'ASSET', before: M(60000), after: M(60000 - stockDown) }, { name: 'Building', kind: 'ASSET', before: M(200000), after: M(200000 + buildUp) }, { name: 'Outstanding expenses', kind: 'LIABILITY', before: M(0), after: M(owing) }], { A: Fraction.of(a, a + b), B: Fraction.of(b, a + b) });
@@ -480,7 +488,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'loan-emi', clause: 'XII.C.spreadsheet', title: 'Loan instalment (EMI)',
+    skill: 'loan-emi', clause: 'XII.C.spreadsheet', title: 'Loan instalment (EMI)', typology: 'AP',
     make: r => {
       const principal = r.multiple(100000, 1000000, 50000), rate = r.pick([6, 9, 12]), months = r.pick([12, 24]);
       const ls = loanSchedule({ principal: M(principal), ratePercent: Fraction.of(rate), months });
@@ -495,7 +503,7 @@ export const GENERATORS: readonly Gen[] = [
     },
   },
   {
-    skill: 'calls-advance', clause: 'XII.2.issue', title: 'Calls in advance',
+    skill: 'calls-advance', clause: 'XII.2.issue', title: 'Calls in advance', typology: 'AP',
     make: r => {
       const shares = r.multiple(2000, 10000, 1000), call = r.pick([3, 4, 5]), advShares = r.multiple(200, 1000, 100), advPer = r.pick([1, 2]);
       const ca = callsInAdvance({ shares: BigInt(advShares), advancePerShare: M(advPer) });
@@ -511,14 +519,15 @@ export const GENERATORS: readonly Gen[] = [
   },
 ];
 
-export const SKILLS = GENERATORS.map(g => ({ skill: g.skill, clause: g.clause, title: g.title }));
+export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS];
+export const SKILLS = ALL_GENERATORS.map(g => ({ skill: g.skill, clause: g.clause, title: g.title, typology: g.typology }));
 
 /** The generator's output exactly as written (no safety filtering) — used by tests to keep the generators themselves honest. */
 export function makeQuestionUnfiltered(skill: string, seed: number): Question {
-  const g = GENERATORS.find(x => x.skill === skill);
+  const g = ALL_GENERATORS.find(x => x.skill === skill);
   if (!g) throw new Error(`Unknown skill "${skill}"`);
   const q = g.make(new Rng(seed * 2654435761 + g.skill.length), seed);
-  return { id: `${skill}#${seed}`, skill, clause: g.clause, seed, marks: q.parts.reduce((a, p) => a + p.marks, 0), ...q };
+  return { id: `${skill}#${seed}`, skill, clause: g.clause, seed, marks: q.parts.reduce((a, p) => a + p.marks, 0), typology: g.typology, ...q };
 }
 
 export function makeQuestion(skill: string, seed: number): Question {
@@ -531,6 +540,7 @@ export function makeQuestion(skill: string, seed: number): Question {
 export function checkAnswer(p: Part, input: string): boolean {
   const t = input.trim();
   if (!t) return false;
+  if (p.kind === 'CHOICE') { const norm = (x: string) => x.trim().replace(/\s+/g, ' ').toLowerCase(); return (p.options ?? []).some(o => norm(o) === norm(t)) && norm(t) === norm(p.answer); }
   if (p.kind === 'TEXT') return t.replace(/[,\s₹]/g, '').toLowerCase() === p.answer.replace(/[,\s₹]/g, '').toLowerCase();
   if (p.kind === 'FRACTION') {
     const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t) ?? /^(-?\d+)$/.exec(t);
