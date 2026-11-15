@@ -41,6 +41,22 @@ function drawNav(active: string | null) {
   clear(nav);
   for (const n of NAV) nav.appendChild(h('a', { href: n.hash, ...(n.key === active ? { 'aria-current': 'page' } : {}) }, n.key));
 }
+
+// --- Projector-friendly mode: high-contrast, larger type, minimal chrome ---
+function initProjectorToggle(): HTMLButtonElement {
+  const saved = (() => { try { return localStorage.getItem('au-projector') === '1'; } catch { return false; } })();
+  const btn = h('button', { type: 'button', class: 'small projector-toggle', 'aria-pressed': String(saved), title: saved ? 'Exit projector mode (high contrast, larger text)' : 'Projector mode: high contrast + larger text for classroom projection' }, saved ? '☀️ Projector: ON' : '🖥️ Projector');
+  const apply = (on: boolean) => {
+    document.documentElement.classList.toggle('projector', on);
+    btn.textContent = on ? '☀️ Projector: ON' : '🖥️ Projector';
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = on ? 'Exit projector mode' : 'Projector mode: high contrast + larger text for classroom projection';
+    try { localStorage.setItem('au-projector', on ? '1' : '0'); } catch { /* storage may be blocked */ }
+  };
+  if (saved) document.documentElement.classList.add('projector');
+  btn.onclick = () => apply(!document.documentElement.classList.contains('projector'));
+  return btn;
+}
 const boot_ = new Machine(APP_BOOT), network = new Machine(NETWORK);
 register(boot_); register(network);
 const root = document.documentElement;
@@ -98,6 +114,7 @@ const notFound = () => h('div', { class: 'panel' }, h('h2', {}, 'Page not found'
 async function boot() {
   const app = document.getElementById('app')!;
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } }, '☰ Menu');
+  const projectorBtn = initProjectorToggle();
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
     h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, langBtn, menu),
