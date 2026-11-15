@@ -8,7 +8,7 @@ import { Ledger, Money, normalSide, starterChartClassXI, suspenseFromTrialBalanc
 import type { Distractor, Gen, Part } from './questions';
 import { assessableBanks, parseImpact } from './banks/verify';
 import { canonical, classify, type AccountClass } from './banks/accounts-xi';
-import { TERM_HI, TYPE_HI, accountHi } from './i18n/glossary-hi';
+import { TERM_HI, TYPE_HI, accountHi, hasAccountHi } from './i18n/glossary-hi';
 
 const M = (n: number) => Money.rupees(n), R = (m: Money) => m.format(), ans = (m: Money) => m.toString();
 const money = (label: string, answer: Money, marks = 1): Part => ({ label, kind: 'MONEY', answer: ans(answer), marks });
@@ -67,6 +67,7 @@ const TX: Tx[] = [
   { en: 'Owner withdrew cash for personal use', hi: 'स्वामी ने निजी उपयोग के लिए रोकड़ निकाली', dr: 'drawings', cr: 'cash' }, { en: 'Deposited cash into the bank', hi: 'बैंक में रोकड़ जमा की', dr: 'bank', cr: 'cash' },
 ];
 const FOCUS = ['cash', 'creditors', 'debtors'] as const;
+const SIDE_ACCOUNTS = ['Cash', 'Machinery', 'Furniture', 'Debtors', 'Purchases', 'Rent Paid', 'Carriage Inwards', 'Bad Debts', 'Drawings', 'Creditors', 'Capital', 'Sales', 'Bank Loan', 'Commission Received', 'Interest Received', 'Bills Payable', 'Outstanding Salary', 'Discount Received'].filter(n => classify(n) && hasAccountHi(n));
 /** A short business month posted through the engine; balances never go negative. */
 function month(r: { int: (a: number, b: number) => number; pick: <T>(x: readonly T[]) => T; multiple: (a: number, b: number, s: number) => number }, need?: string) {
   for (let attempt = 0; attempt < 200; attempt++) {
@@ -229,4 +230,76 @@ export const V1_GENERATORS: readonly Gen[] = [
       };
     },
   },
+  // ── on which side does an account's balance appear (Remembering & Understanding) — normal balances from the independent classification
+  ...([
+    { skill: 'ledger-side', clause: 'XI.2.ledger', title: 'On which side does a ledger balance normally appear?', where: 'in its ledger account', whereHi: 'अपने खाताबही खाते में' },
+    { skill: 'tb-side', clause: 'XI.2.tb', title: 'Which trial-balance column does an account fall in?', where: 'in the trial balance', whereHi: 'तलपट में' },
+  ] as const).map(def => ({
+    skill: def.skill, clause: def.clause, title: def.title, typology: 'RU' as const,
+    make: (r: { pick: <T>(x: readonly T[]) => T }) => {
+      const name = r.pick(SIDE_ACCOUNTS), c = classify(name)!, SIDES = ['Debit side', 'Credit side'], right = c.normal === 'DR' ? SIDES[0]! : SIDES[1]!, other = right === SIDES[0] ? SIDES[1]! : SIDES[0]!;
+      return {
+        stem: `${def.skill === 'tb-side' ? 'In which column of the trial balance does' : 'On which side does'} the closing balance of ${name} Account normally appear${def.skill === 'tb-side' ? '' : ' ' + def.where}?`,
+        parts: [choice('Side', SIDES, right)],
+        hints: [`First decide what kind of account ${name} is: ${kind(c)[0]}.`, 'Assets, expenses and drawings have DEBIT balances; liabilities, capital and income have CREDIT balances (contra-accounts the opposite of the item they reduce).'],
+        working: [`${canonical(name)} is ${kind(c)[0]} account.`, `Its balance is normally on the ${right.toLowerCase()}.`],
+        distractors: [{ part: 0, value: other, mistake: `The balance of ${canonical(name)} is not on the ${other.toLowerCase()}.`, fix: `${canonical(name)} is ${kind(c)[0]} account, so its balance is on the ${right.toLowerCase()}.` }],
+        hi: { stem: `${accountHi(name)} खाते का अंतिम शेष सामान्यतः ${def.skill === 'tb-side' ? 'तलपट के किस स्तंभ में आता है' : `${def.whereHi} किस पक्ष में आता है`}?`, parts: ['पक्ष'], hints: [`पहले तय कीजिए कि ${accountHi(name)} किस प्रकार का खाता है।`, 'परिसंपत्ति, व्यय और आहरण के शेष नाम पक्ष में तथा देयता, पूँजी और आय के शेष जमा पक्ष में होते हैं।'],
+          working: [`${accountHi(name)} एक ${kind(c)[1]} खाता है।`, `इसका शेष सामान्यतः ${c.normal === 'DR' ? 'नाम पक्ष' : 'जमा पक्ष'} में होता है।`], options: [['नाम पक्ष', 'जमा पक्ष']] },
+      };
+    },
+  })),
+  // ── find the error in a journal entry (Analysing) — legacy m4 scenes; the wrong entry is built deliberately
+  {
+    skill: 'journal-error', clause: 'XI.2.journal', title: 'Is this journal entry correct? If not, what is wrong?', typology: 'AEC',
+    make: r => {
+      const s = r.pick(M4), dr = canonical(s.debit[0]!), cr = canonical(s.credit[0]!), pool = s.pool.map(canonical), amt = R(M(s.amount));
+      const others = pool.filter(o => o !== dr && o !== cr), v = others.length ? r.int(0, 2) : r.int(0, 1);
+      const shownDr = v === 1 ? cr : v === 2 ? r.pick(others) : dr, shownCr = v === 1 ? dr : cr;
+      const KINDS = ['The entry is correct', 'Debit and credit are interchanged', 'A wrong account has been used'], right = KINDS[v]!;
+      return {
+        stem: `Transaction: ${s.text}\nA student wrote:\n${shownDr} A/c  Dr.  ${amt}\n    To ${shownCr} A/c  ${amt}\nWhat is the position?`,
+        parts: [choice('Verdict', KINDS, right), choice('Correct account to debit', pool, dr)],
+        hints: HINTS_EN, working: [`${dr} A/c  Dr.  ${amt}`, `    To ${cr} A/c  ${amt}`, ruleEn(dr, 'DR'), ruleEn(cr, 'CR')],
+        distractors: [...KINDS.filter(k => k !== right).map(k => ({ part: 0, value: k, mistake: `Check each account against its rule: ${k.toLowerCase()} is not what happened here.`, fix: right === KINDS[0] ? 'Both accounts and both sides agree with the rules, so the entry is correct.' : `${ruleEn(dr, 'DR')} ${ruleEn(cr, 'CR')}` })),
+          ...pool.filter(o => o !== dr).map(o => whyWrong(1, o, dr, 'DR'))],
+        hi: { stem: `लेन-देन (मूल अंग्रेज़ी में): “${s.text}”\nएक विद्यार्थी ने लिखा:\n${accountHi(shownDr)} खाता  नाम  ${amt}\n    ${accountHi(shownCr)} खाते से  ${amt}\nस्थिति क्या है?`, parts: ['निर्णय', `${TERM_HI.debit} किया जाने वाला सही खाता`],
+          hints: HINTS_HI, working: [`${accountHi(dr)} खाता  नाम  ${amt}`, `    ${accountHi(cr)} खाते से  ${amt}`, ruleHi(dr, 'DR'), ruleHi(cr, 'CR')],
+          options: [['प्रविष्टि सही है', 'नाम और जमा आपस में बदल गए हैं', 'गलत खाते का प्रयोग हुआ है'], pool.map(accountHi)] },
+      };
+    },
+  },
+  // ── a short case with linked parts (Analysing / Evaluating) — everything computed by the engine
+  {
+    skill: 'case-ledger', clause: 'XI.2.ledger', title: 'Case: a month of transactions, the ledger and the trial balance', typology: 'AEC',
+    make: r => {
+      const { l, lines } = month(r, 'cash'), tb = l.trialBalance(), bal = l.balance('cash'), biggest = lines.filter(x => x.tx).reduce((a, b) => (b.amount > a.amount ? b : a));
+      const SIDES = ['Debit total is larger', 'Credit total is larger', 'The two totals agree'];
+      return {
+        stem: `Meera starts a small shop and records these transactions in April:\n${lines.map(txEn).join('\n')}\nAnswer the linked questions about her books.`,
+        parts: [money('Closing balance of Cash Account', bal.abs()), money('Total of the debit column of the trial balance', tb.totalDebit), choice('Comparing the two trial-balance totals', SIDES, SIDES[2]!)],
+        hints: ['Cash is debited when it comes in and credited when it goes out; balance it as an ordinary account.', 'The trial balance lists every closing balance; if every entry was posted on both sides, the totals must agree.'],
+        working: [`Cash closing balance = ${R(bal.abs())}`, `Trial balance totals: Dr ${R(tb.totalDebit)}, Cr ${R(tb.totalCredit)} — they agree because every journal entry has equal debit and credit.`, `Largest single transaction: ${biggest.tx!.en} (${R(M(biggest.amount))}).`],
+        distractors: [{ part: 2, value: SIDES[0]!, mistake: 'If every entry is posted to both a debit and a credit account, the totals cannot differ.', fix: 'Double entry: equal debits and credits, so the trial balance agrees; a difference would signal an error.' },
+          { part: 2, value: SIDES[1]!, mistake: 'If every entry is posted to both a debit and a credit account, the totals cannot differ.', fix: 'Double entry: equal debits and credits, so the trial balance agrees; a difference would signal an error.' }],
+        hi: { stem: `मीरा एक छोटी दुकान आरंभ करती है और अप्रैल में ये लेन-देन लिखती है:\n${lines.map(txHi).join('\n')}\nउसकी बहियों से जुड़े प्रश्नों के उत्तर दीजिए।`, parts: ['रोकड़ खाते का अंतिम शेष', 'तलपट के नाम स्तंभ का योग', 'तलपट के दोनों योगों की तुलना'],
+          hints: ['रोकड़ आने पर नाम और जाने पर जमा होती है; इसे सामान्य खाते की तरह संतुलित कीजिए।', 'यदि प्रत्येक प्रविष्टि दोनों पक्षों में लिखी गई है तो तलपट के योग बराबर होंगे।'],
+          working: [`रोकड़ का अंतिम शेष ${R(bal.abs())}`, `तलपट: नाम ${R(tb.totalDebit)}, जमा ${R(tb.totalCredit)} — दोनों बराबर हैं क्योंकि हर प्रविष्टि में नाम और जमा बराबर होते हैं।`], options: [undefined, undefined, ['नाम योग बड़ा है', 'जमा योग बड़ा है', 'दोनों योग बराबर हैं']] },
+      };
+    },
+  },
 ];
+
+/**
+ * Verified single-debit/single-credit scenes from the legacy m2 bank whose two accounts exist in the given chart (matched by name).
+ * Used by the Debit & Credit Trainer so it draws on the migrated, engine-checked bank (handoff T0.5 UI parity).
+ */
+export function migratedTrainerScenes(chart: readonly { id: string; name: string }[]): { text: string; dr: string; cr: string; why: string }[] {
+  const byName = new Map(chart.map(a => [a.name.toLowerCase(), a.id]));
+  const out: { text: string; dr: string; cr: string; why: string }[] = [];
+  for (const sc of M2) {
+    const dn = canonical(sc.debit[0]!), cn = canonical(sc.credit[0]!), dr = byName.get(dn.toLowerCase()), cr = byName.get(cn.toLowerCase());
+    if (dr && cr && dr !== cr) out.push({ text: sc.text, dr, cr, why: `${ruleEn(dn, 'DR')} ${ruleEn(cn, 'CR')}` });
+  }
+  return out;
+}

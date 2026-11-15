@@ -120,3 +120,66 @@ describe('rule-based feedback for every wrong account choice (T0.6)', () => {
     expect(q.distractors.find(d => d.part === 0 && d.value === o)!.mistake).toMatch(/^Drawings are not a business expense/);
   });
 });
+
+describe('second wave of V1 skills — independent oracles', () => {
+  const DEBIT_NORMAL = new Set(['Cash', 'Machinery', 'Furniture', 'Debtors', 'Purchases', 'Rent Paid', 'Carriage Inwards', 'Bad Debts', 'Drawings']);
+  const CREDIT_NORMAL = new Set(['Creditors', 'Capital', 'Sales', 'Bank Loan', 'Commission Received', 'Interest Received', 'Bills Payable', 'Outstanding Salary', 'Discount Received']);
+  it('ledger-side and tb-side: the answer is the hand-known normal side of the named account', () => {
+    for (const skill of ['ledger-side', 'tb-side']) for (const q of qs(skill)) {
+      const name = /closing balance of (.+?) Account normally/.exec(q.stem)![1]!;
+      expect(DEBIT_NORMAL.has(name) || CREDIT_NORMAL.has(name), name).toBe(true);
+      expect(q.parts[0]!.answer, `${q.id} ${name}`).toBe(DEBIT_NORMAL.has(name) ? 'Debit side' : 'Credit side');
+    }
+  });
+  it('journal-error: the verdict matches what the shown entry really does, recomputed from the stem and the model entry', () => {
+    const seen = new Set<string>();
+    for (const q of qs('journal-error')) {
+      const m = /A student wrote:\n(.+) A\/c  Dr\.  [^\n]+\n    To (.+) A\/c/.exec(q.stem)!, shownDr = m[1]!, shownCr = m[2]!;
+      const good = /^(.+) A\/c  Dr\./.exec(q.working[0]!)![1]!, goodCr = /To (.+) A\/c/.exec(q.working[1]!)![1]!;
+      const verdict = shownDr === good && shownCr === goodCr ? 'The entry is correct' : shownDr === goodCr && shownCr === good ? 'Debit and credit are interchanged' : 'A wrong account has been used';
+      expect(q.parts[0]!.answer, q.id).toBe(verdict); seen.add(verdict);
+      expect(q.parts[1]!.answer, q.id).toBe(good);
+    }
+    expect(seen.size, 'all three verdicts occur').toBe(3);
+  });
+  it('case-ledger: cash balance and trial-balance debit total recomputed from the stem with a hand-written effect table', () => {
+    const CASH: Record<string, number> = { 'Started business with cash (capital)': 1, 'Cash sales': 1, 'Received cash from debtors': 1, 'Bought machinery for cash': -1, 'Paid creditors in cash': -1, 'Paid rent': -1, 'Paid salary': -1, 'Owner withdrew cash for personal use': -1, 'Deposited cash into the bank': -1, 'Purchased goods on credit': 0, 'Sold goods on credit': 0 };
+    const NET: Record<string, Record<string, number>> = {   // account → +debit −credit per ₹ of transaction
+      'Started business with cash (capital)': { Cash: 1, Capital: -1 }, 'Bought machinery for cash': { Machinery: 1, Cash: -1 }, 'Cash sales': { Cash: 1, Sales: -1 },
+      'Purchased goods on credit': { Purchases: 1, Creditors: -1 }, 'Paid creditors in cash': { Creditors: 1, Cash: -1 }, 'Sold goods on credit': { Debtors: 1, Sales: -1 },
+      'Received cash from debtors': { Cash: 1, Debtors: -1 }, 'Paid rent': { Rent: 1, Cash: -1 }, 'Paid salary': { Salary: 1, Cash: -1 }, 'Owner withdrew cash for personal use': { Drawings: 1, Cash: -1 }, 'Deposited cash into the bank': { Bank: 1, Cash: -1 } };
+    for (const q of qs('case-ledger').slice(0, 100)) {
+      const rows = [...q.stem.matchAll(/^\d+ April: (.+) ₹([\d,]+(?:\.\d+)?)$/gm)].map(m => [m[1]!, Number(m[2]!.replace(/,/g, ''))] as const);
+      expect(rows.length, q.id).toBeGreaterThanOrEqual(5);
+      const cash = rows.reduce((s, [t, a]) => s + CASH[t]! * a, 0), net: Record<string, number> = {};
+      for (const [t, a] of rows) for (const [acc, k] of Object.entries(NET[t]!)) net[acc] = (net[acc] ?? 0) + k * a;
+      const debitTotal = Object.values(net).filter(v => v > 0).reduce((s, v) => s + v, 0);
+      expect(rupees(q.parts[0]!.answer), q.id).toBeCloseTo(Math.abs(cash), 2);
+      expect(rupees(q.parts[1]!.answer), q.id).toBeCloseTo(debitTotal, 2);
+      expect(q.parts[2]!.answer).toBe('The two totals agree');
+    }
+  });
+  it('every V1 clause now has items; rules RU, journal AP+AEC, ledger RU+AP+AEC, tb RU+AEC; all three bands overall', () => {
+    const bands = (c: string) => new Set(SKILLS.filter(s => s.clause === c).map(s => s.typology));
+    expect(bands('XI.2.ledger')).toEqual(new Set(['RU', 'AP', 'AEC']));
+    expect(bands('XI.2.journal')).toEqual(new Set(['AP', 'AEC']));
+    expect(bands('XI.2.tb')).toEqual(new Set(['RU', 'AEC']));
+  });
+  it('Hindi is aligned for the new skills (parts, hints and options match)', () => {
+    for (const skill of ['ledger-side', 'tb-side', 'journal-error', 'case-ledger']) for (const q of qs(skill).slice(0, 60)) {
+      const hi = q.hi!; expect(hi, q.id).toBeDefined(); expect(hi.parts.length, q.id).toBe(q.parts.length); expect(hi.hints.length, q.id).toBe(q.hints.length);
+      expect(hi.stem).toMatch(/[ऀ-ॿ]/);
+      q.parts.forEach((p, k) => { if (p.kind === 'CHOICE') expect(hi.options?.[k]?.length, `${q.id} part ${k}`).toBe(p.options!.length); });
+    }
+  });
+});
+
+describe('Trainer draws on the migrated bank', () => {
+  it('returns engine-checked scenes whose accounts exist in the starter chart, none identical in both sides', async () => {
+    const { starterChartClassXI } = await import('../../engine/src');
+    const { migratedTrainerScenes } = await import('../src/questions-v1');
+    const chart = starterChartClassXI(), scenes = migratedTrainerScenes(chart.list());
+    expect(scenes.length).toBeGreaterThan(5);
+    for (const s of scenes) { expect(chart.get(s.dr)).toBeDefined(); expect(chart.get(s.cr)).toBeDefined(); expect(s.dr).not.toBe(s.cr); expect(s.why).toMatch(/DEBITED\. .*CREDITED\.$/); }
+  });
+});

@@ -8,7 +8,7 @@ const PORT = 4181, BASE = `http://127.0.0.1:${PORT}/`;
 let pass = 0; const fails = [];
 const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗', m); } };
 const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [path.join(__dirname, '../apps/web')] }), 'utf8');
-const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'ledger-balance', 'tb-agree'];
+const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'journal-error', 'ledger-balance', 'ledger-side', 'tb-agree', 'tb-side', 'case-ledger'];
 
 (async () => {
   const hs = path.join(execSync('npm root -g').toString().trim(), 'http-server/bin/http-server');
@@ -67,6 +67,15 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'ledg
     await axe('practice (HI)');
     await page.click('[data-lang-toggle]'); await page.waitForSelector('html[data-lang="en"]');
     ok(await page.$('[data-hindi-draft]') === null, 'hindi: switching back to English removes Hindi');
+
+    // choosing Hinglish on a concept card must not switch practice questions to Hindi (regression)
+    await go('#/cards'); await page.click('a.card'); await page.waitForSelector('[role=radiogroup]');
+    await page.click('button[role=radio]:has-text("Hinglish")');
+    await go('#/practice/ledger-side/5/board'); await page.waitForSelector('.question');
+    ok(await page.$('[data-hindi-draft]') === null && await page.$('html[data-lang="hi"]') === null, 'hinglish card toggle does not change the app language');
+    // Trainer: rounds are 15 questions drawn from hand-written + migrated scenes
+    await go('#/trainer'); await page.waitForSelector('[data-machine="trainer-round"]');
+    ok(/Question 1 of 15/.test(await page.textContent('main')), 'trainer: a round is 15 questions');
 
     // ── Learn tab shows the official learning outcomes for the lab's clauses
     await go('#/lab/xi-equation'); await page.waitForSelector('article[data-tab="learn"]');

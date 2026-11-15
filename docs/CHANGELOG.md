@@ -14,6 +14,7 @@
   drawings-as-expense, furniture-as-purchases, personal-vs-nominal and swapped sides.
 - **Hindi draft (T0.4):** Devanagari text for every V1 question, EN/HI UI catalogue (`i18n/en.ts`, `i18n/hi.ts`), NCERT-style glossary,
   header toggle saved in the profile, "Hindi draft — not yet reviewed" badge wherever Hindi appears (`HINDI_REVIEWED = false`, D10).
+- **More V1 skills:** `ledger-side`, `tb-side` (RU), `journal-error`, `case-ledger` (AEC, linked-part case); Trainer draws on verified migrated scenes; fixed Hinglish card toggle changing the app language.
 - **Teacher report by learning outcome (T0.7):** table + CSV on the teacher dashboard.
 - **Review + accessibility (T0.8):** `docs/academic-review/` template and five UNSIGNED clause files; axe-core in the new `e2e/web-app-v1.cjs`;
   fixed a colour-contrast failure on `.eyebrow` labels (light theme).

@@ -44,7 +44,7 @@ export function cardPage(card: Card): HTMLElement {
     checks.append(form);
   });
   drawBody();
-  const toggle = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Language' }, ...([['en', 'English'], ['hi', 'Hinglish']] as const).map(([v, label]) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(v === lang), class: v === lang ? 'on' : '', onclick: (e: Event) => { lang = v; state.lang = v; for (const b of Array.from((e.currentTarget as HTMLElement).parentElement!.children)) { b.classList.toggle('on', b === e.currentTarget); b.setAttribute('aria-checked', String(b === e.currentTarget)); } drawBody(); } }, label)));
+  const toggle = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Language' }, ...([['en', 'English'], ['hi', 'Hinglish']] as const).map(([v, label]) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(v === lang), class: v === lang ? 'on' : '', onclick: (e: Event) => { lang = v; for (const b of Array.from((e.currentTarget as HTMLElement).parentElement!.children)) { b.classList.toggle('on', b === e.currentTarget); b.setAttribute('aria-checked', String(b === e.currentTarget)); } drawBody(); } }, label)));
   return h('article', { class: 'labpage' }, h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, `Concept card · ${card.clause}`), h('h2', {}, card.title), toggle),
     h('section', { class: 'panel' }, body), h('section', { class: 'panel' }, h('h3', {}, 'Check yourself'), checks),
     related.length ? h('p', { class: 'after' }, 'Practise it: ', ...related.map(id => h('a', { class: 'pill', href: hrefOf(id) }, titleOf(id)))) : null,

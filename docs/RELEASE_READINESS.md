@@ -7,8 +7,8 @@ claimed is tested — but the items under "Not done" matter before a wide releas
 | Area | Evidence |
 |---|---|
 | Engine: exact money, journal/ledger/reversal/audit, partnership, company, depreciation, final accounts, ratios, cash flow, and the later calculators | 222 tests; mutation 25/25 + 10/10 |
-| Curriculum, 36 practice skills, learning outcomes, migrated legacy banks, mastery levels, rescue plan, assignments/tests, teacher report/heat-map + by outcome | 348 tests |
-| Web app: 32 labs/pages incl. Computerised Accounting Simulator, 15 bilingual concept cards, practice (3 modes), progress, teacher, project assistants, offline/PWA | 413 browser checks (desktop + mobile) incl. axe on the V1 views |
+| Curriculum, 40 practice skills, learning outcomes, migrated legacy banks, mastery levels, rescue plan, assignments/tests, teacher report/heat-map + by outcome | 348 tests |
+| Web app: 32 labs/pages incl. Computerised Accounting Simulator, 15 bilingual concept cards, practice (3 modes), progress, teacher, project assistants, offline/PWA | 425 browser checks (desktop + mobile) incl. axe on the V1 views |
 | Tutor proxy | 9 tests against a mock upstream |
 | Legacy single-file app still ships | 14/14, 12/12 |
 
@@ -18,10 +18,13 @@ Coverage as shown in the app: Class XI — 18 of 24 topics interactive, 6 theory
 Implemented and tested: T0.2 learning outcomes, T0.3 V1 generators + typology, T0.4 Hindi **draft**, T0.5 bank migration with engine re-verification,
 T0.6 rule-based feedback, T0.7 teacher report by outcome, T0.8 review templates + axe on the new views. **No V1 clause is "Done"** under Appendix B:
 the review files are unsigned (D11) and the Hindi is unreviewed (D10).
-Not done: T0.1 (workspaces, ESLint/Prettier, symlink removal D9, CI D12), T0.9 preview deploy (D8a), the `case-ledger` competency item,
-a multi-line `ENTRY` part kind (journal items are single debit / single credit), Trainer and Equation Visualizer reading the migrated banks
-(the new practice skills do), Hindi for labs, concept text and mistake explanations, typology in every band for *each* V1 clause
-(rules = RU only, journal/ledger = AP only, tb = AEC only), 5 legacy items held for an inventory-model decision.
+Also done since: four more skills (`ledger-side` RU, `tb-side` RU, `journal-error` AEC, `case-ledger` AEC competency case), so every V1 clause has items in at
+least two typology bands and ledger has all three; the Debit & Credit Trainer now draws on the migrated bank (hand-written items + verified legacy scenes whose
+accounts exist in the starter chart); the Hinglish-card toggle no longer switches the whole app to Hindi.
+Not done: T0.1 (workspaces, ESLint/Prettier, symlink removal D9, CI D12), T0.9 preview deploy (D8a), a multi-line `ENTRY` part kind (journal items are
+single debit / single credit; `journal-error` tests recognising mistakes instead), the Equation Visualizer reading the migrated m1 bank (the practice
+skill `eq-impact` does), Hindi for labs, concept text and the wrong-answer explanations, rules and equation clauses still have only one or two bands
+(rules = RU only; equation = RU + AP), 5 legacy items held for an inventory-model decision.
 
 ## Not done / not verified (read before releasing)
 * **AI tutor is not live.** Code, guard and tests exist (`apps/tutor-proxy`) but it was never run against the real API, is not deployed, and needs your API key and a host (D4). The app works fully without it.
