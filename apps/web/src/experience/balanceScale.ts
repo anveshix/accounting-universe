@@ -1,13 +1,13 @@
 /**
  * 3D Balance Scale — experiential accounting equation.
  * Left pan = Assets, Right pan = Capital + Liabilities.
- * Tilts visibly when unbalanced; settles when balanced. Purely visual — 
+ * Tilts visibly when unbalanced; settles when balanced. Purely visual —
  * all numbers come from the Ledger engine.
  */
 import * as THREE from 'three';
 
 export interface BalanceState {
-  assets: number;   // paise or rupees, any consistent unit (geometry uses normalized values)
+  assets: number; // paise or rupees, any consistent unit (geometry uses normalized values)
   rhs: number;
   balanced: boolean;
   assetsLabel: string;
@@ -50,29 +50,21 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
     scene.add(fill);
 
     // ground
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(16, 10),
-      new THREE.MeshStandardMaterial({ color: 0xf3ede0, roughness: 0.9 })
-    );
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), new THREE.MeshStandardMaterial({ color: 0xf3ede0, roughness: 0.9 }));
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -1.45;
     ground.receiveShadow = true;
     scene.add(ground);
 
     // pillar
-    const pillar = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.09, 0.13, 2.4, 16),
-      new THREE.MeshStandardMaterial({ color: 0x0f3d3e, roughness: 0.55, metalness: 0.12 })
-    );
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 2.4, 16), new THREE.MeshStandardMaterial({ color: 0x0f3d3e, roughness: 0.55, metalness: 0.12 }));
     pillar.position.y = -0.25;
     pillar.castShadow = true;
     scene.add(pillar);
-    const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.42, 0.5, 0.16, 20),
-      new THREE.MeshStandardMaterial({ color: 0x1a2e30, roughness: 0.7 })
-    );
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.16, 20), new THREE.MeshStandardMaterial({ color: 0x1a2e30, roughness: 0.7 }));
     base.position.y = -1.37;
-    base.castShadow = true; base.receiveShadow = true;
+    base.castShadow = true;
+    base.receiveShadow = true;
     scene.add(base);
 
     // beam (pivots)
@@ -80,17 +72,11 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
     beamGroup.position.y = 0.95;
     scene.add(beamGroup);
 
-    const beam = new THREE.Mesh(
-      new THREE.BoxGeometry(6.4, 0.1, 0.12),
-      new THREE.MeshStandardMaterial({ color: 0xb7791f, roughness: 0.45, metalness: 0.18 })
-    );
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.1, 0.12), new THREE.MeshStandardMaterial({ color: 0xb7791f, roughness: 0.45, metalness: 0.18 }));
     beam.castShadow = true;
     beamGroup.add(beam);
 
-    const pivot = new THREE.Mesh(
-      new THREE.SphereGeometry(0.13, 16, 16),
-      new THREE.MeshStandardMaterial({ color: 0xf0c75a, metalness: 0.35, roughness: 0.35 })
-    );
+    const pivot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), new THREE.MeshStandardMaterial({ color: 0xf0c75a, metalness: 0.35, roughness: 0.35 }));
     beamGroup.add(pivot);
 
     // pans
@@ -100,30 +86,37 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
 
     const panL = new THREE.Mesh(panGeo, panMatL);
     panL.position.set(-2.9, -0.7, 0);
-    panL.castShadow = true; panL.receiveShadow = true;
+    panL.castShadow = true;
+    panL.receiveShadow = true;
     beamGroup.add(panL);
 
     const panR = new THREE.Mesh(panGeo, panMatR);
     panR.position.set(2.9, -0.7, 0);
-    panR.castShadow = true; panR.receiveShadow = true;
+    panR.castShadow = true;
+    panR.receiveShadow = true;
     beamGroup.add(panR);
 
     // chains (lines)
     const chainMat = new THREE.LineBasicMaterial({ color: 0x5a6a6e, transparent: true, opacity: 0.7 });
     const mkChains = (x: number) => {
       const g = new THREE.Group();
-      for (const dx of [-0.5, 0.5]) for (const dz of [-0.4, 0.4]) {
-        const pts = [new THREE.Vector3(x, -0.05, 0), new THREE.Vector3(x + dx * 0.35, -0.62, dz * 0.35)];
-        const geo = new THREE.BufferGeometry().setFromPoints(pts);
-        g.add(new THREE.Line(geo, chainMat));
-      }
+      for (const dx of [-0.5, 0.5])
+        for (const dz of [-0.4, 0.4]) {
+          const pts = [new THREE.Vector3(x, -0.05, 0), new THREE.Vector3(x + dx * 0.35, -0.62, dz * 0.35)];
+          const geo = new THREE.BufferGeometry().setFromPoints(pts);
+          g.add(new THREE.Line(geo, chainMat));
+        }
       return g;
     };
     beamGroup.add(mkChains(-2.9), mkChains(2.9));
 
     // weights — stacked boxes whose height reflects value
-    const stackL = new THREE.Group(); stackL.position.copy(panL.position); stackL.position.y += 0.16;
-    const stackR = new THREE.Group(); stackR.position.copy(panR.position); stackR.position.y += 0.16;
+    const stackL = new THREE.Group();
+    stackL.position.copy(panL.position);
+    stackL.position.y += 0.16;
+    const stackR = new THREE.Group();
+    stackR.position.copy(panR.position);
+    stackR.position.y += 0.16;
     beamGroup.add(stackL, stackR);
 
     let current: BalanceState = initial;
@@ -140,13 +133,15 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
 
     const rebuildStacks = (assets: number, rhs: number) => {
       // clear
-      for (const g of [stackL, stackR]) { while (g.children.length) g.remove(g.children[0]!); }
+      for (const g of [stackL, stackR]) {
+        while (g.children.length) g.remove(g.children[0]!);
+      }
       const max = Math.max(1, assets, rhs);
       const mk = (group: THREE.Group, value: number, colorIdx: number) => {
         if (value <= 0) return;
         const h = Math.max(0.12, Math.min(1.1, (value / max) * 1.0));
-        const w = 0.78 - (h * 0.08);
-        const d = 0.78 - (h * 0.08);
+        const w = 0.78 - h * 0.08;
+        const d = 0.78 - h * 0.08;
         const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), blockMats[colorIdx % blockMats.length]!);
         m.position.y = h / 2;
         // lift subsequent blocks
@@ -157,7 +152,8 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
           y += h2 + 0.04;
         }
         m.position.y = y + h / 2;
-        m.castShadow = true; m.receiveShadow = true;
+        m.castShadow = true;
+        m.receiveShadow = true;
         group.add(m);
       };
       // For simplicity, one block per side sized by total (keeps it readable; detailed composition is in the DOM list)
@@ -182,7 +178,8 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
     rebuildStacks(initial.assets, initial.rhs);
     applyTilt(initial.balanced, initial.assets, initial.rhs);
 
-    let raf = 0; let alive = true;
+    let raf = 0;
+    let alive = true;
     const onResize = () => {
       const w = container.clientWidth || 640;
       const h = container.clientHeight || 320;
@@ -212,12 +209,18 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
     };
     raf = requestAnimationFrame(tick);
 
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting && !raf) raf = requestAnimationFrame(tick);
-        else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0 as unknown as number; }
-      }
-    }, { threshold: 0 });
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          if (e.isIntersecting && !raf) raf = requestAnimationFrame(tick);
+          else if (!e.isIntersecting && raf) {
+            cancelAnimationFrame(raf);
+            raf = 0 as unknown as number;
+          }
+        }
+      },
+      { threshold: 0 },
+    );
     io.observe(container);
 
     return {
@@ -236,7 +239,7 @@ export function mountBalanceScale(container: HTMLElement, initial: BalanceState)
         scene.traverse((o: THREE.Object3D & { geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[] }) => {
           if (o.geometry) o.geometry.dispose();
           if (o.material) {
-            if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose());
+            if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
             else o.material.dispose();
           }
         });

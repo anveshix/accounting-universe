@@ -5,7 +5,9 @@
  */
 import * as THREE from 'three';
 
-export interface HeroHandle { dispose(): void; }
+export interface HeroHandle {
+  dispose(): void;
+}
 
 export function mountHeroScene(container: HTMLElement): HeroHandle | null {
   if (typeof window === 'undefined') return null;
@@ -57,7 +59,11 @@ export function mountHeroScene(container: HTMLElement): HeroHandle | null {
       m.position.set(x, y, z);
       m.rotation.set(Math.random() * 0.6 - 0.3, Math.random() * 0.8 - 0.4, Math.random() * 0.3 - 0.15);
       group.add(m);
-      items.push({ mesh: m, drift: new THREE.Vector3((Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.0015, 0), spin: new THREE.Vector3((Math.random() - 0.5) * 0.006, (Math.random() - 0.5) * 0.008, (Math.random() - 0.5) * 0.004) });
+      items.push({
+        mesh: m,
+        drift: new THREE.Vector3((Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.0015, 0),
+        spin: new THREE.Vector3((Math.random() - 0.5) * 0.006, (Math.random() - 0.5) * 0.008, (Math.random() - 0.5) * 0.004),
+      });
     };
     const mkCoin = (x: number, y: number, z: number) => {
       const m = new THREE.Mesh(coinGeo, matCoin);
@@ -121,7 +127,7 @@ export function mountHeroScene(container: HTMLElement): HeroHandle | null {
       for (const it of items) {
         it.mesh.position.add(it.drift);
         // gentle bob
-        it.mesh.position.y += Math.sin(t * 1.2 + (it.mesh.position.x * 0.5)) * 0.0008;
+        it.mesh.position.y += Math.sin(t * 1.2 + it.mesh.position.x * 0.5) * 0.0008;
         it.mesh.rotation.x += it.spin.x;
         it.mesh.rotation.y += it.spin.y;
         it.mesh.rotation.z += it.spin.z;
@@ -135,12 +141,19 @@ export function mountHeroScene(container: HTMLElement): HeroHandle | null {
     raf = requestAnimationFrame(tick);
 
     // pause when offscreen
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting && !raf) { raf = requestAnimationFrame(tick); }
-        else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0 as unknown as number; }
-      }
-    }, { threshold: 0 });
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          if (e.isIntersecting && !raf) {
+            raf = requestAnimationFrame(tick);
+          } else if (!e.isIntersecting && raf) {
+            cancelAnimationFrame(raf);
+            raf = 0 as unknown as number;
+          }
+        }
+      },
+      { threshold: 0 },
+    );
     io.observe(container);
 
     return {
@@ -155,7 +168,7 @@ export function mountHeroScene(container: HTMLElement): HeroHandle | null {
         scene.traverse((o: THREE.Object3D & { geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[] }) => {
           if (o.geometry) o.geometry.dispose();
           if (o.material) {
-            if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose());
+            if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
             else o.material.dispose();
           }
         });

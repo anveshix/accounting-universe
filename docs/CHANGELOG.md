@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Audit of merged `main` (after PRs #6, #8, #9) — defects found and fixed
+- `npm ci` failed on `main`: `three` was in `apps/web/package.json` but not in the root lockfile → lockfile regenerated.
+- The web build failed on `main`: no types for `three` → `@types/three` added.
+- `styles.css` was corrupted by an automatic merge (old palette fragments spliced into the redesign; `lightningcss` rejected it) → rebuilt from the redesign plus the V1 additions.
+- The projector-mode button was created but never added to the page, and was white-on-white when shown → inserted into the header and styled.
+- The redesign shortened the Class XII Option II explanation (dropped the Spreadsheet Lab) → original wording restored.
+- Two axe colour-contrast failures on the gold `.eyebrow` label → darker in light mode; one unused-variable lint error and two unformatted files fixed.
+
 ### T0.1 (partial) — repo foundations
 - npm workspaces (`packages/*`, `apps/*`) with one root `package-lock.json`; `npm ci && npm run check` works from a fresh checkout (verified in a clean copy: 378 + 222 + 12 tests, web build).
 - ESLint 10 + typescript-eslint and Prettier 3 in `tools/lint` (outside the workspaces, see AGENTS.md). ESLint enforces AGENTS rule 1 in engine source (no `parseFloat`, `Math.round`, `toFixed`).

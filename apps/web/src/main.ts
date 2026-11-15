@@ -117,7 +117,7 @@ async function boot() {
   const projectorBtn = initProjectorToggle();
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, langBtn, menu),
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, projectorBtn, langBtn, menu),
     banner, nav, main);
   await ready();
   drawBanner(); storage.subscribe(drawBanner);

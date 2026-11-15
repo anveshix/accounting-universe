@@ -69,6 +69,9 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     await page.click('[data-lang-toggle]'); await page.waitForSelector('html[data-lang="en"]');
     ok(await page.$('[data-hindi-draft]') === null, 'hindi: switching back to English removes Hindi');
 
+    // header controls are really on the page (the projector button used to be created but never inserted)
+    await go('#/'); ok(await page.isVisible('header .projector-toggle') && await page.isVisible('header [data-lang-toggle]'), 'header: projector and language buttons are visible');
+    await page.click('header .projector-toggle'); ok(await page.$eval('html', e => e.classList.contains('projector')), 'projector mode switches on'); await page.click('header .projector-toggle');
     // choosing Hinglish on a concept card must not switch practice questions to Hindi (regression)
     await go('#/cards'); await page.click('a.card'); await page.waitForSelector('[role=radiogroup]');
     await page.click('button[role=radio]:has-text("Hinglish")');

@@ -40,7 +40,7 @@ export function homePage(rerender: () => void): HTMLElement {
         ...([['OPTION_I_ANALYSIS', 'Option I — Analysis + Cash Flow'], ['OPTION_II_COMPUTERISED', 'Option II — Computerised Accounting']] as const).map(([v, label]) =>
           h('label', { class: 'radio' }, h('input', { type: 'radio', name: 'route', value: v, ...(route === v ? { checked: true } : {}), onchange: () => { state.profile = { ...state.profile, route: v }; void setProfile(state.profile); rerender(); } }), ' ', label)),
         route === 'OPTION_II_COMPUTERISED'
-          ? h('p', { class: 'note info', style: 'margin-top:.6rem;background:rgba(255,255,255,.92);color:var(--ink);border-radius:8px;padding:.6rem .8rem;' }, 'Option II replaces Analysis & Cash Flow. Use the Computerised Simulator; Partnership & Company labs are shared.')
+          ? h('p', { class: 'note info', style: 'margin-top:.6rem;background:rgba(255,255,255,.92);color:var(--ink);border-radius:8px;padding:.6rem .8rem;' }, 'Option II replaces the Analysis and Cash Flow units. Use the Computerised Accounting Simulator and the Spreadsheet Lab; Partnership and Company labs are shared by both options.')
           : null) : null,
       h('div', { class: 'actions', style: 'margin-top:1.2rem' },
         h('button', { type: 'button', class: 'primary', onclick: () => navigate(`#/class/${cls}`) }, `Open Class ${cls} syllabus`),
