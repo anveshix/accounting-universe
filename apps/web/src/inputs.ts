@@ -34,7 +34,7 @@ export function percent(values: Record<string, string>, id: string, label: strin
 /** "3:2:5" → fractions, for exactly `n` partners (or any count when n omitted). */
 export function ratio(values: Record<string, string>, id: string, label: string, n?: number): Fraction[] {
   const raw = (values[id] ?? '').trim();
-  const parts = raw.split(/[:\/,\s]+/).filter(Boolean);
+  const parts = raw.split(/[:/,\s]+/).filter(Boolean);
   if (parts.length < 2 || parts.some(p => !/^\d+$/.test(p))) throw new InputError(`${label} must look like 3:2:5 (whole numbers separated by colons).`, id);
   if (n !== undefined && parts.length !== n) throw new InputError(`${label} needs exactly ${n} numbers, one for each partner.`, id);
   if (parts.every(p => p === '0')) throw new InputError(`${label} cannot be all zeros.`, id);

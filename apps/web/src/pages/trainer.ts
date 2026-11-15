@@ -1,5 +1,6 @@
 import { Machine } from '../../../../packages/engine/src';
 import { TRAINER_ROUND } from '../../../../packages/curriculum/src';
+import { migratedTrainerScenes } from '../../../../packages/curriculum/src/questions-v1';
 import { onDispose, track, unregister } from '../machine-dom';
 import { starterChartClassXI, type Side } from '../../../../packages/engine/src';
 import { h, mount } from '../dom';
@@ -28,7 +29,10 @@ const QS: Q[] = [
 
 export function trainerPage(): HTMLElement {
   const chart = starterChartClassXI();
-  const order = [...QS].sort(() => Math.random() - 0.5);
+  // pool = the 15 hand-written items + verified legacy scenes whose accounts exist in this chart; each round is 15 random items
+  const pool: Q[] = [...QS, ...migratedTrainerScenes(chart.list()).filter(m => !QS.some(q => q.text === m.text))];
+  const draw15 = () => [...pool].sort(() => Math.random() - 0.5).slice(0, 15);
+  const order = draw15();
   let i = 0, score = 0;
   const root = h('div', { class: 'trainer' });
   const tm = new Machine(TRAINER_ROUND, { hasBoth: false });          // ASKING → ANSWERED → (ASKING | COMPLETE)
@@ -39,7 +43,7 @@ export function trainerPage(): HTMLElement {
   function draw() {
     if (i >= order.length) {
       mount(root, head(), h('section', { class: 'panel' }, h('h3', {}, 'Round complete'), h('p', { class: 'lead' }, `You got ${score} of ${order.length} fully right.`), h('p', {}, score === order.length ? 'Excellent — now try the Journal → Ledger page with your own entries.' : 'Open the lab’s rule cards again and retry the ones you missed.'),
-        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', onclick: () => { tm.send('AGAIN'); order.sort(() => Math.random() - 0.5); i = 0; score = 0; draw(); } }, 'Play again'), h('a', { class: 'button', href: '#/ledger' }, 'Open the Ledger lab'))));
+        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', onclick: () => { tm.send('AGAIN'); order.splice(0, order.length, ...draw15()); i = 0; score = 0; draw(); } }, 'Play again'), h('a', { class: 'button', href: '#/ledger' }, 'Open the Ledger lab'))));
       return;
     }
     const q = order[i]!;
@@ -54,7 +58,7 @@ export function trainerPage(): HTMLElement {
       const mistakes: string[] = [];
       if (!okDr) mistakes.push(`Debited ${chart.get(dr.value).name} instead of ${chart.get(q.dr).name}`);
       if (!okCr) mistakes.push(`Credited ${chart.get(cr.value).name} instead of ${chart.get(q.cr).name}`);
-      void recordAttempt({ t: Date.now(), skill: 'rules-trainer', clause: 'XI.2.rules', seed: QS.indexOf(q) + 1, mode: 'BEGINNER', marks: ok ? 1 : 0, outOf: 1, hintsUsed: 0, mistakes: ok ? [] : [mistakes.join('; ')], correctParts: Number(okDr) + Number(okCr), parts: 2 });
+      void recordAttempt({ t: Date.now(), skill: 'rules-trainer', clause: 'XI.2.rules', seed: pool.indexOf(q) + 1, mode: 'BEGINNER', marks: ok ? 1 : 0, outOf: 1, hintsUsed: 0, mistakes: ok ? [] : [mistakes.join('; ')], correctParts: Number(okDr) + Number(okCr), parts: 2 });
       void recordSeen({ lab: 'xi-trainer', tab: 'example', t: Date.now() });
       dr.disabled = true; cr.disabled = true; next.hidden = false;
       mount(out, h('p', { class: 'note ' + (ok ? 'good' : 'bad'), role: 'status' }, ok ? '✓ Correct.' : `Not quite. ${mistakes.join('. ')}.`), h('ul', {}, h('li', {}, ruleText(chart, q.dr, 'DR' as Side)), h('li', {}, ruleText(chart, q.cr, 'CR' as Side))), h('p', { class: 'hint' }, q.why));

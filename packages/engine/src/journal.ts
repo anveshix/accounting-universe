@@ -14,7 +14,7 @@ export interface DraftEntry {
   readonly lines: readonly DraftLine[];
 }
 
-export interface PostedLine extends DraftLine {}
+export type PostedLine = DraftLine;
 
 export interface PostedEntry {
   /** Unique, sequential, e.g. "JE-000007". */

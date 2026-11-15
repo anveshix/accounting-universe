@@ -12,7 +12,7 @@ export interface Attempt {
   readonly mistakes: readonly string[]; readonly correctParts: number; readonly parts: number;
 }
 export interface Seen { readonly lab: string; readonly tab: 'learn' | 'example' | 'try'; readonly t: number; }
-export interface Profile { readonly cls: ClassLevel; readonly route: 'OPTION_I_ANALYSIS' | 'OPTION_II_COMPUTERISED'; readonly name: string; }
+export interface Profile { readonly cls: ClassLevel; readonly route: 'OPTION_I_ANALYSIS' | 'OPTION_II_COMPUTERISED'; readonly name: string; /** UI language; Hindi is a DRAFT until reviewed (D10). Optional so older saved profiles still load. */ readonly lang?: 'en' | 'hi'; }
 export interface Export { readonly app: 'accounting-universe'; readonly version: 1; readonly exportedAt: number; readonly profile: Profile | null; readonly attempts: Attempt[]; readonly seen: Seen[]; }
 
 export const LEVELS = ['Not started', 'Understand', 'Observe', 'Guided practice', 'Error correction', 'Independent mastery'] as const;

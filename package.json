@@ -1,0 +1,19 @@
+{
+  "name": "accounting-universe",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Accounting Universe monorepo (npm workspaces). The legacy single-file app index.html at the repo root is shipped separately and is not part of any workspace.",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "check": "npm run typecheck && npm test",
+    "build": "npm run build -w @accounting-universe/web",
+    "lint": "npm --prefix tools/lint run lint",
+    "format:check": "npm --prefix tools/lint run format:check",
+    "format": "npm --prefix tools/lint run format",
+    "check:all": "bash tools/check-all.sh"
+  },
+  "license": "UNLICENSED"
+}

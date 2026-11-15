@@ -1,7 +1,9 @@
 import { Machine } from '../../../../packages/engine/src';
 import { LAB_RUN } from '../../../../packages/curriculum/src';
 import { onDispose, track, unregister } from '../machine-dom';
-import { clauseById } from '../../../../packages/curriculum/src';
+import { state } from '../state';
+import { t } from '../../../../packages/curriculum/src/i18n';
+import { clauseById, outcomesOf, OUTCOME_MAPPING_STATUS } from '../../../../packages/curriculum/src';
 import { h, mount } from '../dom';
 import { renderBlocks } from '../render';
 import { InputError, type Field, type Lab } from '../spec';
@@ -39,11 +41,14 @@ export function labPage(lab: Lab, startTab: Tab = 'learn'): HTMLElement {
 
   const clauseNotes = lab.clauses.map(id => clauseById(id)).filter(Boolean).map(c => h('li', {}, h('span', { class: 'cid' }, c!.id), ' ', c!.title, c!.limit ? h('em', { class: 'limit' }, ` — Syllabus limit: ${c!.limit}`) : null));
 
+  const los = [...new Map(lab.clauses.flatMap(c => outcomesOf(c)).map(o => [o.id, o])).values()];
   function learn() {
     return h('div', { class: 'prose' },
       h('h3', {}, 'The idea'), ...lab.concept.map(p => h('p', {}, p)),
       h('h3', {}, 'Where you see it in real life'), h('p', {}, lab.realWorld),
       h('h3', {}, 'Syllabus clauses covered'), h('ul', { class: 'clauses' }, ...clauseNotes),
+      ...(los.length ? [h('h3', {}, t(state.lang, 'learn.outcomes')), state.lang === 'hi' ? h('p', { lang: 'hi', class: 'muted' }, t('hi', 'learn.outcomesNote')) : null, h('p', { class: 'muted' }, `Wording from the CBSE 2026-27 curriculum. Which outcomes this lab serves is ${OUTCOME_MAPPING_STATUS}.`),
+        h('ul', { class: 'lo-list', 'data-outcomes': String(los.length) }, ...los.map(o => h('li', { 'data-outcome': o.id }, h('code', {}, o.id), ' ', o.text)))] : []),
       h('div', { class: 'actions' }, h('button', { type: 'button', class: 'primary', onclick: () => select('example') }, 'See a worked example →')));
   }
   function example() {

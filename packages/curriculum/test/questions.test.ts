@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLAUSES, GENERATORS, SKILLS, checkAnswer, makeQuestion, makeQuestionUnfiltered } from '../src';
+import { ALL_GENERATORS, CLAUSES, SKILLS, checkAnswer, makeQuestion, makeQuestionUnfiltered } from '../src';
 
 const SEEDS = Array.from({ length: 150 }, (_, i) => i + 1);
 
@@ -64,7 +64,7 @@ describe('every generator, many seeds', () => {
     });
   }
   it('every skill points at a real syllabus clause', () => {
-    for (const g of GENERATORS) expect(CLAUSES.some(c => c.id === g.clause), g.skill).toBe(true);
+    for (const g of ALL_GENERATORS) expect(CLAUSES.some(c => c.id === g.clause), g.skill).toBe(true);
   });
   it('skills are unique', () => expect(new Set(SKILLS.map(s => s.skill)).size).toBe(SKILLS.length));
 });

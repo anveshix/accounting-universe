@@ -1,0 +1,7 @@
+node_modules
+dist
+**/package-lock.json
+packages/curriculum/src/banks/legacy-v1.ts
+docs
+index.html
+*.html

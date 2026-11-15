@@ -6,3 +6,5 @@ export * from './cards';
 export * from './rescue';
 export * from './assignments';
 export * from './machines';
+export * from './outcomes';
+export * from './outcome-report';

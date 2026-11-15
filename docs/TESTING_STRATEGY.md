@@ -26,14 +26,17 @@
    every post; reversing all 300 returns every account to exactly zero.
 5. **No float in money paths** — enforced by a source-scanning guard test.
 
-## Current results (run locally 2026-11-07)
+## Current results (run locally 2026-11-15, `tools/check-all.sh` → ALL CHECKS PASSED)
 
 * Engine: **222 tests** (10 files) incl. the `Machine` kit (property test: 10,000 random events) and the journal-entry lifecycle; mutation checks **25/25** (`test/mutation-check.py`) and **10/10** on the later calculators (`test/mutation-extras.py`).
-* Curriculum: **271 tests** (7 files) incl. every state machine (validity, random walks, scenarios with the exact user-facing messages), the route table vs the old router as an oracle, and a test that fails if `docs/STATE_MACHINES.md` is stale.
+* Curriculum: **378 tests** (13 files). New for P0 V1: legacy-bank re-verification by the engine plus an independent account classification, with corruption tests that prove each check can fail (`legacy-banks`, 14); official learning outcomes (`outcomes`, 6); V1 generators with oracles recomputed from the question text and rule-based feedback for every wrong option (`questions-v1`, 12); report by learning outcome on hand-worked fixtures (`outcome-report`, 3); EN/HI catalogue parity (`i18n`, 4); review files match the outcome mapping and stay unsigned (`academic-review`, 2). Earlier suites include incl. every state machine (validity, random walks, scenarios with the exact user-facing messages), the route table vs the old router as an oracle, and a test that fails if `docs/STATE_MACHINES.md` is stale.
 * Tutor proxy: **12 tests** (`node --test`) against a mock upstream — key never returned, output guard, limits incl. fake-clock day rollover and idle-client eviction, CORS.
-* Web: `tsc` clean; browser suites `web-app` **260**, `web-app-extra` **54**, `web-app-states` **51** (states readable, refusals explained, timer-leak/double-submit/storage-banner regressions), `web-app-tutor` **8** (panel ↔ real proxy ↔ mock upstream).
+* Web: `tsc` clean; browser suites `web-app` **260**, `web-app-extra` **54**, `web-app-states` **51** (states readable, refusals explained, timer-leak/double-submit/storage-banner regressions), `web-app-tutor` **8** (panel ↔ real proxy ↔ mock upstream), `web-app-v1` **54** (each new skill answered wrong then right, CHOICE parts, Hindi draft toggle persists and renders Devanagari, learning outcomes on the Learn tab, teacher outcome table + CSV against a hand-made file, 390 px no horizontal scroll, **axe-core zero serious/critical** on practice EN/HI, lab Learn tab, teacher, home).
 * Legacy: `e2e/legacy-simulator-regression.cjs` 14/14; `e2e/legacy-smoke.cjs` 12/12.
 * All of the above in one command: `tools/check-all.sh`.
+
+## Lint and format
+`npm --prefix tools/lint ci` once, then `npm run lint` (ESLint, 0 errors; engine sources may not use `parseFloat`/`Math.round`/`toFixed`) and `npm run format:check` (Prettier ratchet, see AGENTS.md). Both are part of `tools/check-all.sh` when installed. They are not running in CI (D12).
 
 ## Running
 
@@ -50,7 +53,6 @@ NODE_PATH="$(npm root -g)" node e2e/legacy-simulator-regression.cjs
 ## Known gaps
 
 No CI is *running* (an example workflow is in `docs/ci/`; the token used here cannot create workflow files). No coverage measurement.
-Accessibility is checked by hand-written DOM assertions (labels, headings, names, keyboard tabs), **not** by axe or a screen reader;
-contrast was designed for WCAG AA but not measured. No Lighthouse run. Chromium only; no real devices. The tutor proxy has never
+Accessibility: axe-core runs on 5 views in `web-app-v1` (zero serious/critical); the other routes still rely on hand-written DOM assertions. No screen-reader test. No Lighthouse run. Chromium only; no real devices. The tutor proxy has never
 talked to the live API. Lab result values are verified in the engine tests and by 11 browser spot checks, not for every lab number in the browser.
 Concept-card text is original and reviewed by me, not by a teacher.

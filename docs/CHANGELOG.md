@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### T0.1 (partial) — repo foundations
+- npm workspaces (`packages/*`, `apps/*`) with one root `package-lock.json`; `npm ci && npm run check` works from a fresh checkout (verified in a clean copy: 378 + 222 + 12 tests, web build).
+- ESLint 10 + typescript-eslint and Prettier 3 in `tools/lint` (outside the workspaces, see AGENTS.md). ESLint enforces AGENTS rule 1 in engine source (no `parseFloat`, `Math.round`, `toFixed`).
+  Existing code was brought to zero lint errors (unused imports, needless escapes, an empty interface, one `let`→`const`; no behaviour change). Prettier runs as a ratchet over a 105-file baseline instead of reformatting the dense existing code.
+- `.gitignore` added (`node_modules/`, `dist/`). NOT done: symlink removal (D9), CI workflow (D12), deleting the superseded per-package lockfiles.
+
+### P0 — vertical V1 (Class XI: equation → rules → journal → ledger → trial balance), handoff T0.2–T0.8
+- **Learning outcomes (T0.2):** `outcomes.ts` — the 77 official unit learning outcomes transcribed from the 2026-27 PDF, mapped to clauses
+  (mapping pending academic review, D11). Shown on each lab's Learn tab. Gap recorded: `XI.3.incomplete` has no official outcome.
+- **Legacy bank migration (T0.5):** `tools/extract-legacy-banks.mjs` reads `index.html` (read-only) into `banks/legacy-v1.ts`
+  (m1 50, m2 69, m4 49, m5 25, TB 25 + 41, BAL 14). Every item is re-checked by the engine and an independently written account
+  classification (`banks/accounts-xi.ts`, 106 names): 0 errors, 5 items held for review (inventory-model mix, F-4), 133 "why" sentences rule-checked.
+- **Assessment (T0.3):** six new skills — `eq-impact` (RU), `eq-balance` (AP), `drcr-choose` (RU), `journal-entry` (AP),
+  `ledger-balance` (AP), `tb-agree` (AEC); new part kind `CHOICE`; `typology` on every generator (existing 30 tagged AP as a proposal).
+- **Feedback (T0.6):** every wrong account option in `drcr-choose`/`journal-entry` gets a rule-based explanation, including
+  drawings-as-expense, furniture-as-purchases, personal-vs-nominal and swapped sides.
+- **Hindi draft (T0.4):** Devanagari text for every V1 question, EN/HI UI catalogue (`i18n/en.ts`, `i18n/hi.ts`), NCERT-style glossary,
+  header toggle saved in the profile, "Hindi draft — not yet reviewed" badge wherever Hindi appears (`HINDI_REVIEWED = false`, D10).
+- **More V1 skills:** `ledger-side`, `tb-side` (RU), `journal-error`, `case-ledger` (AEC, linked-part case); Trainer draws on verified migrated scenes; fixed Hinglish card toggle changing the app language.
+- **Teacher report by learning outcome (T0.7):** table + CSV on the teacher dashboard.
+- **Review + accessibility (T0.8):** `docs/academic-review/` template and five UNSIGNED clause files; axe-core in the new `e2e/web-app-v1.cjs`;
+  fixed a colour-contrast failure on `.eyebrow` labels (light theme).
+
 ### Added
 - `docs/` Phase 0 discovery set (syllabus matrix, app audit, architecture, repository research, roadmap).
 - `packages/engine` v0.1: exact `Money`, closed chart of accounts, validated + frozen journal, ledger with

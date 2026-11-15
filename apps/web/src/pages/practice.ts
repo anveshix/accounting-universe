@@ -4,10 +4,12 @@ import { Machine } from '../../../../packages/engine/src';
 import { PRACTICE_QUESTION, type QuestionCtx, type QuestionEvent, type QuestionState } from '../../../../packages/curriculum/src';
 import { register, track, unregister, onDispose } from '../machine-dom';
 import { h, mount } from '../dom';
+import { hindiDraftNote } from '../i18n';
 import { attempts, recordAttempt } from '../store';
 import { announce } from '../ui';
 import { state } from '../state';
 import { ALL_LABS } from '../labs';
+import { t } from '../../../../packages/curriculum/src/i18n';
 
 type Mode = 'BEGINNER' | 'PRACTICE' | 'BOARD';
 const MODES: { id: Mode; label: string; blurb: string }[] = [
@@ -35,17 +37,22 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
     let qArticle!: HTMLElement;
     const q: Question = makeQuestion(skill, seed);
     let hintsShown = 0, stepsShown = 0;
-    const inputs: HTMLInputElement[] = [];
+    const inputs: (HTMLInputElement | HTMLSelectElement)[] = [];
+    // Hindi (draft) when chosen and available; otherwise English, and say so
+    const hi = state.lang === 'hi' && q.hi ? q.hi : null, T = (en: string, k?: number, arr?: readonly string[]) => (hi && arr && k !== undefined && arr[k] ? arr[k]! : en);
+    const L = hi ? 'hi' as const : 'en' as const;
+    const stem = hi ? hi.stem : q.stem, hints = hi ? hi.hints : q.hints, working = hi ? hi.working : q.working;
+    const optLabel = (k: number, o: string) => { const i = q.parts[k]!.options?.indexOf(o) ?? -1; return hi?.options?.[k]?.[i] ?? o; };
     const feedback = h('div', { class: 'feedback', 'aria-live': 'polite' });
     const hintBox = h('div', { class: 'hintbox' });
     const workBox = h('div', { class: 'workbox' });
     const lab = ALL_LABS.find(l => l.skills.includes(skill));
     // one machine per question: decides what is possible right now (see `practice-question` in docs/STATE_MACHINES.md)
     if (current) unregister(current);
-    const qm = new Machine(PRACTICE_QUESTION, { mode, hintsLeft: q.hints.length, stepsLeft: q.working.length });
+    const qm = new Machine(PRACTICE_QUESTION, { mode, hintsLeft: hints.length, stepsLeft: working.length });
     current = qm; register(qm);
 
-    const showWorking = (n: number) => mount(workBox, n > 0 ? h('ol', { class: 'walk' }, ...q.working.slice(0, n).map(w => h('li', {}, w))) : null);
+    const showWorking = (n: number) => mount(workBox, n > 0 ? h('ol', { class: 'walk', ...(hi ? { lang: 'hi' } : {}) }, ...working.slice(0, n).map(w => h('li', {}, w))) : null);
 
     const check = () => {
       if (qm.is('SUBMITTED')) { mount(feedback, h('p', { class: 'note warn', role: 'status' }, qm.why('SUBMIT_FINAL')!)); return; }     // an answer can never be recorded twice
@@ -75,17 +82,17 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
       }
       for (const i of inputs) i.disabled = true;
       void recordAttempt({ t: Date.now(), skill, clause: q.clause, seed, mode, marks, outOf: q.marks, hintsUsed: hintsShown + stepsShown, mistakes, correctParts, parts: q.parts.length });
-      showWorking(q.working.length);
+      showWorking(working.length);
       mount(feedback,
-        h('p', { class: 'note ' + (finished ? 'good' : 'warn'), role: 'status' }, `${finished ? '✓ Correct.' : 'Not this time.'} You scored ${marks} / ${q.marks}${mode === 'BOARD' ? ' marks' : ''}.`),
-        ...rows.filter(r => !r.ok).map(r => h('div', { class: 'note bad' }, h('p', {}, h('b', {}, r.p.label), ': you wrote “', r.v || '(blank)', '”; the answer is ', h('b', {}, r.p.kind === 'MONEY' ? Money.parse(r.p.answer).format() : r.p.answer), '.'), r.d ? h('p', {}, h('b', {}, r.d.mistake), ' ', r.d.fix) : null)));
+        h('p', { class: 'note ' + (finished ? 'good' : 'warn'), role: 'status' }, `${t(L, finished ? 'practice.correct' : 'practice.notThisTime')} ${t(L, 'practice.scored', { marks, outOf: q.marks })}`),
+        ...rows.filter(r => !r.ok).map(r => h('div', { class: 'note bad' }, h('p', {}, h('b', {}, T(r.p.label, q.parts.indexOf(r.p), hi?.parts)), t(L, 'practice.youWrote'), (r.p.kind === 'CHOICE' ? optLabel(q.parts.indexOf(r.p), r.v) : r.v) || t(L, 'practice.blank'), t(L, 'practice.answerIs'), h('b', {}, r.p.kind === 'MONEY' ? Money.parse(r.p.answer).format() : r.p.kind === 'CHOICE' ? optLabel(q.parts.indexOf(r.p), r.p.answer) : r.p.answer), t(L, 'practice.end')), r.d ? h('p', {}, h('b', {}, r.d.mistake), ' ', r.d.fix) : null)));
       announce(finished ? 'Correct' : 'Incorrect, see the working below');
     };
 
     const hintBtn = h('button', { type: 'button', onclick: () => {
       const r = qm.send('HINT'); if (!r.ok) { mount(hintBox, h('p', { class: 'hint' }, r.reason!)); return; }
       hintsShown++; qm.ctx.hintsLeft--; refresh();
-      mount(hintBox, h('ol', { class: 'hintlist' }, ...q.hints.slice(0, hintsShown).map(t => h('li', {}, t))));
+      mount(hintBox, h('ol', { class: 'hintlist', ...(hi ? { lang: 'hi' } : {}) }, ...hints.slice(0, hintsShown).map(t => h('li', {}, t))));
     } }, '💡 Next hint');
     const stepBtn = h('button', { type: 'button', onclick: () => {
       const r = qm.send('STEP_SHOW'); if (!r.ok) { mount(workBox, h('p', { class: 'hint' }, r.reason!)); return; }
@@ -101,11 +108,13 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
       hintBtn.title = qm.why('HINT') ?? ''; stepBtn.title = qm.why('STEP_SHOW') ?? '';
     };
     const partsUi = q.parts.map((p, i) => {
-      const inp = h('input', { type: 'text', id: `ans-${i}`, inputmode: p.kind === 'FRACTION' ? 'text' : 'decimal', autocomplete: 'off', placeholder: p.kind === 'FRACTION' ? 'e.g. 3/10' : p.kind === 'TEXT' ? 'type your answer' : 'amount in ₹' });
+      const label = T(p.label, i, hi?.parts);
+      const inp: HTMLInputElement | HTMLSelectElement = p.kind === 'CHOICE'
+        ? h('select', { id: `ans-${i}` }, h('option', { value: '' }, t(L, 'practice.choose')), ...(p.options ?? []).map(o => h('option', { value: o }, optLabel(i, o))))
+        : h('input', { type: 'text', id: `ans-${i}`, inputmode: p.kind === 'FRACTION' ? 'text' : 'decimal', autocomplete: 'off', placeholder: p.kind === 'FRACTION' ? 'e.g. 3/10' : p.kind === 'TEXT' ? 'type your answer' : t(L, 'practice.amount') });
       inputs.push(inp);
-      return h('div', { class: 'field' }, h('label', { for: `ans-${i}` }, `${p.label} `, h('span', { class: 'marks' }, `[${p.marks} mark${p.marks > 1 ? 's' : ''}]`)), inp, p.unit ? h('small', {}, p.unit) : null);
+      return h('div', { class: 'field' }, h('label', { for: `ans-${i}` }, `${label} `, h('span', { class: 'marks' }, `[${p.marks} mark${p.marks > 1 ? 's' : ''}]`)), inp, p.unit ? h('small', {}, p.unit) : null);
     });
-
     qm.subscribe(() => refresh());
     mount(root,
       h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, `Class ${state.profile.cls}`), h('h2', {}, 'Practice'), h('p', { class: 'lead' }, 'Every question is made fresh and marked by the accounting engine. Wrong answers are explained, not just crossed out.')),
@@ -115,7 +124,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
         h('button', { type: 'button', onclick: () => { void recommend(); } }, '🎯 Pick what I should practise next')),
       h('p', { class: 'hint' }, MODES.find(m => m.id === mode)!.blurb),
       qArticle = h('article', { class: 'question' },
-        h('p', { class: 'eyebrow' }, `${q.clause} · ${q.marks} marks`), h('p', { class: 'stem' }, q.stem),
+        h('p', { class: 'eyebrow' }, `${q.clause} · ${q.marks} marks · ${t(L, `typology.${q.typology}`)}`), hi ? hindiDraftNote() : state.lang === 'hi' ? h('p', { class: 'note warn', lang: 'hi' }, t('hi', 'practice.noHindi')) : null, h('p', { class: 'stem', ...(hi ? { lang: 'hi' } : {}) }, stem),
         h('form', { onsubmit: (e: Event) => { e.preventDefault(); check(); } }, ...partsUi,
           h('div', { class: 'actions' }, submitBtn,
             mode !== 'BOARD' ? hintBtn : null, mode === 'BEGINNER' ? stepBtn : null, nextBtn)),
