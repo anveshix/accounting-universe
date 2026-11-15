@@ -12,6 +12,12 @@ Accounting Universe: CBSE Class XI/XII Accountancy (2026-27), learned by doing. 
 | `index.html` (root) | Legacy single-file app, shipped separately — **do not refactor it** | `e2e/legacy-*.cjs` |
 | `e2e/` | Playwright scripts (`NODE_PATH="$(npm root -g)" node e2e/<file>.cjs`; build the web app first) | `tools/check-all.sh` runs everything |
 
+## Setup and commands (npm workspaces)
+`npm ci` at the repo root installs `packages/*` and `apps/*` together (one lockfile). Then: `npm run check` (typecheck + unit tests of every workspace), `npm run build` (web), `npm run check:all` (everything incl. browsers).
+Lint and format live in `tools/lint` and are **not** a workspace (typescript-eslint needs the TypeScript JS API; the workspaces use TypeScript 7, which has none). Install once with `npm --prefix tools/lint ci`, then `npm run lint` and `npm run format:check`.
+Prettier is a ratchet: files listed in `tools/lint/prettier-baseline.txt` keep their dense hand-written style; every other file must be Prettier-clean, and a baseline file that becomes clean must be removed from the list. The old per-package `package-lock.json` files in `packages/engine` and `apps/web` are superseded by the root lockfile and are kept only until the owner approves deleting them.
+The tracked symlink `packages/curriculum/node_modules` is still in place (decision D9); `npm ci` works with it.
+
 ## Rules that must not be broken
 1. **Money is never a float.** Use `Money`/`Fraction` with an explicit rounding mode; a test forbids `parseFloat/toFixed/Math.round` in engine source.
 2. **The engine computes; nothing else does.** The AI tutor only explains figures the engine supplied, and the proxy withholds replies containing other figures.

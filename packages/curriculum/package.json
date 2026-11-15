@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "main": "src/index.ts",
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run", "check": "npm run typecheck && npm run test" },
-  "license": "UNLICENSED"
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run test"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
 }

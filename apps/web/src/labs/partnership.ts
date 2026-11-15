@@ -180,7 +180,7 @@ export const admissionLab: Lab = {
       { kind: 'ratio', title: 'Z\'s share comes out of X and Y', rows: [ratioRow('Before', ids, old), ratioRow('After', all, r.newShares)] },
       { kind: 'table', caption: 'Capital accounts', head: ['Partner', 'Capital before', 'Premium received', 'Adjusted capital'], numeric: [1, 2, 3], rows: [...ids.map(i => [i, R(cap[i as 'X' | 'Y']), R(r.premiumShare[i]!), R(r.adjustedCapital[i]!)]), ['Z', '—', '—', R(r.newPartnerCapital)]], foot: ['Firm\'s total capital', '', '', R(r.firmCapital)] },
       { kind: 'bars', title: 'Capitals after admission', items: all.map(i => bar(i, i === 'Z' ? r.newPartnerCapital : r.adjustedCapital[i]!)) },
-      { kind: 'steps', title: 'Working notes', steps: [`Z\'s premium for goodwill = ${sh(z)} × ${R(optMoney(v, 'gw', 'Goodwill'))} = ${R(r.premium)}`, `Sacrificing ratio = ${ids.map(i => sh(r.sacrificeRatio[i]!)).join(' : ')}`, `Z\'s capital = ${R(r.newPartnerCapital)}`] },
+      { kind: 'steps', title: 'Working notes', steps: [`Z's premium for goodwill = ${sh(z)} × ${R(optMoney(v, 'gw', 'Goodwill'))} = ${R(r.premium)}`, `Sacrificing ratio = ${ids.map(i => sh(r.sacrificeRatio[i]!)).join(' : ')}`, `Z's capital = ${R(r.newPartnerCapital)}`] },
       note('The premium is paid to the old partners privately through their capital accounts; it is not a cost to the firm.', 'info'),
     ];
   },

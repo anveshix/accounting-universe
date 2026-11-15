@@ -5,9 +5,9 @@
  */
 import {
   Fraction, Money, admission, appropriate, averageProfit, currentRatio, debtEquityRatio, depreciationSchedule, disposeAsset, dissolve, forfeit, goodwillAverageProfit,
-  goodwillSuperProfit, interestPA, invoice, issueDebentures, issueShares, inventoryTurnoverRatio, pct, profitByStatementOfAffairs, quickRatio, ratioChange, reconcile,
+  goodwillSuperProfit, interestPA, invoice, issueDebentures, inventoryTurnoverRatio, pct, profitByStatementOfAffairs, quickRatio, ratioChange, reconcile,
   reissue, suspenseFromTrialBalance, allotmentPayable, allotmentPlan, exitSettlement, newSharesAfterExit, cashFlowStatement, interestCoverageRatio,
-  costOfRevenueFromOperations, goodwillOnRatioChange, cashBook, provisionDoubtful, openingEntry, revaluation, loanSchedule, callsInAdvance, type BrsKind,
+  costOfRevenueFromOperations, cashBook, provisionDoubtful, openingEntry, revaluation, loanSchedule, callsInAdvance, type BrsKind,
 } from '../../engine/src';
 import { Rng } from './rng';
 import { V1_GENERATORS } from './questions-v1';
@@ -183,7 +183,7 @@ export const GENERATORS: readonly Gen[] = [
         stem: `A, B and C share profits ${w.join(':')}. C is guaranteed a minimum profit of ${R(M(min))} a year; any deficiency is borne by A and B equally. The profit for the year is ${R(M(profit))}. How much deficiency does each of A and B bear?`,
         parts: [part('Deficiency borne by A', ans(a.guaranteeBorne.A!)), part('Deficiency borne by B', ans(a.guaranteeBorne.B!))],
         hints: ['First find C\'s ordinary share of the profit.', 'Deficiency = guaranteed amount − C\'s ordinary share. Then split it as the deed says (equally here).'],
-        working: [`C\'s share = ${R(cShare)}`, `Deficiency = ${R(M(min))} − ${R(cShare)} = ${R(M(min).sub(cShare))}`, `A bears ${R(a.guaranteeBorne.A!)} and B bears ${R(a.guaranteeBorne.B!)}`],
+        working: [`C's share = ${R(cShare)}`, `Deficiency = ${R(M(min))} − ${R(cShare)} = ${R(M(min).sub(cShare))}`, `A bears ${R(a.guaranteeBorne.A!)} and B bears ${R(a.guaranteeBorne.B!)}`],
         distractors: [{ part: 0, value: ans(M(min).sub(cShare)), mistake: 'You made A bear the whole deficiency.', fix: 'Split the deficiency between A and B in the ratio the question gives.' }],
       };
     },
@@ -227,7 +227,7 @@ export const GENERATORS: readonly Gen[] = [
       const ce = r.multiple(500000, 1500000, 100000), nr = r.pick([8, 10, 12]), avg = Math.round(ce * nr / 100) + r.multiple(20000, 80000, 10000), yrs = r.pick([2, 3, 4]);
       const g = goodwillSuperProfit(M(avg), M(ce), BigInt(nr), BigInt(yrs));
       return {
-        stem: `A firm\'s average profit is ${R(M(avg))}. Capital employed is ${R(M(ce))} and the normal rate of return is ${nr}%. Goodwill is valued at ${yrs} years\' purchase of super profit. Find the goodwill.`,
+        stem: `A firm's average profit is ${R(M(avg))}. Capital employed is ${R(M(ce))} and the normal rate of return is ${nr}%. Goodwill is valued at ${yrs} years' purchase of super profit. Find the goodwill.`,
         parts: [part('Normal profit', ans(g.normalProfit)), part('Super profit', ans(g.superProfit)), part('Goodwill', ans(g.goodwill))],
         hints: ['Normal profit = capital employed × normal rate of return.', 'Super profit = average profit − normal profit. Goodwill = super profit × years\' purchase.'],
         working: [`Normal profit = ${nr}% × ${R(M(ce))} = ${R(g.normalProfit)}`, `Super profit = ${R(M(avg))} − ${R(g.normalProfit)} = ${R(g.superProfit)}`, `Goodwill = ${R(g.superProfit)} × ${yrs} = ${R(g.goodwill)}`],

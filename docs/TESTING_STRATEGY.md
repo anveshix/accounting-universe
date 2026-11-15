@@ -35,6 +35,9 @@
 * Legacy: `e2e/legacy-simulator-regression.cjs` 14/14; `e2e/legacy-smoke.cjs` 12/12.
 * All of the above in one command: `tools/check-all.sh`.
 
+## Lint and format
+`npm --prefix tools/lint ci` once, then `npm run lint` (ESLint, 0 errors; engine sources may not use `parseFloat`/`Math.round`/`toFixed`) and `npm run format:check` (Prettier ratchet, see AGENTS.md). Both are part of `tools/check-all.sh` when installed. They are not running in CI (D12).
+
 ## Running
 
 ```

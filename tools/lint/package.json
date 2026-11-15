@@ -1,0 +1,22 @@
+{
+  "name": "@accounting-universe/lint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ESLint + Prettier, kept OUTSIDE the npm workspaces on purpose: typescript-eslint needs the TypeScript JS API (<6.1), while the workspaces use TypeScript 7 (native, no JS API). Install with: npm --prefix tools/lint ci",
+  "scripts": {
+    "lint": "cd ../.. && eslint --config tools/lint/eslint.config.js .",
+    "lint:fix": "cd ../.. && eslint --config tools/lint/eslint.config.js --fix .",
+    "format:check": "cd ../.. && node tools/lint/format-check.mjs",
+    "format": "cd ../.. && prettier --write \"{packages,apps,e2e,tools}/**/*.{ts,mjs,cjs,js,json,css}\" --ignore-path .prettierignore"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.72.2"
+  },
+  "license": "UNLICENSED"
+}

@@ -21,7 +21,7 @@ the review files are unsigned (D11) and the Hindi is unreviewed (D10).
 Also done since: four more skills (`ledger-side` RU, `tb-side` RU, `journal-error` AEC, `case-ledger` AEC competency case), so every V1 clause has items in at
 least two typology bands and ledger has all three; the Debit & Credit Trainer now draws on the migrated bank (hand-written items + verified legacy scenes whose
 accounts exist in the starter chart); the Hinglish-card toggle no longer switches the whole app to Hindi.
-Not done: T0.1 (workspaces, ESLint/Prettier, symlink removal D9, CI D12), T0.9 preview deploy (D8a), a multi-line `ENTRY` part kind (journal items are
+T0.1 is partly done: npm workspaces, ESLint and Prettier (ratchet) are in and verified from a clean copy; symlink removal (D9), the CI workflow (D12) and deleting the old per-package lockfiles still wait for you. Not done: T0.1 remainder, T0.9 preview deploy (D8a), a multi-line `ENTRY` part kind (journal items are
 single debit / single credit; `journal-error` tests recognising mistakes instead), the Equation Visualizer reading the migrated m1 bank (the practice
 skill `eq-impact` does), Hindi for labs, concept text and the wrong-answer explanations, rules and equation clauses still have only one or two bands
 (rules = RU only; equation = RU + AP), 5 legacy items held for an inventory-model decision.

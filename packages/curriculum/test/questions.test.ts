@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_GENERATORS, CLAUSES, GENERATORS, SKILLS, checkAnswer, makeQuestion, makeQuestionUnfiltered } from '../src';
+import { ALL_GENERATORS, CLAUSES, SKILLS, checkAnswer, makeQuestion, makeQuestionUnfiltered } from '../src';
 
 const SEEDS = Array.from({ length: 150 }, (_, i) => i + 1);
 

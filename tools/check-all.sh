@@ -2,6 +2,11 @@
 # Run every automated check in the repo. Needs: node 22, and (for browser tests) global `playwright` + `http-server` with Chromium installed.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+if [ -x tools/lint/node_modules/.bin/eslint ]; then
+  echo "== lint + format"; npm --prefix tools/lint run lint && npm --prefix tools/lint run format:check
+else
+  echo "== lint + format: SKIPPED (install once with: npm --prefix tools/lint ci)"
+fi
 echo "== engine";      (cd packages/engine && npm run check)
 echo "== curriculum";  (cd packages/curriculum && npm run check)
 echo "== tutor proxy"; (cd apps/tutor-proxy && npm test)

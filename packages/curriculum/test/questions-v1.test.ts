@@ -134,8 +134,8 @@ describe('second wave of V1 skills — independent oracles', () => {
   it('journal-error: the verdict matches what the shown entry really does, recomputed from the stem and the model entry', () => {
     const seen = new Set<string>();
     for (const q of qs('journal-error')) {
-      const m = /A student wrote:\n(.+) A\/c  Dr\.  [^\n]+\n    To (.+) A\/c/.exec(q.stem)!, shownDr = m[1]!, shownCr = m[2]!;
-      const good = /^(.+) A\/c  Dr\./.exec(q.working[0]!)![1]!, goodCr = /To (.+) A\/c/.exec(q.working[1]!)![1]!;
+      const m = /A student wrote:\n(.+) A\/c {2}Dr\. {2}[^\n]+\n {4}To (.+) A\/c/.exec(q.stem)!, shownDr = m[1]!, shownCr = m[2]!;
+      const good = /^(.+) A\/c {2}Dr\./.exec(q.working[0]!)![1]!, goodCr = /To (.+) A\/c/.exec(q.working[1]!)![1]!;
       const verdict = shownDr === good && shownCr === goodCr ? 'The entry is correct' : shownDr === goodCr && shownCr === good ? 'Debit and credit are interchanged' : 'A wrong account has been used';
       expect(q.parts[0]!.answer, q.id).toBe(verdict); seen.add(verdict);
       expect(q.parts[1]!.answer, q.id).toBe(good);

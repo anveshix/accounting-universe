@@ -1,5 +1,5 @@
 import {
-  ExtrasError, Fraction, Money, actDefaults, allocate, appropriate, balanceSheet, callsInAdvance, currentRatio, debtEquityRatio, depreciationSchedule, interestPA, isBalanced, loanSchedule,
+  ExtrasError, Fraction, Money, actDefaults, allocate, appropriate, balanceSheet, callsInAdvance, currentRatio, debtEquityRatio, depreciationSchedule, isBalanced, loanSchedule,
   partnerAccounts, pct, purchaseOfBusiness, quickRatio, reconcile, revaluation, statementOfProfitAndLoss, type Illustration, type RevalItem, type BrsKind,
 } from '../../../../packages/engine/src';
 import { InputError, type Block, type Field, type Lab } from '../spec';

@@ -7,7 +7,7 @@ const html = readFileSync(SRC, 'utf8');
 /** Return the source text of `const NAME = [ ... ];` by bracket matching (strings and comments respected). */
 function literal(name) {
   const start = html.indexOf(`const ${name} = [`); if (start < 0) throw new Error(`array ${name} not found`);
-  let i = html.indexOf('[', start), depth = 0, q = null;
+  const i = html.indexOf('[', start); let depth = 0, q = null;
   for (let j = i; j < html.length; j++) {
     const c = html[j], p = html[j - 1];
     if (q) { if (c === q && p !== '\\') q = null; continue; }
