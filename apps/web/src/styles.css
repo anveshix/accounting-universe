@@ -568,3 +568,94 @@ table.inputs td { white-space: pre-line; }
   .hero-scene { display: none; }
   .balance-3d-wrap { height: auto; min-height: 140px; }
 }
+
+/* ==========================================================================
+   Projector mode — ultra-high contrast, decluttered, larger type
+   Toggle via header button: <html class="projector">
+   Designed for classroom projectors: white background, black text,
+   minimal chrome, no blur/transparency, bigger headings.
+   ========================================================================== */
+.projector {
+  --ink: #0f172a; --ink-2: #1e293b; --muted: #334155; --muted-2: #475569;
+  --bg: #ffffff; --bg-2: #ffffff; --surface: #ffffff; --surface-2: #f8fafc;
+  --line: #cbd5e1; --line-2: #e2e8f0;
+  --brand: #0f3d3e; --brand-2: #13484a;
+  --shadow-1: none; --shadow-2: none; --shadow-hero: none;
+  font-size: 17px;
+}
+.projector body {
+  background: #ffffff !important;
+  color: var(--ink);
+}
+.projector .top {
+  background: #ffffff !important;
+  color: var(--brand) !important;
+  border-bottom: 3px solid var(--brand);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none;
+  padding: .9rem 1.2rem;
+}
+.projector .brand-mark { box-shadow: none; border: 2px solid var(--brand); background: var(--brand); color: #fff; }
+.projector .brand b { color: var(--brand); }
+.projector .brand span { color: var(--muted); opacity: 1; }
+.projector .net { background: #f1f5f9; color: var(--muted); border: 1px solid var(--line); }
+.projector .net.off { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
+.projector nav {
+  background: #f8fafc !important;
+  border-bottom: 2px solid var(--line);
+  backdrop-filter: none;
+}
+.projector nav a { color: var(--muted); font-size: .88rem; font-weight: 700; }
+.projector nav a[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); background: #fff; }
+.projector main { max-width: 1100px; padding: 1.4rem 1.2rem 2.5rem; }
+.projector h2 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); letter-spacing: -.02em; line-height: 1.2; }
+.projector .lead { font-size: 1.08rem; color: var(--muted); }
+.projector .hero {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+  border: 2.5px solid var(--brand);
+  border-radius: 16px;
+  box-shadow: none;
+  padding: 1.8rem 1.6rem;
+}
+.projector .hero .eyebrow { color: var(--brand); background: #f0fdfa; border: 1px solid #ccfbf1; padding: .25rem .6rem; border-radius: 99px; display: inline-block; }
+.projector .hero h2 { color: var(--brand); }
+.projector .hero h2 span { color: var(--accent) !important; }
+.projector .hero .lead { color: var(--muted); }
+.projector .hero .primary { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; box-shadow: none; }
+.projector .hero button:not(.primary):not(.bigchoice) { background: #fff !important; color: var(--brand) !important; border: 1.5px solid var(--brand) !important; backdrop-filter: none; }
+.projector .hero-scene { display: none !important; }
+.projector .classpick { gap: .8rem; }
+.projector .bigchoice { background: #fff !important; color: var(--ink) !important; border: 1.5px solid var(--line) !important; backdrop-filter: none; box-shadow: none; }
+.projector .bigchoice.on { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
+.projector .bigchoice.on span { color: rgba(255,255,255,.85) !important; }
+.projector .routebox { background: #f8fafc !important; border: 1.5px solid var(--line) !important; backdrop-filter: none; }
+.projector .routebox legend { color: var(--brand); }
+.projector .panel { box-shadow: none; border: 1.5px solid var(--line); border-radius: 12px; }
+.projector .card { box-shadow: none; border: 1.5px solid var(--line); border-radius: 12px; }
+.projector .card::before { display: none; }
+.projector .card:hover { transform: none; box-shadow: none; border-color: var(--brand); }
+.projector .card-icon { background: #f0fdfa; border-color: #ccfbf1; }
+.projector .features { gap: .8rem; }
+.projector .feature { box-shadow: none; border: 1.5px solid var(--line); }
+.projector .stat-row { gap: .8rem; }
+.projector .stat-card { box-shadow: none; border: 1.5px solid var(--line); background: #f8fafc; }
+.projector .stat-card b { color: var(--brand); }
+.projector .kicker { background: #f0fdfa; border-color: #99f6e4; color: var(--brand); }
+.projector .tabs button { background: transparent; }
+.projector .tabs button[aria-selected="true"] { background: #f0fdfa; border-bottom-color: var(--brand); color: var(--brand); box-shadow: none; }
+.projector .note { border-width: 1.5px; border-left-width: 5px; }
+.projector .tablewrap { border: 1.5px solid var(--line); }
+.projector thead th { background: #f1f5f9; color: var(--ink-2); }
+.projector .balance-3d-wrap { border: 1.5px solid var(--line); box-shadow: none; background: #fff; }
+.projector .balance-3d-overlay { background: #fff; border: 1.5px solid var(--line); box-shadow: none; backdrop-filter: none; }
+.projector .experience-note { background: #f0fdfa; border-color: #99f6e4; color: var(--muted); }
+.projector .experience-note b { color: var(--brand); }
+.projector .app-footer { border-top: 2px solid var(--line); }
+/* declutter helpers — hide non-essential badges when in projector mode optionally */
+.projector .declutter-hide { display: none !important; }
+/* larger base for projector readability */
+.projector p, .projector li, .projector td, .projector th { font-size: 1rem; line-height: 1.6; }
+/* print-like: no animations */
+.projector * { transition: none !important; animation: none !important; }
