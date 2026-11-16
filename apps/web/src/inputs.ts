@@ -50,10 +50,27 @@ export function ratio(values: Record<string, string>, id: string, label: string,
   if (parts.every(p => p === '0')) throw new InputError(`${label} cannot be all zeros.`, id);
   return Fraction.fromRatio(parts.map(Number));
 }
+/**
+ * Splits a list of amounts on new lines, semicolons and commas — but keeps Indian/Western grouping commas (1,25,000 · 50,000)
+ * inside one amount: a comma is grouping when a digit comes before it and exactly 2–3 digits follow it.
+ */
+export function splitAmounts(raw: string): string[] {
+  const parts: string[] = []; let cur = '';
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i]!;
+    if (c === '\n' || c === ';') { parts.push(cur); cur = ''; }
+    else if (c === ',') {
+      const grouping = /\d$/.test(cur) && /^\d{2,3}(?!\d)/.test(raw.slice(i + 1));
+      if (grouping) cur += c; else { parts.push(cur); cur = ''; }
+    } else cur += c;
+  }
+  parts.push(cur);
+  return parts.map(s => s.trim()).filter(Boolean);
+}
 /** Comma/line separated list of amounts. */
 export function moneyList(values: Record<string, string>, id: string, label: string, min = 1): Money[] {
-  const parts = (values[id] ?? '').split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-  if (parts.length < min) throw new InputError(`${label} needs at least ${min} amount${min > 1 ? 's' : ''}, separated by commas.`, id);
+  const parts = splitAmounts(values[id] ?? '');
+  if (parts.length < min) throw new InputError(`${label} needs at least ${min} amount${min > 1 ? 's' : ''}, separated by commas, semicolons or new lines.`, id);
   return parts.map((p, i) => { try { return Money.parse(strip(p)); } catch { throw new InputError(`${label}: item ${i + 1} ("${p}") is not a valid amount.`, id); } });
 }
 /** Lines like "Name : 1200" or "Name 1200". */

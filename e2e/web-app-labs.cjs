@@ -88,6 +88,22 @@ const ok = (c, m) => {
     await p2.goto(BASE + '#/lab/xi-depreciation/@@bad@@');
     await p2.waitForSelector('article[data-tab]');
     ok(await p2.$eval('article', a => a.getAttribute('data-tab') === 'learn'), 'labs: a corrupt link falls back to the normal lab');
+
+    // Hindi draft: labelled as a draft, teaching text in Hindi, figures untouched
+    const p3 = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+    await p3.goto(BASE + '#/lab/xi-brs');
+    await p3.waitForSelector('article[data-tab]');
+    await p3.click('[data-lang-toggle]');
+    await p3.waitForSelector('[data-draft="hi-lab"]', { timeout: 3000 }).then(
+      () => ok(true, ''),
+      () => ok(false, 'labs: Hindi lab shows the draft banner'),
+    );
+    ok(/बैंक समाधान/.test(await p3.textContent('.labhead h2')), 'labs: Hindi title shown');
+    await p3.click('#tab-example');
+    ok(/56,500/.test(await p3.textContent('.walk')) && /₹56,500\.00/.test(await p3.textContent('#labpanel')), 'labs: Hindi walkthrough keeps the engine figures');
+    await p3.goto(BASE + '#/lab/xi-gst');
+    await p3.waitForSelector('article[data-tab]');
+    ok((await p3.$('[data-draft="hi-lab"]')) === null, 'labs: untranslated labs stay English without a false Hindi banner');
   } catch (e) {
     fails.push('exception: ' + e.message);
     console.log(e);

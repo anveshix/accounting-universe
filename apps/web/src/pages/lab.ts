@@ -8,6 +8,7 @@ import { h, mount } from '../dom';
 import { renderBlocks } from '../render';
 import { InputError, type Field, type Lab } from '../spec';
 import { recordSeen } from '../store';
+import { LAB_HI } from '../labs/hi';
 import { decodeValues, loadSaved, save, shareUrl } from '../labstate';
 
 type Tab = 'learn' | 'example' | 'try';
@@ -34,7 +35,9 @@ function fieldInput(f: Field, value: string, onInput: () => void): HTMLElement {
   return h('div', { class: 'field' }, h('label', { for: id }, f.label), control, f.help ? h('small', { id: `${id}-help` }, f.help) : null);
 }
 
-export function labPage(lab: Lab, startTab: Tab = 'learn', shared?: string): HTMLElement {
+export function labPage(baseLab: Lab, startTab: Tab = 'learn', shared?: string): HTMLElement {
+  const hi = state.lang === 'hi' ? LAB_HI[baseLab.id] : undefined;
+  const lab: Lab = hi ? { ...baseLab, title: hi.title, summary: hi.summary, concept: hi.concept, realWorld: hi.realWorld, walkthrough: hi.walkthrough } : baseLab;
   const panel = h('div', { class: 'tabpanel', id: 'labpanel', role: 'tabpanel', tabindex: 0 });
   const fromLink = decodeValues(lab, shared);
   const values: Record<string, string> = { ...(fromLink ?? loadSaved(lab) ?? lab.example) };
@@ -136,7 +139,8 @@ export function labPage(lab: Lab, startTab: Tab = 'learn', shared?: string): HTM
       tabBtns.set(t.id, b); return b;
     }));
   const root = h('article', { class: 'labpage' },
-    h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, `Class ${lab.cls}`), h('h2', {}, lab.title), h('p', { class: 'lead' }, lab.summary)),
+    h('header', { class: 'labhead', ...(hi ? { lang: 'hi' } : {}) }, h('p', { class: 'eyebrow' }, `Class ${lab.cls}`), h('h2', {}, lab.title), h('p', { class: 'lead' }, lab.summary)),
+    hi ? h('p', { class: 'note warn', 'data-draft': 'hi-lab' }, `${t('hi', 'draft.body')} (समझाने वाला पाठ हिंदी में है; फ़ील्ड के नाम और गणना की तालिकाएँ अंग्रेज़ी में रहती हैं।)`) : null,
     tablist, panel,
     lab.skills.length ? h('p', { class: 'after' }, 'Ready to test yourself? ', h('a', { href: `#/practice/${lab.skills[0]}` }, 'Practise this topic →')) : null);
   select(current);
