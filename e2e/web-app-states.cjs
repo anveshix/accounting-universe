@@ -47,6 +47,27 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok(await page.evaluate(() => window.__timers.size) === 0, 'LEAK FIX: navigating away stops the ledger timer');
     ok(!(await machines(page)).some(m => m.startsWith('ledger-player')), 'LEAK FIX: the player machine is unregistered after leaving');
 
+    // Ledger: signed balances must not be clipped or represented as positive tank weights.
+    await page.goto(BASE + '#/ledger'); await page.waitForSelector('.ledger-lab');
+    const postLedger = async (narration, debit, credit, amount) => {
+      await page.fill('#je-narr', narration);
+      await page.selectOption('.linerow:nth-child(1) select:nth-of-type(2)', debit);
+      await page.selectOption('.linerow:nth-child(2) select:nth-of-type(2)', credit);
+      await page.fill('.linerow:nth-child(1) input', amount);
+      await page.fill('.linerow:nth-child(2) input', amount);
+      await page.click('text=Post entry');
+    };
+    await postLedger('Loan', 'cash', 'bank-loan', '100');
+    await postLedger('Rent', 'rent', 'cash', '60');
+    ok((await page.$eval('.eqline', e => e.textContent)).includes('Capital -₹60.00'), 'ledger: negative capital remains signed in the equation');
+    ok((await page.$eval('.equation-signed', e => e.textContent)).includes('-₹60.00'), 'ledger: negative capital displayed in signed fallback');
+    ok(await page.$eval('.balance-3d-wrap', e => e.hidden), 'ledger: scale hidden for signed balances');
+    await page.click('text=↺ Reset');
+    await postLedger('Overdrawn bank', 'rent', 'bank', '50');
+    ok((await page.$eval('.equation-signed', e => e.textContent)).includes('-₹50.00'), 'ledger: negative asset is not shown as empty');
+    const tbalances = await page.$$eval('.tbal', els => els.map(e => e.textContent));
+    ok(tbalances.some(t => t.includes('₹50.00 Cr') && !t.includes('-₹50.00 Cr')), 'ledger: credit balance is shown without a negative sign');
+
     // ── practice: a question can only be answered once; help follows the state
     await page.goto(BASE + '#/practice/dep-wdv/4242/practice'); await page.waitForSelector('.question[data-machine="practice-question"]');
     ok(await state(page, '.question') === 'ANSWERING', 'practice: ANSWERING at first');
