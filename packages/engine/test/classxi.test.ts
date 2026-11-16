@@ -32,6 +32,20 @@ describe('depreciation schedules', () => {
     const r = depreciationSchedule({ cost: M('100000'), method: 'SLM', rate: pct(10), years: 2, firstYearMonths: 6 });
     expect(r.map(x => s(x.depreciation))).toEqual(['5000.00', '10000.00']);
   });
+  it('rounds a part-year charge once, after applying the period fraction', () => {
+    // ₹0.01 × 50% × 6/12 = ₹0.0025, rounded to ₹0.00 (not ₹0.01).
+    for (const method of ['SLM', 'WDV'] as const) {
+      const r = depreciationSchedule({ cost: M('0.01'), method, rate: pct(50), years: 1, firstYearMonths: 6 });
+      expect(s(r[0]!.depreciation)).toBe('0.00');
+      expect(s(r[0]!.closing)).toBe('0.01');
+    }
+  });
+  it('rejects negative or over-100% rates and invalid lives', () => {
+    for (const rate of [pct(-1), pct(101)]) {
+      expect(() => depreciationSchedule({ cost: M('100'), method: 'WDV', rate, years: 1 })).toThrow(RangeError);
+    }
+    expect(() => depreciationSchedule({ cost: M('100'), method: 'SLM', lifeYears: 0, years: 1 })).toThrow(RangeError);
+  });
   it('never depreciates below scrap and rejects bad input', () => {
     const r = depreciationSchedule({ cost: M('100'), scrap: M('90'), method: 'WDV', rate: pct(50), years: 5 });
     expect(s(r.at(-1)!.closing)).toBe('90.00');
@@ -58,6 +72,13 @@ describe('disposal of an asset', () => {
     expect(d.entries.length).toBe(4);
     expect(d.entries.every(isBalanced)).toBe(true);
     expect(d.entries[0]!.lines[0]!.account).toBe('Asset Disposal A/c');
+  });
+  it('omits zero-value disposal entries and rejects impossible balances', () => {
+    const d = disposeAsset({ name: 'X', cost: M('100'), accumulated: M('0'), saleProceeds: M('100'), method: 'PROVISION' });
+    expect(d.entries).toHaveLength(2);
+    expect(d.entries.every(e => e.lines.length > 0 && e.lines.every(l => !l.amount.isZero()) && isBalanced(e))).toBe(true);
+    expect(() => disposeAsset({ name: 'X', cost: M('100'), accumulated: M('101'), saleProceeds: M('1'), method: 'PROVISION' })).toThrow(RangeError);
+    expect(() => disposeAsset({ name: 'X', cost: M('100'), accumulated: M('0'), saleProceeds: M('-1'), method: 'ASSET_ACCOUNT' })).toThrow(RangeError);
   });
   it('sale at exactly book value has neither profit nor loss', () => {
     const d = disposeAsset({ name: 'X', cost: M('100'), accumulated: M('40'), saleProceeds: M('60'), method: 'ASSET_ACCOUNT' });
