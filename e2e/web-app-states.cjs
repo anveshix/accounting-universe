@@ -120,6 +120,10 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok((await page.$eval('.result', e => e.textContent)).includes('Shares can only be forfeited after a call was not paid.'), 'share lab: forfeiture without unpaid calls is refused with an explanation');
     await page.click('text=Reset to example'); await page.click('button[type=submit]'); await page.waitForSelector('.lifecycle');
     ok((await page.$$eval('.lifecycle li.issue', l => l.length)) === 2, 'share lab: example shows arrears + forfeiture as issues (derived from the machine)');
+    await page.fill('#f-fShares', '100001'); await page.click('button[type=submit]');
+    ok((await page.$eval('.result', e => e.textContent)).includes('cannot exceed shares allotted'), 'share lab: over-forfeiture is refused');
+    await page.click('text=Reset to example'); await page.fill('#f-fShares', '0'); await page.fill('#f-reShares', '0'); await page.click('button[type=submit]');
+    ok((await page.$eval('.result', e => e.textContent)).includes('share-capital note cannot be prepared reliably'), 'share lab: unresolved arrears withhold disclosure');
 
     // ── storage fallback: private-mode style — nothing is saved, and the student is TOLD
     const mem = await newPage(() => { Object.defineProperty(window, 'indexedDB', { value: undefined, configurable: true }); });
