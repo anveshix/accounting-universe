@@ -28,4 +28,26 @@ describe('depreciation lab: independent classroom examples', () => {
     expect(result.some(b => b.kind === 'note' && b.text.includes('no residual value'))).toBe(true);
     expect(tables(result)[1]!.rows).toContainEqual(['Loss on sale', '₹2,900.00']);
   });
+  it('accepts decimal rates: 12.5% WDV on 80,000 → 10,000 then 8,750, closing 61,250', () => {
+    const t = tables(depreciation.compute({ ...depreciation.example, cost: '80000', method: 'WDV', rate: '12.5', years: '2', months: '12', sale: '' }))[0]!;
+    expect(t.rows.map(r => r.slice(1))).toEqual([
+      ['₹80,000.00', '₹10,000.00', '₹70,000.00'],
+      ['₹70,000.00', '₹8,750.00', '₹61,250.00'],
+    ]);
+  });
+  it('never depreciates below scrap: SLM 50% on 80,000 with scrap 20,000 → 40,000 then 20,000', () => {
+    const r = depreciation.compute({ ...depreciation.example, cost: '80000', method: 'SLM', rate: '50', scrap: '20000', years: '2', months: '12', sale: '' });
+    expect(tables(r)[0]!.rows.map(x => x[2])).toEqual(['₹40,000.00', '₹20,000.00']);
+    expect(tables(r)[0]!.rows[1]![3]).toBe('₹20,000.00');
+  });
+  it('uses the student’s asset name in the journal and refuses scrap above cost', () => {
+    const r = depreciation.compute({ ...depreciation.example, asset: 'Computer', sale: '' });
+    const j = r.find(b => b.kind === 'journal') as Extract<Block, { kind: 'journal' }>;
+    expect(j.entries[0]!.lines.map(l => l.account)).toContain('Computer A/c');
+    expect(() => depreciation.compute({ ...depreciation.example, scrap: '200000' })).toThrow(/Scrap/);
+  });
+  it('rejects a rate over 100% or with 3 decimals', () => {
+    expect(() => depreciation.compute({ ...depreciation.example, rate: '101' })).toThrow(/100%/);
+    expect(() => depreciation.compute({ ...depreciation.example, rate: '1.005' })).toThrow(/percentage/);
+  });
 });

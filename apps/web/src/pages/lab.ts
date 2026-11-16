@@ -8,6 +8,8 @@ import { h, mount } from '../dom';
 import { renderBlocks } from '../render';
 import { InputError, type Field, type Lab } from '../spec';
 import { recordSeen } from '../store';
+import { LAB_HI } from '../labs/hi';
+import { decodeValues, loadSaved, save, shareUrl } from '../labstate';
 
 type Tab = 'learn' | 'example' | 'try';
 const TABS: { id: Tab; label: string }[] = [{ id: 'learn', label: '1 · Learn' }, { id: 'example', label: '2 · Worked example' }, { id: 'try', label: '3 · Try it' }];
@@ -33,9 +35,13 @@ function fieldInput(f: Field, value: string, onInput: () => void): HTMLElement {
   return h('div', { class: 'field' }, h('label', { for: id }, f.label), control, f.help ? h('small', { id: `${id}-help` }, f.help) : null);
 }
 
-export function labPage(lab: Lab, startTab: Tab = 'learn'): HTMLElement {
+export function labPage(baseLab: Lab, startTab: Tab = 'learn', shared?: string): HTMLElement {
+  const hi = state.lang === 'hi' ? LAB_HI[baseLab.id] : undefined;
+  const lab: Lab = hi ? { ...baseLab, title: hi.title, summary: hi.summary, concept: hi.concept, realWorld: hi.realWorld, walkthrough: hi.walkthrough } : baseLab;
   const panel = h('div', { class: 'tabpanel', id: 'labpanel', role: 'tabpanel', tabindex: 0 });
-  const values: Record<string, string> = { ...lab.example };
+  const fromLink = decodeValues(lab, shared);
+  const values: Record<string, string> = { ...(fromLink ?? loadSaved(lab) ?? lab.example) };
+  if (fromLink) startTab = 'try';
   const tabBtns = new Map<Tab, HTMLElement>();
   let current: Tab = startTab;
 
@@ -63,25 +69,60 @@ export function labPage(lab: Lab, startTab: Tab = 'learn'): HTMLElement {
   function tryIt() {
     const out = h('div', { class: 'result', 'aria-live': 'polite' }), lm = new Machine(LAB_RUN);
     track(out, lm); onDispose(() => unregister(lm));
-    const run = () => {
-      for (const el of Array.from(form.querySelectorAll('[aria-invalid]'))) el.removeAttribute('aria-invalid');
+    const status = h('span', { class: 'muted', role: 'status' });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const run = (focusError = false) => {
+      for (const el of Array.from(form.querySelectorAll('[aria-invalid]'))) { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); }
       const r = runLab(lab, values);
+      if (r.error) r.node.id = 'lab-error';
       mount(out, r.node); lm.send(r.error ? 'RUN_ERROR' : 'RUN_OK');        // data-state on .result: IDLE | OK | ERROR
-      if (r.error?.field) { const el = form.querySelector(`#f-${r.error.field}`); el?.setAttribute('aria-invalid', 'true'); }
+      if (r.error?.field) {
+        const el = form.querySelector(`#f-${r.error.field}`) as HTMLElement | null;
+        el?.setAttribute('aria-invalid', 'true'); el?.setAttribute('aria-describedby', 'lab-error');
+        if (focusError) el?.focus();
+      }
+    };
+    const live = () => { clearTimeout(timer); timer = setTimeout(() => run(), 300); onDispose(() => clearTimeout(timer)); };
+    const setAll = (src: (id: string) => string, rerun = true) => {
+      for (const f of lab.fields) { values[f.id] = src(f.id); const el = form.querySelector(`#f-${f.id}`) as HTMLInputElement | null; if (el) el.value = values[f.id]!; }
+      save(lab, values);
+      if (rerun) run(); else mount(out, h('p', { class: 'note info' }, 'All fields are empty. Type your numbers, and the answer appears here.'));
     };
     const fields: HTMLElement[] = [];
     let group: string | undefined;
     for (const f of lab.fields) {
       if (f.group && f.group !== group) { group = f.group; fields.push(h('h4', { class: 'fgroup' }, f.group)); }
-      fields.push(fieldInput(f, values[f.id] ?? '', () => { const el = form.querySelector(`#f-${f.id}`) as HTMLInputElement; values[f.id] = el.value; }));
+      fields.push(fieldInput(f, values[f.id] ?? '', () => { const el = form.querySelector(`#f-${f.id}`) as HTMLInputElement; values[f.id] = el.value; save(lab, values); live(); }));
     }
-    const form = h('form', { class: 'labform', onsubmit: (e: Event) => { e.preventDefault(); run(); } },
+    const snapshot = () => Array.from(out.querySelectorAll('td, .val')).map(e => e.textContent ?? '');
+    const whatIfNote = h('p', { class: 'hint whatif-prompt', role: 'status' });
+    const apply = (w: NonNullable<Lab['whatIf']>[number]) => {
+      const before = snapshot();
+      setAll(id => w.set[id] ?? values[id] ?? '');
+      const cells = Array.from(out.querySelectorAll('td, .val'));
+      let moved = 0;
+      const seen = new Map<string, number>();
+      for (const t of before) seen.set(t, (seen.get(t) ?? 0) + 1);
+      for (const c of cells) {                       // a figure is "new" if it was not in the old result (multiset match)
+        const t = c.textContent ?? '', left = seen.get(t) ?? 0;
+        if (left > 0) seen.set(t, left - 1); else if (/\d/.test(t)) { c.classList.add('moved'); moved++; }
+      }
+      whatIfNote.textContent = `${w.prompt}${moved ? ` (${moved} new or changed figure${moved > 1 ? 's' : ''} highlighted below.)` : ''}`;
+    };
+    const chips = lab.whatIf?.length ? h('div', { class: 'whatif' }, h('strong', {}, 'What if… '), ...lab.whatIf.map(w => h('button', { type: 'button', class: 'chip', 'data-whatif': w.label, onclick: () => apply(w) }, w.label)), whatIfNote) : null;
+    const copy = async () => {
+      const url = shareUrl(lab, values);
+      try { await navigator.clipboard.writeText(url); status.textContent = 'Link copied — anyone who opens it sees these numbers.'; }
+      catch { status.textContent = url; }
+    };
+    const form = h('form', { class: 'labform', onsubmit: (e: Event) => { e.preventDefault(); clearTimeout(timer); run(true); } },
       h('div', { class: 'fieldgrid' }, ...fields),
       h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'primary' }, 'Work it out'),
-        h('button', { type: 'button', onclick: () => { for (const f of lab.fields) values[f.id] = lab.example[f.id] ?? ''; mount(panel, tryIt()); } }, 'Reset to example'),
-        h('button', { type: 'button', onclick: () => { for (const f of lab.fields) values[f.id] = ''; mount(panel, tryIt()); } }, 'Clear all')));
-    const wrap = h('div', {}, h('p', { class: 'hint' }, 'Change any number and press “Work it out”. Money can be typed as 125000 or 1,25,000. Nothing you type leaves your device.'), form, out);
-    queueMicrotask(run);
+        h('button', { type: 'button', onclick: () => setAll(id => lab.example[id] ?? '') }, 'Reset to example'),
+        h('button', { type: 'button', onclick: () => setAll(() => '', false) }, 'Clear all'),
+        h('button', { type: 'button', onclick: () => void copy() }, 'Copy link to these numbers'), status));
+    const wrap = h('div', {}, h('p', { class: 'hint' }, 'Change any number — the answer updates as you type (or press “Work it out”). Money can be typed as 125000 or 1,25,000. Your numbers stay in this browser tab; the link above carries them only if you copy it.'), chips, form, out);
+    queueMicrotask(() => run());
     return wrap;
   }
   function select(t: Tab) {
@@ -98,7 +139,8 @@ export function labPage(lab: Lab, startTab: Tab = 'learn'): HTMLElement {
       tabBtns.set(t.id, b); return b;
     }));
   const root = h('article', { class: 'labpage' },
-    h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, `Class ${lab.cls}`), h('h2', {}, lab.title), h('p', { class: 'lead' }, lab.summary)),
+    h('header', { class: 'labhead', ...(hi ? { lang: 'hi' } : {}) }, h('p', { class: 'eyebrow' }, `Class ${lab.cls}`), h('h2', {}, lab.title), h('p', { class: 'lead' }, lab.summary)),
+    hi ? h('p', { class: 'note warn', 'data-draft': 'hi-lab' }, `${t('hi', 'draft.body')} (समझाने वाला पाठ हिंदी में है; फ़ील्ड के नाम और गणना की तालिकाएँ अंग्रेज़ी में रहती हैं।)`) : null,
     tablist, panel,
     lab.skills.length ? h('p', { class: 'after' }, 'Ready to test yourself? ', h('a', { href: `#/practice/${lab.skills[0]}` }, 'Practise this topic →')) : null);
   select(current);

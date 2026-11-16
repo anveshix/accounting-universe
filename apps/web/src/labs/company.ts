@@ -158,7 +158,7 @@ export const ratios: Lab = {
     { id: 'ltd', label: 'Long-term debt (₹)', type: 'money' }, { id: 'sf', label: 'Shareholders\' funds (₹)', type: 'money' }, { id: 'nfa', label: 'Net fixed assets (₹)', type: 'money' },
     { id: 'or', label: 'Opening trade receivables (₹)', type: 'money' }, { id: 'cr', label: 'Closing trade receivables (₹)', type: 'money' }, { id: 'op', label: 'Opening trade payables (₹)', type: 'money' }, { id: 'cp', label: 'Closing trade payables (₹)', type: 'money' },
   ],
-  example: { rev: '1000000', oi: '60000', pur: '600000', dir: '100000', ci: '80000', opex: '150000', int: '30000', tax: '30', ca: '400000', pre: '10000', cl: '200000', ltd: '300000', sf: '700000', nfa: '600000', or: '90000', cr: '110000', op: '70000', cp: '90000' },
+  example: { rev: '1000000', oi: '60000', pur: '600000', dir: '100000', ci: '80000', opex: '150000', int: '30000', tax: '30', ca: '400000', pre: '10000', cl: '200000', ltd: '300000', sf: '700000', nfa: '800000', or: '90000', cr: '110000', op: '70000', cp: '90000' },
   walkthrough: ['Cost of revenue = 60,000 + 6,00,000 + 1,00,000 − 80,000 = ₹6,80,000, so gross profit = ₹3,20,000.', 'Operating profit = ₹3,20,000 − ₹1,50,000 = ₹1,70,000; after interest ₹30,000, profit before tax is ₹1,40,000.', 'Current ratio = 4,00,000 ÷ 2,00,000 = 2 : 1. Quick assets exclude inventory and prepaid expenses.'],
   compute: v => {
     const m = (id: string, label: string) => money(v, id, label);
@@ -178,7 +178,9 @@ export const ratios: Lab = {
     const ok = list.filter((x): x is RatioResult => typeof x !== 'string');
     const errs = list.filter((x): x is string => typeof x === 'string');
     const cats = ['LIQUIDITY', 'SOLVENCY', 'ACTIVITY', 'PROFITABILITY'] as const;
-    const blocks: Block[] = [{ kind: 'table', caption: 'Figures derived from your inputs', head: ['', '₹'], numeric: [1], rows: [['Cost of revenue from operations', R(cost)], ['Gross profit', R(gp)], ['Operating profit', R(opProfit)], ['Profit before tax', R(pbt)], ['Profit after tax', R(pat)], ['Capital employed (shareholders\' funds + long-term debt)', R(ce)], ['Working capital (current assets − current liabilities)', R(wc)]] }];
+    const assetsSide = nfa.add(ca), fundsSide = ce.add(cl);
+    const mismatch: Block[] = assetsSide.equals(fundsSide) ? [] : [note(`Your balance sheet figures do not agree: fixed + current assets ${R(assetsSide)} vs shareholders' funds + long-term debt + current liabilities ${R(fundsSide)} (difference ${R(assetsSide.sub(fundsSide).abs())}). Ratios that use total assets are taken from the funds side; check your inputs.`, 'warn')];
+    const blocks: Block[] = [...mismatch, { kind: 'table', caption: 'Figures derived from your inputs', head: ['', '₹'], numeric: [1], rows: [['Cost of revenue from operations', R(cost)], ['Gross profit', R(gp)], ['Operating profit', R(opProfit)], ['Profit before tax', R(pbt)], ['Profit after tax', R(pat)], ['Capital employed (shareholders\' funds + long-term debt)', R(ce)], ['Working capital (current assets − current liabilities)', R(wc)]] }];
     for (const c of cats) {
       const rs = ok.filter(r => r.category === c);
       blocks.push({ kind: 'table', caption: c.charAt(0) + c.slice(1).toLowerCase() + ' ratios', head: ['Ratio', 'Formula', 'Working', 'Result', 'What it tells you'], numeric: [3], rows: rs.map(r => [r.name, r.formula, r.working, r.display, r.reading]) });
@@ -250,7 +252,7 @@ export const cashflow: Lab = {
     const r = cashFlowStatement(input);
     const sec = (title: string, items: { label: string; amount: Money }[], total: Money): string[][] => [[title, ''], ...items.map(i => [`   ${i.label}`, i.amount.isNegative() ? `(${R(i.amount.neg())})` : R(i.amount)]), [`Net cash from ${title.toLowerCase()}`, R(total)]];
     const blocks: Block[] = [
-      { kind: 'streams', items: [{ label: 'Operating', value: num(r.cashFromOperating), text: R(r.cashFromOperating.abs()) }, { label: 'Investing', value: num(r.cashFromInvesting), text: R(r.cashFromInvesting.abs()) }, { label: 'Financing', value: num(r.cashFromFinancing), text: R(r.cashFromFinancing.abs()) }], net: `Net change in cash: ${r.netChange.isNegative() ? '−' : '+'}${R(r.netChange.abs())}` },
+      { kind: 'streams', items: [{ label: 'Operating', value: num(r.cashFromOperating), text: R(r.cashFromOperating) }, { label: 'Investing', value: num(r.cashFromInvesting), text: R(r.cashFromInvesting) }, { label: 'Financing', value: num(r.cashFromFinancing), text: R(r.cashFromFinancing) }], net: `Net change in cash: ${r.netChange.isNegative() ? '−' : '+'}${R(r.netChange.abs())}` },
       { kind: 'table', caption: 'Cash Flow Statement (indirect method)', head: ['Particulars', '₹'], numeric: [1], rows: [
         ['Profit before tax', R(input.netProfitBeforeTaxAndExtraordinary)], ...input.adjustments.map(a => [`   ${a.amount.isNegative() ? 'Less' : 'Add'}: ${a.label}`, R(a.amount.abs())]),
         ['Operating profit before working capital changes', R(r.operatingProfitBeforeWorkingCapital)], ...input.workingCapitalChanges.map((a, i) => { const isAsset = i < 2; const cashUp = !a.amount.isNegative(); return [`   ${cashUp ? 'Add' : 'Less'}: ${isAsset ? (cashUp ? 'decrease' : 'increase') : (cashUp ? 'increase' : 'decrease')} in ${a.label.toLowerCase()}`, R(a.amount.abs())]; }),

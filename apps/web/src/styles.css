@@ -688,3 +688,10 @@ table.inputs td { white-space: pre-line; }
 .projector p, .projector li, .projector td, .projector th { font-size: 1rem; line-height: 1.6; }
 /* print-like: no animations */
 .projector * { transition: none !important; animation: none !important; }
+
+/* Lab "what if" experiments */
+.whatif { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.75rem 0; }
+.whatif .chip { border: 1px solid var(--accent); background: var(--accent-soft); color: inherit; border-radius: 999px; padding: 0.3rem 0.8rem; cursor: pointer; font: inherit; }
+.whatif .chip:hover, .whatif .chip:focus-visible { background: var(--accent-bg); }
+.whatif-prompt { flex-basis: 100%; margin: 0; }
+td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--accent); outline-offset: -2px; }
