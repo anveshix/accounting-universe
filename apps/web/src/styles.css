@@ -6,14 +6,7 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  --eyebrow: #82540e; --ink: #17262a; --muted: #4d5f63; --bg: #f6f4ee; --surface: #ffffff; --line: #d9d4c5; --brand: #0f3d3e; --brand-ink: #ffffff;
-  --accent: #b7791f; --accent-bg: #fbf0d2; --good: #17653a; --good-bg: #e3f4e8; --bad: #a32020; --bad-bg: #fbe5e3; --warn: #8a5a00; --warn-bg: #fff2cc; --info-bg: #e5f0f2;
-  --c1: #0f6b6e; --c2: #b7791f; --c3: #5b4b9a; --c4: #a3472f; --c5: #3f7d2e; --focus: #1a56db;
-  --r: 12px; --shadow: 0 1px 2px rgba(23,38,42,.08), 0 4px 14px rgba(23,38,42,.06);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif; color-scheme: light dark;
-}
-@media (prefers-color-scheme: dark) {
-  :root { --eyebrow: #f2c14e; --ink: #e8efef; --muted: #aebfc2; --bg: #0f1a1c; --surface: #172629; --line: #2d4145; --brand: #1d6a6c; --accent: #f2c14e; --accent-bg: #3a2f10; --good: #6fd199; --good-bg: #12301f; --bad: #ff9c94; --bad-bg: #3b1816; --warn: #f2c14e; --warn-bg: #3a2f10; --info-bg: #14343a; --c1: #4fc1c4; --c2: #f2c14e; --c3: #a99be0; --c4: #f0937a; --c5: #8fd47a; --focus: #7aa7ff; --shadow: none; }
+  --eyebrow: #82540e;
   /* palette — trustworthy academic, warm paper */
   --ink: #152026;
   --ink-2: #243136;
@@ -52,6 +45,7 @@
   --s-1: .25rem; --s1: .5rem; --s2: .75rem; --s3: 1rem; --s4: 1.5rem; --s5: 2rem; --s6: 3rem;
   --r-sm: 10px; --r: 14px; --r-lg: 18px; --r-xl: 24px; --pill: 999px;
   --shadow-1: 0 1px 2px rgba(21,32,38,.06), 0 6px 18px rgba(21,32,38,.07);
+  --shadow: var(--shadow-1);
   --shadow-2: 0 4px 16px rgba(21,32,38,.1), 0 1px 3px rgba(21,32,38,.08);
   --shadow-hero: 0 16px 40px rgba(15,61,62,.18);
 
@@ -64,7 +58,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #eaf0f0; --ink-2: #d3dde0; --muted: #a8b8bc; --muted-2: #90a2a7;
+    --eyebrow: #f2c14e; --ink: #eaf0f0; --ink-2: #d3dde0; --muted: #a8b8bc; --muted-2: #90a2a7;
     --bg: #0c1416; --bg-2: #111d1f; --surface: #162528; --surface-2: #1b2e31;
     --line: #263d41; --line-2: #2e494d;
     --brand: #1a6a6c; --brand-2: #238789;
