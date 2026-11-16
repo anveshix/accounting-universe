@@ -27,7 +27,7 @@ export const shares: Lab = {
     { id: 'rej', label: 'Applications rejected outright (shares)', type: 'int', group: 'Applications' }, { id: 'pro', label: 'Applications allotted pro-rata (shares applied for)', type: 'int' },
     { id: 'arrCall', label: 'Calls in arrears on the CALL (₹)', type: 'money', group: 'Non-payment' }, { id: 'arrAllot', label: 'Calls in arrears on ALLOTMENT (₹)', type: 'money' },
     { id: 'fShares', label: 'Shares forfeited', type: 'int', group: 'Forfeiture' },
-    { id: 'rApp', label: 'Total received on those shares — application (₹)', type: 'money' }, { id: 'rAl', label: '… allotment (₹)', type: 'money' }, { id: 'rCa', label: '… call (₹)', type: 'money' },
+    { id: 'rApp', label: 'Total received on those shares — application (₹)', type: 'money' }, { id: 'rAl', label: '… allotment (₹)', type: 'money', help: 'Include excess application money adjusted to allotment on these shares.' }, { id: 'rCa', label: '… call (₹)', type: 'money' },
     { id: 'reShares', label: 'Forfeited shares re-issued', type: 'int', group: 'Re-issue' }, { id: 'rePrice', label: 'Re-issue price per share (₹, as fully paid)', type: 'money' },
   ],
   example: { face: '10', offered: '100000', appT: '5', appP: '1', alT: '5', alP: '1', caT: '3', caP: '1', rej: '10000', pro: '150000', arrCall: '4500', arrAllot: '0', fShares: '1500', rApp: '7500', rAl: '7500', rCa: '0', reShares: '1000', rePrice: '12' },
@@ -49,11 +49,12 @@ export const shares: Lab = {
     if (ac.isPositive()) arrears[2] = ac; if (aa.isPositive()) arrears[1] = aa;
     let r;
     try { r = issueShares({ company: 'Company', faceValue: face, instalments, offered: BigInt(offered), categories: [...(rej ? [{ label: 'rejected', applied: BigInt(rej), treatment: 'REJECT' as const }] : []), { label: 'pro-rata', applied: BigInt(pro), treatment: 'PRORATA' as const }], arrearsAmount: arrears }); }
-    catch (e) { if (e instanceof ShareError) throw new InputError(e.message + ' Adjust the shares offered / applied for so that pro-rata allotment gives whole shares.'); throw e; }
+    catch (e) { if (e instanceof ShareError) throw new InputError(e.message); throw e; }
     const blocks: Block[] = [];
     const subscribed = r.plan.accepted;
     // The lifecycle strip is derived from the `share-lifecycle` machine, so an impossible story is refused in words.
     const nF = whole(v, 'fShares', 'Shares forfeited', 0), nR = whole(v, 'reShares', 'Shares re-issued', 0);
+    if (BigInt(nF) > subscribed) throw new InputError('Shares forfeited cannot exceed shares allotted.', 'fShares');
     let st: ReturnType<typeof shareStages>;
     try { st = shareStages({ arrears: r.callsInArrears.isPositive(), forfeited: nF > 0, reissued: nR > 0 }); }
     catch (e) { if (e instanceof RangeError) throw new InputError(`${e.message}${nF > 0 && !r.callsInArrears.isPositive() ? ' Enter the unpaid amount under "Calls in arrears" first.' : ''}`, nF > 0 ? 'fShares' : 'reShares'); throw e; }
@@ -66,7 +67,21 @@ export const shares: Lab = {
     const fN = nF;
     let fRes: ReturnType<typeof forfeit> | undefined;
     if (fN > 0) {
-      fRes = forfeit({ shares: BigInt(fN), called: instalments, receivedByInstalment: [optMoney(v, 'rApp', 'Application received'), optMoney(v, 'rAl', 'Allotment received'), optMoney(v, 'rCa', 'Call received')] });
+      const received = [optMoney(v, 'rApp', 'Application received'), optMoney(v, 'rAl', 'Allotment received'), optMoney(v, 'rCa', 'Call received')];
+      const called = instalments.map(i => i.face.add(i.premium).mulRatio(BigInt(fN), 1n, 'DOWN'));
+      for (let k = 0; k < called.length; k++) {
+        if (received[k]!.cmp(called[k]!) > 0) throw new InputError(`Received on forfeited shares exceeds ${instalments[k]!.name} called on those shares.`, ['rApp', 'rAl', 'rCa'][k]);
+        const totalReceived = instalments[k]!.face.add(instalments[k]!.premium).mulRatio(subscribed, 1n, 'DOWN').sub(arrears[k] ?? Money.ZERO);
+        if (received[k]!.cmp(totalReceived) > 0) throw new InputError(`Received on forfeited shares exceeds total ${instalments[k]!.name} received on allotted shares.`, ['rApp', 'rAl', 'rCa'][k]);
+      }
+      if (!received[0]!.equals(called[0]!)) throw new InputError('Application money on allotted shares must be fully received.', 'rApp');
+      const missingAllotment = called[1]!.sub(received[1]!);
+      const missingCall = called[2]!.sub(received[2]!);
+      if (missingAllotment.cmp(aa) > 0) throw new InputError('Unpaid allotment on forfeited shares exceeds total allotment arrears.', 'rAl');
+      if (missingCall.cmp(ac) > 0) throw new InputError('Unpaid call on forfeited shares exceeds total call arrears.', 'rCa');
+      if (missingAllotment.add(missingCall).isZero()) throw new InputError('The shares selected for forfeiture must have an unpaid allotment or call.', 'fShares');
+      try { fRes = forfeit({ shares: BigInt(fN), called: instalments, receivedByInstalment: received }); }
+      catch (e) { if (e instanceof ShareError) throw new InputError(e.message); throw e; }
       blocks.push({ kind: 'heading', text: 'Forfeiture' });
       blocks.push({ kind: 'journal', entries: [fRes.entry] });
       blocks.push(note(`Premium received on these shares (${R(fRes.premiumReceived)}) stays in Securities Premium; only the amount received on SHARE CAPITAL, ${R(fRes.forfeitedCredit)}, is credited to Share Forfeited.`, 'info'));
@@ -75,13 +90,21 @@ export const shares: Lab = {
     if (reN > 0) {
       if (!fRes) throw new InputError('Enter the shares forfeited before re-issuing any.', 'fShares');
       if (reN > fN) throw new InputError('You cannot re-issue more shares than were forfeited.', 'reShares');
+      if (fRes.forfeitedCredit.paise % BigInt(fN) !== 0n) throw new InputError('The forfeited amount per share is not an exact paisa. This lab cannot allocate it reliably across a re-issue; use a case with a uniform exact amount per share.', 'reShares');
       let re; try { re = reissue({ reissued: BigInt(reN), price: money(v, 'rePrice', 'Re-issue price'), faceValue: face, forfeitedPerShare: fRes.forfeitedCredit.mulRatio(1n, BigInt(fN), 'HALF_UP') }); } catch (e) { if (e instanceof ShareError) throw new InputError(e.message, 'rePrice'); throw e; }
+      blocks.push(note('Re-issue assumes the same amount was received on each forfeited share; aggregate receipts alone cannot establish this for mixed groups.', 'info'));
       blocks.push({ kind: 'heading', text: 'Re-issue' });
       blocks.push({ kind: 'journal', entries: re.entries });
       blocks.push(note(re.discount.isPositive() ? `Discount of ${R(re.discount)} was allowed, so Capital Reserve is ${R(re.capitalReserve)} (forfeited amount on these shares − discount).` : `No discount was given, so the whole forfeited amount on these shares, ${R(re.capitalReserve)}, becomes Capital Reserve.`, 'good'));
     }
-    const note1 = shareCapitalNote({ authorisedShares: BigInt(offered), face, issuedShares: BigInt(offered), fullyPaidShares: subscribed - BigInt(fN) + BigInt(reN), ...(fRes ? { forfeitedReceived: fRes.forfeitedCredit.mulRatio(BigInt(fN - reN), BigInt(fN), 'HALF_UP') } : {}) });
-    blocks.push({ kind: 'table', caption: 'Share capital in the balance sheet (note)', head: ['', '₹'], numeric: [1], rows: [['Issued capital', R(note1.issued)], ['Subscribed and fully paid up', R(note1.subscribedAndPaid)], ['Add: forfeited shares (amount received)', R(note1.forfeitedAdded)]], foot: ['Total', R(note1.total)] });
+    const remainingArrears = r.callsInArrears.sub(fRes?.unpaidCredit ?? Money.ZERO);
+    if (remainingArrears.isPositive()) {
+      blocks.push(note(`A share-capital note cannot be prepared reliably: ${R(remainingArrears)} of arrears remain after forfeiture. The number of affected shares and the unpaid capital versus premium are not known.`, 'warn'));
+    } else {
+      const note1 = shareCapitalNote({ authorisedShares: BigInt(offered), face, issuedShares: BigInt(offered), fullyPaidShares: subscribed - BigInt(fN) + BigInt(reN), ...(fRes ? { forfeitedReceived: fRes.forfeitedCredit.mulRatio(BigInt(fN - reN), BigInt(fN), 'HALF_UP') } : {}) });
+      blocks.push(note('The note assumes the offered shares were all issued. The forfeited shares are assumed to have the same amount received per share.', 'info'));
+      blocks.push({ kind: 'table', caption: 'Share capital in the balance sheet (note)', head: ['', '₹'], numeric: [1], rows: [['Issued capital', R(note1.issued)], ['Subscribed and fully paid up', R(note1.subscribedAndPaid)], ['Add: forfeited shares (amount received)', R(note1.forfeitedAdded)]], foot: ['Total', R(note1.total)] });
+    }
     return blocks;
   },
 };

@@ -215,3 +215,27 @@ describe('scope guards', () => {
   });
   it('Fraction type still exported for ratios used here', () => expect(Fraction.of(1, 2).toString()).toBe('1/2'));
 });
+
+describe('share issue input boundaries', () => {
+  // 10 offered, 20 applied, ₹2 application + ₹3 allotment. Excess ₹20
+  // is adjusted to allotment, leaving ₹10 due in cash from all applicants.
+  const spec = { company: 'Example', faceValue: M('5'), offered: 10n,
+    categories: [{ label: 'all', applied: 20n, treatment: 'PRORATA' as const }],
+    instalments: [{ name: 'Application', face: M('2'), premium: M('0') }, { name: 'Allotment', face: M('3'), premium: M('0') }] };
+  it('accepts no arrears or the exact cash due after adjustment, but never more', () => {
+    const zero = issueShares(spec);
+    expect(find(zero.entries.at(-1)!, 'Bank A/c', 'DR')).toBe('10.00');
+    const exact = issueShares({ ...spec, arrearsAmount: { 1: M('10') } });
+    expect(find(exact.entries.at(-1)!, 'Calls in Arrears A/c', 'DR')).toBe('10.00');
+    expect(find(exact.entries.at(-1)!, 'Bank A/c', 'DR')).toBeUndefined();
+    expect(exact.entries.every(isBalanced)).toBe(true);
+    expect(() => issueShares({ ...spec, arrearsAmount: { 1: M('10.01') } })).toThrow(ShareError);
+    expect(() => issueShares({ ...spec, arrearsAmount: { 1: M('-1') } })).toThrow(ShareError);
+    expect(() => issueShares({ ...spec, arrearsAmount: { 2: M('1') } })).toThrow(ShareError);
+  });
+  it('rejects negative instalments, invalid face value and negative applications', () => {
+    expect(() => issueShares({ ...spec, faceValue: M('0') })).toThrow(ShareError);
+    expect(() => issueShares({ ...spec, instalments: [{ name: 'Application', face: M('5'), premium: M('-1') }] })).toThrow(ShareError);
+    expect(() => issueShares({ ...spec, categories: [{ label: 'x', applied: -1n, treatment: 'PRORATA' }] })).toThrow(ShareError);
+  });
+});

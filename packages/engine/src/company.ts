@@ -47,6 +47,8 @@ export class ShareError extends Error { constructor(m: string) { super(m); this.
  * Pro-rata allotment must come out in whole shares; otherwise the question is ill-formed and we say so.
  */
 export function allotmentPlan(offered: bigint, categories: readonly ApplicantCategory[]): AllotmentPlan {
+  if (offered <= 0n) throw new ShareError('Shares offered must be greater than zero');
+  if (categories.some(c => c.applied < 0n)) throw new ShareError('Applications cannot be negative');
   const full = categories.filter(c => c.treatment === 'FULL').reduce((a, c) => a + c.applied, 0n);
   const pro = categories.filter(c => c.treatment === 'PRORATA').reduce((a, c) => a + c.applied, 0n);
   const remaining = offered - full;
@@ -112,6 +114,13 @@ export interface ShareIssueResult {
 }
 
 export function issueShares(spec: ShareIssueSpec): ShareIssueResult {
+  if (!spec.faceValue.isPositive()) throw new ShareError('Face value must be greater than zero');
+  if (spec.instalments.some(i => i.face.isNegative() || i.premium.isNegative())) throw new ShareError('Instalment face value and premium cannot be negative');
+  for (const [key, amount] of Object.entries(spec.arrearsAmount ?? {})) {
+    const index = Number(key);
+    if (!Number.isInteger(index) || index < 1 || index >= spec.instalments.length) throw new ShareError('Arrears must refer to an allotment or call instalment');
+    if (amount.isNegative()) throw new ShareError('Calls in arrears cannot be negative');
+  }
   const faceSum = Money.sum(spec.instalments.map(i => i.face));
   if (!faceSum.equals(spec.faceValue)) throw new ShareError(`Instalment face parts add to ${faceSum.toString()}, not the face value ${spec.faceValue.toString()}`);
   if (spec.instalments.length < 1) throw new ShareError('At least an application instalment is needed');
@@ -155,6 +164,7 @@ export function issueShares(spec: ShareIssueSpec): ShareIssueResult {
     shareCapital = shareCapital.add(times(inst.face, plan.accepted)); premium = premium.add(times(inst.premium, plan.accepted));
     const adjusted = idx === 1 ? toAllotment : Money.ZERO;
     const unpaid = spec.arrearsAmount?.[idx] ?? Money.ZERO;
+    if (unpaid.cmp(due.sub(adjusted)) > 0) throw new ShareError(`${inst.name} arrears cannot exceed ${due.sub(adjusted).format()} due after application adjustment`);
     arrearsTotal = arrearsTotal.add(unpaid);
     entries.push({
       narration: `${inst.name} money received${unpaid.isZero() ? '' : ' (calls in arrears ' + unpaid.format() + ')'}`,
@@ -189,6 +199,8 @@ export interface ForfeitureResult {
 }
 
 export function forfeit(inp: ForfeitureInput): ForfeitureResult {
+  if (inp.shares <= 0n) throw new ShareError('Shares forfeited must be greater than zero');
+  if (inp.called.some(i => i.face.isNegative() || i.premium.isNegative())) throw new ShareError('Called amounts cannot be negative');
   if (inp.called.length !== inp.receivedByInstalment.length) throw new ShareError('One received amount is needed per called instalment');
   let faceCalled = Money.ZERO, premCalled = Money.ZERO, faceRecv = Money.ZERO, premRecv = Money.ZERO, recvTotal = Money.ZERO;
   inp.called.forEach((inst, k) => {
