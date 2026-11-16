@@ -17,5 +17,6 @@ echo "== browser: web app (extra)"; node e2e/web-app-extra.cjs
 echo "== browser: state machines"; node e2e/web-app-states.cjs
 echo "== browser: tutor panel ↔ proxy (mock upstream)"; node e2e/web-app-tutor.cjs
 echo "== browser: V1 slice (skills, Hindi draft, outcomes, axe)"; node e2e/web-app-v1.cjs
+echo "== browser: Trial Balance Crisis challenge"; node e2e/web-app-crisis.cjs
 echo "== browser: legacy";    node e2e/legacy-smoke.cjs && node e2e/legacy-simulator-regression.cjs
 echo "ALL CHECKS PASSED"

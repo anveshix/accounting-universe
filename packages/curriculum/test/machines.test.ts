@@ -10,7 +10,7 @@ describe('every machine in the registry', () => {
     let seed = 99; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32; };
     const ctxFor: Record<string, () => unknown> = {
       'practice-question': () => ({ mode: (['BEGINNER', 'PRACTICE', 'BOARD'] as const)[Math.floor(rnd() * 3)], hintsLeft: Math.floor(rnd() * 3), stepsLeft: Math.floor(rnd() * 3) }),
-      'trainer-round': () => ({ hasBoth: rnd() < 0.5 }), 'card-check': () => ({ hasChoice: rnd() < 0.5 }), 'ai-ask': () => ({ hasQuestion: rnd() < 0.5 }),
+      'trainer-round': () => ({ hasBoth: rnd() < 0.5 }), 'tb-crisis': () => ({ lives: Math.floor(rnd() * 4) }), 'card-check': () => ({ hasChoice: rnd() < 0.5 }), 'ai-ask': () => ({ hasQuestion: rnd() < 0.5 }),
       'cas-voucher': () => ({ role: (['ACCOUNTANT', 'CHECKER', 'VIEWER'] as const)[Math.floor(rnd() * 3)], yearClosed: rnd() < 0.3 }),
       'cas-year': () => ({ role: (['ACCOUNTANT', 'CHECKER', 'VIEWER'] as const)[Math.floor(rnd() * 3)], pending: Math.floor(rnd() * 3) }),
     };

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Trial Balance Crisis — gamified what-if challenge (Class XI, clauses XI.2.tb and XI.2.errors)
+- New page `#/crisis` (listed under Visual Labs): a month of transactions is posted correctly, one posting in one ledger account is spoiled
+  (left out / wrong side / wrong amount) and the trial balance no longer agrees. Five steps: find the difference and the short side → audit the ledger
+  accounts against the journal and name the wrong one → name the kind of error → pass the rectifying entry through Suspense → answer a what-if about an
+  error the trial balance cannot reveal. Three lives (lost only for a wrong accusation or a wrong entry), XP with a ×1.5 streak, speed bonus, two badges,
+  3D balance scale that levels only when the entry is right, English and Hindi (draft). XP and badges stay on the device.
+- `packages/curriculum/src/crisis.ts` (scenario by the engine: `Money`, `suspenseFromTrialBalance`, `rectify`), `TB_CRISIS` state machine, 63 UI strings in the EN/HI catalogue.
+- Tests: `crisis.test.ts` (13; plain-arithmetic oracles, corruption checks, hand-worked XP), `e2e/web-app-crisis.cjs` (35; the test plays from what is on screen, axe, 390 px).
+
 ### Audit of merged `main` (after PRs #6, #8, #9) — defects found and fixed
 - `npm ci` failed on `main`: `three` was in `apps/web/package.json` but not in the root lockfile → lockfile regenerated.
 - The web build failed on `main`: no types for `three` → `@types/three` added.

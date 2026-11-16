@@ -58,7 +58,7 @@ export const impactHi = (o: string) => o.replace(/No net change/g, 'कोई �
 const SIDE_WORD: Record<number, string> = { 0: 'what the business owns (assets)', 1: 'what it owes to outsiders (liabilities)', 2: "the owner's claim (capital: capital brought in, profit or loss, drawings)" };
 
 // ───── ledger / trial-balance transaction templates on the starter chart (EN, HI)
-type Tx = { en: string; hi: string; dr: string; cr: string };
+export type Tx = { en: string; hi: string; dr: string; cr: string };
 const TX: Tx[] = [
   { en: 'Bought machinery for cash', hi: 'नकद मशीनरी खरीदी', dr: 'machinery', cr: 'cash' }, { en: 'Cash sales', hi: 'नकद विक्रय', dr: 'cash', cr: 'sales' },
   { en: 'Purchased goods on credit', hi: 'उधार माल खरीदा', dr: 'purchases', cr: 'creditors' }, { en: 'Paid creditors in cash', hi: 'लेनदारों को नकद भुगतान', dr: 'creditors', cr: 'cash' },
@@ -69,7 +69,7 @@ const TX: Tx[] = [
 const FOCUS = ['cash', 'creditors', 'debtors'] as const;
 const SIDE_ACCOUNTS = ['Cash', 'Machinery', 'Furniture', 'Debtors', 'Purchases', 'Rent Paid', 'Carriage Inwards', 'Bad Debts', 'Drawings', 'Creditors', 'Capital', 'Sales', 'Bank Loan', 'Commission Received', 'Interest Received', 'Bills Payable', 'Outstanding Salary', 'Discount Received'].filter(n => classify(n) && hasAccountHi(n));
 /** A short business month posted through the engine; balances never go negative. */
-function month(r: { int: (a: number, b: number) => number; pick: <T>(x: readonly T[]) => T; multiple: (a: number, b: number, s: number) => number }, need?: string) {
+export function month(r: { int: (a: number, b: number) => number; pick: <T>(x: readonly T[]) => T; multiple: (a: number, b: number, s: number) => number }, need?: string) {
   for (let attempt = 0; attempt < 200; attempt++) {
     const l = new Ledger(starterChartClassXI()), lines: { tx: Tx | null; amount: number; day: number }[] = [];
     const start = r.multiple(50000, 150000, 10000);

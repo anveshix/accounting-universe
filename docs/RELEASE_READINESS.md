@@ -26,6 +26,11 @@ single debit / single credit; `journal-error` tests recognising mistakes instead
 skill `eq-impact` does), Hindi for labs, concept text and the wrong-answer explanations, rules and equation clauses still have only one or two bands
 (rules = RU only; equation = RU + AP), 5 legacy items held for an inventory-model decision.
 
+## Trial Balance Crisis challenge (2026-11-16)
+Built and tested (13 unit tests with independent oracles, 35 browser checks incl. axe and 390 px). Not verified: a teacher's review of the wording, the
+rectification convention and the what-if answers (D11); the Hindi text is an unreviewed draft (D10); the 3D scale is decorative and was only checked in headless Chromium;
+classroom use with real students. Only one-sided posting errors in a single account are generated (no compound or two-sided errors, which need no Suspense).
+
 ## Not done / not verified (read before releasing)
 * **AI tutor is not live.** Code, guard and tests exist (`apps/tutor-proxy`) but it was never run against the real API, is not deployed, and needs your API key and a host (D4). The app works fully without it.
 * **No accounts, sync or central teacher view** (D5): teachers work from files students hand over. By design, nothing about minors leaves the device.

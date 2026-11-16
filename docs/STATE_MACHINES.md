@@ -144,6 +144,40 @@ stateDiagram-v2
 | `ANSWERED` | Checked; the rule behind each side is shown. | `NEXT`→`ASKING`, `FINISH`→`COMPLETE` |
 | `COMPLETE` | All questions done; the score is shown. | `AGAIN`→`ASKING` |
 
+### `tb-crisis` — UI
+
+The Trial Balance Crisis challenge: five steps, three lives.
+
+Implemented in: `apps/web/src/pages/crisis.ts`
+
+```mermaid
+stateDiagram-v2
+  [*] --> DIAGNOSE
+  DIAGNOSE --> LOCATE: RIGHT
+  DIAGNOSE --> DIAGNOSE: WRONG
+  LOCATE --> CLASSIFY: RIGHT
+  LOCATE --> LOCATE: WRONG ⚑
+  LOCATE --> FAILED: OUT ⚑
+  CLASSIFY --> RECTIFY: RIGHT
+  CLASSIFY --> CLASSIFY: WRONG
+  RECTIFY --> WHAT_IF: RIGHT
+  RECTIFY --> RECTIFY: WRONG ⚑
+  RECTIFY --> FAILED: OUT ⚑
+  WHAT_IF --> CLEARED: ANSWER
+  CLEARED --> DIAGNOSE: AGAIN
+  FAILED --> DIAGNOSE: AGAIN
+```
+
+| State | Meaning | Events |
+|---|---|---|
+| `DIAGNOSE` | Find the difference between the totals and the short side (no lives at stake). | `RIGHT`→`LOCATE`, `WRONG`→`DIAGNOSE` |
+| `LOCATE` | Audit the ledger accounts and name the one with the wrong posting (a wrong accusation costs a life). | `RIGHT`→`CLASSIFY`, `WRONG`→`LOCATE` ⚑, `OUT`→`FAILED` ⚑ |
+| `CLASSIFY` | Name the kind of error (no lives at stake). | `RIGHT`→`RECTIFY`, `WRONG`→`CLASSIFY` |
+| `RECTIFY` | Pass the rectifying entry through the Suspense Account (a wrong entry costs a life). | `RIGHT`→`WHAT_IF`, `WRONG`→`RECTIFY` ⚑, `OUT`→`FAILED` ⚑ |
+| `WHAT_IF` | One critical-thinking question about a different error; any answer ends the challenge. | `ANSWER`→`CLEARED` |
+| `CLEARED` | Books agree; XP, badges and the full solution are shown. | `AGAIN`→`DIAGNOSE` |
+| `FAILED` | Out of lives; the full solution is shown. | `AGAIN`→`DIAGNOSE` |
+
 ### `card-check` — UI
 
 A single self-check question on a concept card.

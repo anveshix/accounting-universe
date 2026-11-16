@@ -26,6 +26,7 @@ describe('route table', () => {
     expect(NAV.map(n => n.key)).toEqual(OLD_NAV.map(n => n.label));
     for (const n of NAV) expect(resolve(n.hash.replace(/^#\/?/, '').split('/').filter(Boolean)).nav, n.key).toBe(n.key);
   });
+  it('pages added after the refactor resolve too', () => { expect(resolve(['crisis'])).toEqual({ id: 'crisis', nav: 'VISUAL LABS', rest: [] }); expect(resolve(['crisis', '42']).rest).toEqual(['42']); });
   it('passes the rest of the path to the page', () => { expect(resolve(['practice', 'dep-wdv', '7', 'board']).rest).toEqual(['dep-wdv', '7', 'board']); });
   it('hashFor encodes segments', () => { expect(hashFor('rescue', 'XI.2.brs')).toBe('#/rescue/XI.2.brs'); expect(hashFor('lab', 'a b')).toBe('#/lab/a%20b'); });
 });
