@@ -3,7 +3,7 @@ import {
   profitByStatementOfAffairs, reconcile, rectify, statementOfAffairs, suspenseFromTrialBalance, type Adjustment, type BrsKind, type RectLine, type TbLine,
 } from '../../../../packages/engine/src';
 import { InputError, type Block, type Lab } from '../spec';
-import { money, moneyList, namedAmounts, num, optMoney, percent, whole } from '../inputs';
+import { money, moneyList, namedAmounts, num, optMoney, percent, percentExact, whole } from '../inputs';
 import { bar, note, R } from './common';
 
 // ───────────────────────────── Depreciation ─────────────────────────────
@@ -17,15 +17,17 @@ export const depreciation: Lab = {
   ],
   realWorld: 'A bakery buys an oven for ₹1,00,000. It will not last forever, so each year part of its cost is charged against that year\'s profit — otherwise the first year would carry the whole cost and later years none.',
   fields: [
+    { id: 'asset', label: 'Asset name', type: 'text', help: 'Used in the journal entries, e.g. Machinery, Furniture, Computer.' },
     { id: 'cost', label: 'Cost of asset (₹)', type: 'money' },
     { id: 'method', label: 'Method', type: 'select', options: [{ value: 'WDV', label: 'Written Down Value (WDV)' }, { value: 'SLM', label: 'Straight Line (SLM)' }] },
-    { id: 'rate', label: 'Rate of depreciation (% a year)', type: 'percent', help: 'Whole-number percentages only. On cost for SLM, on opening book value for WDV; residual value is assumed to be zero.' },
+    { id: 'rate', label: 'Rate of depreciation (% a year)', type: 'percent', help: 'Decimals allowed, e.g. 12.5. On cost for SLM, on opening book value for WDV.' },
+    { id: 'scrap', label: 'Scrap / residual value (₹, blank = none)', type: 'money', help: 'Book value is never reduced below this amount.' },
     { id: 'years', label: 'Number of years', type: 'int' },
     { id: 'months', label: 'Months in the first year (1–12)', type: 'int', help: 'Bought mid-year? Only that part of the year is charged.' },
     { id: 'recording', label: 'Record by', type: 'select', options: [{ value: 'ASSET_ACCOUNT', label: 'Crediting the asset account' }, { value: 'PROVISION', label: 'Provision for depreciation account' }] },
     { id: 'sale', label: 'Sale price at the end of the last year (₹, blank = not sold)', type: 'money' },
   ],
-  example: { cost: '100000', method: 'WDV', rate: '10', years: '3', months: '12', recording: 'ASSET_ACCOUNT', sale: '70000' },
+  example: { asset: 'Machinery', cost: '100000', scrap: '', method: 'WDV', rate: '10', years: '3', months: '12', recording: 'ASSET_ACCOUNT', sale: '70000' },
   walkthrough: [
     'Year 1: 10% of ₹1,00,000 = ₹10,000, so the oven is now worth ₹90,000.',
     'Year 2: WDV charges 10% of the NEW balance ₹90,000 = ₹9,000 (SLM would still charge ₹10,000).',
@@ -36,22 +38,24 @@ export const depreciation: Lab = {
     const cost = money(v, 'cost', 'Cost');
     if (!cost.isPositive()) throw new InputError('Cost must be greater than zero.', 'cost');
     const method = v.method === 'SLM' ? 'SLM' : 'WDV';
-    const rate = percent(v, 'rate', 'Rate');
+    const rateX = percentExact(v, 'rate', 'Rate'), rate = rateX.text, scrap = optMoney(v, 'scrap', 'Scrap value');
+    const asset = (v.asset ?? '').trim() || 'Machinery';
+    if (scrap.cmp(cost) > 0) throw new InputError('Scrap value cannot be more than the cost.', 'scrap');
     const years = whole(v, 'years', 'Number of years', 1, 50), months = whole(v, 'months', 'Months in first year', 1, 12);
     let rows;
-    try { rows = depreciationSchedule({ cost, method, rate: pct(rate), years, firstYearMonths: months }); } catch (e) { throw new InputError((e as Error).message); }
+    try { rows = depreciationSchedule({ cost, method, rate: rateX.f, scrap, years, firstYearMonths: months }); } catch (e) { throw new InputError((e as Error).message); }
     const blocks: Block[] = [];
     blocks.push({ kind: 'table', caption: `${method === 'SLM' ? 'Straight Line' : 'Written Down Value'} schedule`, head: ['Year', 'Opening value', 'Depreciation', 'Closing value'], numeric: [1, 2, 3],
       rows: rows.map(r => [String(r.year), R(r.opening), R(r.depreciation), R(r.closing)]), foot: ['Total', '', R(Money.sum(rows.map(r => r.depreciation))), ''] });
     blocks.push({ kind: 'bars', title: 'Book value at the end of each year', items: [{ ...bar('Cost', cost), tone: 'c' as const }, ...rows.map(r => bar(`End of year ${r.year}`, r.closing))] });
-    blocks.push(note('Assumptions: no residual value; depreciation is rounded to the nearest paisa and cannot reduce book value below zero. Sale, if entered, occurs after the last year’s depreciation.', 'info'));
+    blocks.push(note(`Assumptions: ${scrap.isZero() ? 'no residual value' : `residual value ${R(scrap)}`}; depreciation is rounded to the nearest paisa and cannot reduce book value below ${scrap.isZero() ? 'zero' : 'the residual value'}. Sale, if entered, occurs after the last year’s depreciation.`, 'info'));
     blocks.push({ kind: 'steps', title: 'Working notes', steps: rows.map(r => {
       const base = method === 'WDV' ? r.opening : cost;
       const period = r.year === 1 ? months : 12;
-      const calculated = pct(rate).mul(pct(period, 12)).of_(base, 'HALF_UP');
+      const calculated = rateX.f.mul(pct(period, 12)).of_(base, 'HALF_UP');
       const formula = `${rate}% of ${method === 'WDV' ? 'opening' : 'cost'} ${R(base)}${period < 12 ? ` × ${period}/12` : ''}`;
-      return calculated.cmp(r.opening) > 0
-        ? `Year ${r.year}: ${formula} = ${R(calculated)}; limited to opening book value ${R(r.opening)} = ${R(r.depreciation)}.`
+      return calculated.cmp(r.opening.sub(scrap)) > 0
+        ? `Year ${r.year}: ${formula} = ${R(calculated)}; ${scrap.isZero() ? `limited to opening book value ${R(r.opening)} = ${R(r.depreciation)}.` : `limited so book value stays at the scrap value ${R(scrap)}: ${R(r.depreciation)}.`}`
         : `Year ${r.year}: ${formula}, rounded to nearest paisa = ${R(r.depreciation)}.`;
     }) });
     const recording = v.recording === 'PROVISION' ? 'PROVISION' : 'ASSET_ACCOUNT';
@@ -59,12 +63,12 @@ export const depreciation: Lab = {
       blocks.push(note('No depreciation entry is needed for the first year because the charge is zero.'));
     } else {
       blocks.push({ kind: 'heading', text: 'Journal entry for the first year' });
-      blocks.push({ kind: 'journal', entries: [depreciationEntry('Machinery', rows[0]!.depreciation, recording)] });
+      blocks.push({ kind: 'journal', entries: [depreciationEntry(asset, rows[0]!.depreciation, recording)] });
     }
     if ((v.sale ?? '').trim() !== '') {
       const sale = optMoney(v, 'sale', 'Sale price');
       const acc = cost.sub(rows[rows.length - 1]!.closing);
-      const d = disposeAsset({ name: 'Machinery', cost, accumulated: acc, saleProceeds: sale, method: recording });
+      const d = disposeAsset({ name: asset, cost, accumulated: acc, saleProceeds: sale, method: recording });
       blocks.push({ kind: 'heading', text: 'Sale of the asset' });
       blocks.push({ kind: 'table', head: ['', 'Amount'], numeric: [1], rows: [['Cost', R(cost)], ['Less: depreciation to date', R(acc)], ['Book value at sale', R(d.bookValue)], ['Sale price', R(sale)], [d.profitOrLoss.isNegative() ? 'Loss on sale' : 'Profit on sale', R(d.profitOrLoss.abs())]] });
       blocks.push({ kind: 'journal', entries: d.entries });

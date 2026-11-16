@@ -31,6 +31,16 @@ export function percent(values: Record<string, string>, id: string, label: strin
   if (n > 100n) throw new InputError(`${label} cannot be more than 100%.`, id);
   return n;
 }
+/** A percentage with up to 2 decimals (12.5, 7.25) as an exact Fraction of 1, plus the text to show back to the student. */
+export function percentExact(values: Record<string, string>, id: string, label: string): { f: Fraction; text: string } {
+  const raw = strip(values[id] ?? '');
+  const m = /^(\d+)(?:\.(\d{1,2}))?$/.exec(raw);
+  if (!m) throw new InputError(`${label} must be a percentage such as 10 or 12.5 (at most 2 decimals).`, id);
+  const frac = (m[2] ?? '').padEnd(2, '0');
+  const f = Fraction.of(BigInt(m[1]! + frac), 10000n);
+  if (f.cmp(Fraction.ONE) > 0) throw new InputError(`${label} cannot be more than 100%.`, id);
+  return { f, text: `${m[1]}${m[2] ? '.' + m[2] : ''}` };
+}
 /** "3:2:5" → fractions, for exactly `n` partners (or any count when n omitted). */
 export function ratio(values: Record<string, string>, id: string, label: string, n?: number): Fraction[] {
   const raw = (values[id] ?? '').trim();
