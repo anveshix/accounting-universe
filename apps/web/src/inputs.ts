@@ -31,6 +31,16 @@ export function percent(values: Record<string, string>, id: string, label: strin
   if (n > 100n) throw new InputError(`${label} cannot be more than 100%.`, id);
   return n;
 }
+/** A percentage with up to 2 decimals (12.5, 7.25) as an exact Fraction of 1, plus the text to show back to the student. */
+export function percentExact(values: Record<string, string>, id: string, label: string): { f: Fraction; text: string } {
+  const raw = strip(values[id] ?? '');
+  const m = /^(\d+)(?:\.(\d{1,2}))?$/.exec(raw);
+  if (!m) throw new InputError(`${label} must be a percentage such as 10 or 12.5 (at most 2 decimals).`, id);
+  const frac = (m[2] ?? '').padEnd(2, '0');
+  const f = Fraction.of(BigInt(m[1]! + frac), 10000n);
+  if (f.cmp(Fraction.ONE) > 0) throw new InputError(`${label} cannot be more than 100%.`, id);
+  return { f, text: `${m[1]}${m[2] ? '.' + m[2] : ''}` };
+}
 /** "3:2:5" → fractions, for exactly `n` partners (or any count when n omitted). */
 export function ratio(values: Record<string, string>, id: string, label: string, n?: number): Fraction[] {
   const raw = (values[id] ?? '').trim();
@@ -40,10 +50,27 @@ export function ratio(values: Record<string, string>, id: string, label: string,
   if (parts.every(p => p === '0')) throw new InputError(`${label} cannot be all zeros.`, id);
   return Fraction.fromRatio(parts.map(Number));
 }
+/**
+ * Splits a list of amounts on new lines, semicolons and commas — but keeps Indian/Western grouping commas (1,25,000 · 50,000)
+ * inside one amount: a comma is grouping when a digit comes before it and exactly 2–3 digits follow it.
+ */
+export function splitAmounts(raw: string): string[] {
+  const parts: string[] = []; let cur = '';
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i]!;
+    if (c === '\n' || c === ';') { parts.push(cur); cur = ''; }
+    else if (c === ',') {
+      const grouping = /\d$/.test(cur) && /^\d{2,3}(?!\d)/.test(raw.slice(i + 1));
+      if (grouping) cur += c; else { parts.push(cur); cur = ''; }
+    } else cur += c;
+  }
+  parts.push(cur);
+  return parts.map(s => s.trim()).filter(Boolean);
+}
 /** Comma/line separated list of amounts. */
 export function moneyList(values: Record<string, string>, id: string, label: string, min = 1): Money[] {
-  const parts = (values[id] ?? '').split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-  if (parts.length < min) throw new InputError(`${label} needs at least ${min} amount${min > 1 ? 's' : ''}, separated by commas.`, id);
+  const parts = splitAmounts(values[id] ?? '');
+  if (parts.length < min) throw new InputError(`${label} needs at least ${min} amount${min > 1 ? 's' : ''}, separated by commas, semicolons or new lines.`, id);
   return parts.map((p, i) => { try { return Money.parse(strip(p)); } catch { throw new InputError(`${label}: item ${i + 1} ("${p}") is not a valid amount.`, id); } });
 }
 /** Lines like "Name : 1200" or "Name 1200". */

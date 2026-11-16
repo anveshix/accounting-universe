@@ -50,7 +50,7 @@ export function homePage(rerender: () => void): HTMLElement {
     // Decluttered features — 2 key promises, not 3
     h('section', { class: 'features', 'aria-label': 'Why this works' },
       h('div', { class: 'feature' }, h('i', { 'aria-hidden': 'true' }, '📘'), h('div', {}, h('b', {}, 'Exact engine'), h('span', {}, 'Money is bigint paise. Every journal, ledger and ratio is computed — never hand-coded.'))),
-      h('div', { class: 'feature' }, h('i', { 'aria-hidden': 'true' }, '🎓'), h('div', {}, h('b', {}, 'Learn by doing'), h('span', {}, 'Post entries, tilt the 3D balance scale, see the books respond — not a video lecture.')))),
+      h('div', { class: 'feature' }, h('i', { 'aria-hidden': 'true' }, '🎓'), h('div', {}, h('b', {}, 'Learn by doing'), h('span', {}, 'Post entries, see the ledger, trial balance and accounting equation respond — not a video lecture.')))),
 
     // Stats — 2 honest numbers, decluttered (removed 2 extra cards)
     h('section', { class: 'stat-row', style: 'grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))' },

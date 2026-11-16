@@ -47,6 +47,27 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok(await page.evaluate(() => window.__timers.size) === 0, 'LEAK FIX: navigating away stops the ledger timer');
     ok(!(await machines(page)).some(m => m.startsWith('ledger-player')), 'LEAK FIX: the player machine is unregistered after leaving');
 
+    // Ledger: signed balances must not be clipped or represented as positive tank weights.
+    await page.goto(BASE + '#/ledger'); await page.waitForSelector('.ledger-lab');
+    const postLedger = async (narration, debit, credit, amount) => {
+      await page.fill('#je-narr', narration);
+      await page.selectOption('.linerow:nth-child(1) select:nth-of-type(2)', debit);
+      await page.selectOption('.linerow:nth-child(2) select:nth-of-type(2)', credit);
+      await page.fill('.linerow:nth-child(1) input', amount);
+      await page.fill('.linerow:nth-child(2) input', amount);
+      await page.click('text=Post entry');
+    };
+    await postLedger('Loan', 'cash', 'bank-loan', '100');
+    await postLedger('Rent', 'rent', 'cash', '60');
+    ok((await page.$eval('.eqline', e => e.textContent)).includes('Capital -₹60.00'), 'ledger: negative capital remains signed in the equation');
+    ok((await page.$eval('.equation-signed', e => e.textContent)).includes('-₹60.00'), 'ledger: negative capital displayed in signed fallback');
+    ok(await page.$eval('.balance-3d-wrap', e => e.hidden), 'ledger: scale hidden for signed balances');
+    await page.click('text=↺ Reset');
+    await postLedger('Overdrawn bank', 'rent', 'bank', '50');
+    ok((await page.$eval('.equation-signed', e => e.textContent)).includes('-₹50.00'), 'ledger: negative asset is not shown as empty');
+    const tbalances = await page.$$eval('.tbal', els => els.map(e => e.textContent));
+    ok(tbalances.some(t => t.includes('₹50.00 Cr') && !t.includes('-₹50.00 Cr')), 'ledger: credit balance is shown without a negative sign');
+
     // ── practice: a question can only be answered once; help follows the state
     await page.goto(BASE + '#/practice/dep-wdv/4242/practice'); await page.waitForSelector('.question[data-machine="practice-question"]');
     ok(await state(page, '.question') === 'ANSWERING', 'practice: ANSWERING at first');
@@ -79,8 +100,23 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     await page.click('button[type=submit]'); ok(await state(page, '[data-machine="trainer-round"]') === 'ASKING' && (await page.$eval('.note.warn', e => e.textContent)).includes('Choose an account'), 'trainer: refused answer stays ASKING with a reason');
     await page.selectOption('#dr', { index: 1 }); await page.selectOption('#cr', { index: 2 }); await page.click('button[type=submit]');
     ok(await state(page, '[data-machine="trainer-round"]') === 'ANSWERED', 'trainer: ANSWERED');
-    const scoreText = await page.$eval('.eyebrow', e => e.textContent); await page.evaluate(() => document.querySelector('form').requestSubmit());
-    ok((await page.$eval('.eyebrow', e => e.textContent)) === scoreText, 'trainer: a second Check cannot score twice');
+    const scoreText = await page.$eval('.trainer section .eyebrow', e => e.textContent);
+    const feedbackBefore = await page.$eval('.trainer form + div', e => e.textContent);
+    ok(await page.$eval('.trainer button[type=submit]', e => e.disabled), 'trainer: Check disabled after answer');
+    await page.evaluate(() => document.querySelector('.trainer form').requestSubmit());
+    ok((await page.$eval('.trainer section .eyebrow', e => e.textContent)) === scoreText, 'trainer: a second Check cannot score twice');
+    ok((await page.$eval('.trainer form + div', e => e.textContent)) === feedbackBefore, 'trainer: duplicate submission preserves feedback');
+    // Every question has distinct debit and credit, so choosing cash on both sides is always wrong.
+    await page.goto(BASE + '#/trainer'); await page.waitForSelector('[data-machine="trainer-round"]');
+    const firstQuestion = await page.textContent('.trainer .stem');
+    for (let k = 0; k < 15; k++) {
+      await page.selectOption('#dr', 'cash'); await page.selectOption('#cr', 'cash'); await page.click('.trainer button[type=submit]');
+      await page.locator('.trainer button.primary').filter({ hasText: /Next|Finish/ }).click();
+    }
+    ok((await page.textContent('.trainer')).includes('Retry missed (15)'), 'trainer: incorrect transactions available for review');
+    await page.click('text=Retry missed (15)');
+    ok(await state(page, '[data-machine="trainer-round"]') === 'ASKING', 'trainer: retry starts a new round through the machine');
+    ok(await page.textContent('.trainer .stem') === firstQuestion, 'trainer: retry begins with the same missed transaction');
     await page.goto(BASE + '#/cards/gst'); await page.waitForSelector('form.check[data-machine="card-check"]');
     ok(await page.$eval('form.check', e => e.getAttribute('data-state')) === 'UNANSWERED', 'cards: UNANSWERED');
     await (await page.$('form.check input[value="1"]')).check(); await (await page.$('form.check button')).click();
@@ -120,6 +156,10 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok((await page.$eval('.result', e => e.textContent)).includes('Shares can only be forfeited after a call was not paid.'), 'share lab: forfeiture without unpaid calls is refused with an explanation');
     await page.click('text=Reset to example'); await page.click('button[type=submit]'); await page.waitForSelector('.lifecycle');
     ok((await page.$$eval('.lifecycle li.issue', l => l.length)) === 2, 'share lab: example shows arrears + forfeiture as issues (derived from the machine)');
+    await page.fill('#f-fShares', '100001'); await page.click('button[type=submit]');
+    ok((await page.$eval('.result', e => e.textContent)).includes('cannot exceed shares allotted'), 'share lab: over-forfeiture is refused');
+    await page.click('text=Reset to example'); await page.fill('#f-fShares', '0'); await page.fill('#f-reShares', '0'); await page.click('button[type=submit]');
+    ok((await page.$eval('.result', e => e.textContent)).includes('share-capital note cannot be prepared reliably'), 'share lab: unresolved arrears withhold disclosure');
 
     // ── storage fallback: private-mode style — nothing is saved, and the student is TOLD
     const mem = await newPage(() => { Object.defineProperty(window, 'indexedDB', { value: undefined, configurable: true }); });
