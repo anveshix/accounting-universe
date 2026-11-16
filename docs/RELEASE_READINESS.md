@@ -8,6 +8,8 @@ claimed is tested — but the items under "Not done" matter before a wide releas
 
 **Class XII share-capital audit step:** Issue arrears are now bounded by the amount due after application adjustment; the lab checks forfeiture counts and receipts, and withholds the share-capital note if arrears remain without enough information for a reliable breakdown. Reissue assumes uniform receipts per forfeited share; non-uniform cases and a full partly-paid disclosure workflow remain future work. Independent examples are in `packages/engine/test/company.test.ts` and `packages/curriculum/test/share-lab-audit.test.ts`. Browser verification and independent CBSE teacher review remain pending.
 
+**Class XI visual labs, step 1:** signed balances in the Journal → Ledger view now use a textual fallback rather than an inaccurate positive-only tank; see `AUDIT_XI_VISUAL_LABS.md`. Engine and minimal-DOM tests pass. The added browser scenario, live deployment, accessibility and independent teacher review remain unverified.
+
 ## Works and is tested
 | Area | Evidence |
 |---|---|
