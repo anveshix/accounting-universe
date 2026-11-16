@@ -23,9 +23,19 @@ These are the current card order, not numbered syllabus units. Work proceeds one
 
 **Evidence:** engine tests cover the signed equation; `packages/curriculum/test/equation-render.test.ts` checks renderer output using a minimal DOM stub. `e2e/web-app-states.cjs` adds a real browser scenario but it was not run in this environment. `npm ci`, `npm run check`, and `npm run build` passed. This is not an exhaustive audit of all manual-entry scenarios, visual accessibility, real devices, live deployment or official academic marking; a qualified CBSE teacher should review it.
 
+## Step 2 — Debit & Credit Trainer
+
+**Findings and changes:**
+
+- The round previously told students to retry missed questions but offered only a fresh random round. After the round, “Retry missed” now repeats exactly those transactions; review attempts are recorded separately and do not change the earlier round's score.
+- A second form submission previously overwrote the feedback with a refusal. Check is now disabled after answering; a duplicate submission does not erase the explanation or score again.
+- Feedback now identifies swapped sides and distinguishes machinery from goods purchased for resale and personal drawings from business expenses. For other mistakes it avoids asserting that the selected account never changes in the transaction.
+- Clarified that this exercise handles one debit and one credit using the periodic purchases/sales convention. Replaced biased random sort with sampling without replacement.
+
+**Evidence:** `packages/curriculum/test/trainer-audit.test.ts` checks hand-worked account pairs, targeted feedback and sampling. `e2e/web-app-states.cjs` includes retry and duplicate-submission checks, but browser execution was not available in this environment. `npm ci`, `npm run check`, and `npm run build` passed. The migrated bank is machine-checked but has not had independent CBSE teacher sign-off; compound entries and Hindi are not covered by this trainer. Progress's existing error-correction level compares attempts by skill rather than by the same question, so a retry should not be treated as proof of mastery.
+
 ## Next steps
 
-2. Audit and improve the Debit & Credit Trainer using hand-worked cases and misconception feedback.
 3. Review Project Assistant guidance against the official Class XI project requirements and privacy assumptions.
 4. Revisit Depreciation Lab for remaining cases and teacher review.
 5. Audit Bank Reconciliation, including overdraft, starting point, signs and reconciled examples.

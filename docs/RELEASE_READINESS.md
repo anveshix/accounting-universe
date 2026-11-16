@@ -10,6 +10,8 @@ claimed is tested — but the items under "Not done" matter before a wide releas
 
 **Class XI visual labs, step 1:** signed balances in the Journal → Ledger view now use a textual fallback rather than an inaccurate positive-only tank; see `AUDIT_XI_VISUAL_LABS.md`. Engine and minimal-DOM tests pass. The added browser scenario, live deployment, accessibility and independent teacher review remain unverified.
 
+**Class XI visual labs, step 2:** the Debit & Credit Trainer now supports retrying missed transactions and gives targeted feedback; see `AUDIT_XI_VISUAL_LABS.md`. Automated unit tests pass; browser verification and independent teacher review remain pending.
+
 ## Works and is tested
 | Area | Evidence |
 |---|---|

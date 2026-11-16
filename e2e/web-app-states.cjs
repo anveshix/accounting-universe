@@ -100,8 +100,23 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     await page.click('button[type=submit]'); ok(await state(page, '[data-machine="trainer-round"]') === 'ASKING' && (await page.$eval('.note.warn', e => e.textContent)).includes('Choose an account'), 'trainer: refused answer stays ASKING with a reason');
     await page.selectOption('#dr', { index: 1 }); await page.selectOption('#cr', { index: 2 }); await page.click('button[type=submit]');
     ok(await state(page, '[data-machine="trainer-round"]') === 'ANSWERED', 'trainer: ANSWERED');
-    const scoreText = await page.$eval('.eyebrow', e => e.textContent); await page.evaluate(() => document.querySelector('form').requestSubmit());
-    ok((await page.$eval('.eyebrow', e => e.textContent)) === scoreText, 'trainer: a second Check cannot score twice');
+    const scoreText = await page.$eval('.trainer section .eyebrow', e => e.textContent);
+    const feedbackBefore = await page.$eval('.trainer form + div', e => e.textContent);
+    ok(await page.$eval('.trainer button[type=submit]', e => e.disabled), 'trainer: Check disabled after answer');
+    await page.evaluate(() => document.querySelector('.trainer form').requestSubmit());
+    ok((await page.$eval('.trainer section .eyebrow', e => e.textContent)) === scoreText, 'trainer: a second Check cannot score twice');
+    ok((await page.$eval('.trainer form + div', e => e.textContent)) === feedbackBefore, 'trainer: duplicate submission preserves feedback');
+    // Every question has distinct debit and credit, so choosing cash on both sides is always wrong.
+    await page.goto(BASE + '#/trainer'); await page.waitForSelector('[data-machine="trainer-round"]');
+    const firstQuestion = await page.textContent('.trainer .stem');
+    for (let k = 0; k < 15; k++) {
+      await page.selectOption('#dr', 'cash'); await page.selectOption('#cr', 'cash'); await page.click('.trainer button[type=submit]');
+      await page.locator('.trainer button.primary').filter({ hasText: /Next|Finish/ }).click();
+    }
+    ok((await page.textContent('.trainer')).includes('Retry missed (15)'), 'trainer: incorrect transactions available for review');
+    await page.click('text=Retry missed (15)');
+    ok(await state(page, '[data-machine="trainer-round"]') === 'ASKING', 'trainer: retry starts a new round through the machine');
+    ok(await page.textContent('.trainer .stem') === firstQuestion, 'trainer: retry begins with the same missed transaction');
     await page.goto(BASE + '#/cards/gst'); await page.waitForSelector('form.check[data-machine="card-check"]');
     ok(await page.$eval('form.check', e => e.getAttribute('data-state')) === 'UNANSWERED', 'cards: UNANSWERED');
     await (await page.$('form.check input[value="1"]')).check(); await (await page.$('form.check button')).click();
