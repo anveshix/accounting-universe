@@ -5,10 +5,11 @@ import { XI2_LABS } from './xi2';
 import { PARTNERSHIP_LABS } from './partnership';
 import { COMPANY_LABS } from './company';
 import { XII2_LABS } from './xii2';
+import { WHAT_IF } from './whatif';
 
 /** Every select must carry one of its declared options; anything else is a refusal the student can act on, never a crash inside compute(). */
 export function guarded(lab: Lab): Lab {
-  return { ...lab, compute: values => {
+  return { ...lab, ...(WHAT_IF[lab.id] ? { whatIf: WHAT_IF[lab.id] } : {}), compute: values => {
     for (const f of lab.fields) {
       if (f.type !== 'select' || !f.options) continue;
       const v = values[f.id] ?? '';

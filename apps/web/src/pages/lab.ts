@@ -91,6 +91,22 @@ export function labPage(lab: Lab, startTab: Tab = 'learn', shared?: string): HTM
       if (f.group && f.group !== group) { group = f.group; fields.push(h('h4', { class: 'fgroup' }, f.group)); }
       fields.push(fieldInput(f, values[f.id] ?? '', () => { const el = form.querySelector(`#f-${f.id}`) as HTMLInputElement; values[f.id] = el.value; save(lab, values); live(); }));
     }
+    const snapshot = () => Array.from(out.querySelectorAll('td, .val')).map(e => e.textContent ?? '');
+    const whatIfNote = h('p', { class: 'hint whatif-prompt', role: 'status' });
+    const apply = (w: NonNullable<Lab['whatIf']>[number]) => {
+      const before = snapshot();
+      setAll(id => w.set[id] ?? values[id] ?? '');
+      const cells = Array.from(out.querySelectorAll('td, .val'));
+      let moved = 0;
+      const seen = new Map<string, number>();
+      for (const t of before) seen.set(t, (seen.get(t) ?? 0) + 1);
+      for (const c of cells) {                       // a figure is "new" if it was not in the old result (multiset match)
+        const t = c.textContent ?? '', left = seen.get(t) ?? 0;
+        if (left > 0) seen.set(t, left - 1); else if (/\d/.test(t)) { c.classList.add('moved'); moved++; }
+      }
+      whatIfNote.textContent = `${w.prompt}${moved ? ` (${moved} new or changed figure${moved > 1 ? 's' : ''} highlighted below.)` : ''}`;
+    };
+    const chips = lab.whatIf?.length ? h('div', { class: 'whatif' }, h('strong', {}, 'What if… '), ...lab.whatIf.map(w => h('button', { type: 'button', class: 'chip', 'data-whatif': w.label, onclick: () => apply(w) }, w.label)), whatIfNote) : null;
     const copy = async () => {
       const url = shareUrl(lab, values);
       try { await navigator.clipboard.writeText(url); status.textContent = 'Link copied — anyone who opens it sees these numbers.'; }
@@ -102,7 +118,7 @@ export function labPage(lab: Lab, startTab: Tab = 'learn', shared?: string): HTM
         h('button', { type: 'button', onclick: () => setAll(id => lab.example[id] ?? '') }, 'Reset to example'),
         h('button', { type: 'button', onclick: () => setAll(() => '', false) }, 'Clear all'),
         h('button', { type: 'button', onclick: () => void copy() }, 'Copy link to these numbers'), status));
-    const wrap = h('div', {}, h('p', { class: 'hint' }, 'Change any number — the answer updates as you type (or press “Work it out”). Money can be typed as 125000 or 1,25,000. Your numbers stay in this browser tab; the link above carries them only if you copy it.'), form, out);
+    const wrap = h('div', {}, h('p', { class: 'hint' }, 'Change any number — the answer updates as you type (or press “Work it out”). Money can be typed as 125000 or 1,25,000. Your numbers stay in this browser tab; the link above carries them only if you copy it.'), chips, form, out);
     queueMicrotask(() => run());
     return wrap;
   }

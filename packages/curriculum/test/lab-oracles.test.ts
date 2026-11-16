@@ -152,3 +152,29 @@ describe('lab hardening', () => {
     expect(() => l.compute({ ...l.example, exit: 'Q' })).toThrow(/Retiring|exit|option/i);
   });
 });
+
+describe('what-if experiments', () => {
+  it('every experiment targets real fields, is valid, and actually changes the answer', () => {
+    let n = 0;
+    for (const l of ALL_LABS)
+      for (const w of l.whatIf ?? []) {
+        n++;
+        for (const k of Object.keys(w.set))
+          expect(
+            l.fields.some(f => f.id === k),
+            `${l.id}/${w.label}: ${k}`,
+          ).toBe(true);
+        const base = blocksToFacts(l.compute({ ...l.example })).join('\n');
+        const alt = blocksToFacts(l.compute({ ...l.example, ...w.set })).join('\n');
+        expect(alt, `${l.id}/${w.label} should change the output`).not.toBe(base);
+        expect(w.prompt.length, w.label).toBeGreaterThan(20);
+      }
+    expect(n).toBeGreaterThanOrEqual(12);
+  });
+  it('hand-worked: SLM on 1,00,000 at 10% sells for 80,000 → book 70,000 → profit 10,000', () => {
+    has('xi-depreciation', { method: 'SLM', sale: '80000' }, 'Profit on sale | Amount: ₹10,000.00');
+  });
+  it('hand-worked: starting from the pass book at 56,500 reconciles back to 50,000', () => {
+    has('xi-brs', { start: 'PASS_BOOK', balance: '56500' }, '₹50,000.00');
+  });
+});
