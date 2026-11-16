@@ -11,7 +11,7 @@ export const depreciation: Lab = {
   id: 'xi-depreciation', cls: 'XI', title: 'Depreciation Lab', clauses: ['XI.2.depreciation'], skills: ['dep-wdv', 'dep-slm', 'disposal'],
   summary: 'Spread an asset\'s cost over its life by SLM or WDV, record it two ways, and work out profit or loss when it is sold.',
   concept: [
-    'Depreciation is the fall in the value of a fixed asset from use, passage of time or obsolescence. It is an expense of the year, but no cash leaves the business.',
+    'Depreciation allocates the depreciable cost of a fixed asset over its useful life. Wear and tear, passage of time or obsolescence can cause it; it is an expense, not a cash payment each year.',
     'Straight Line Method (SLM): the same amount every year. Written Down Value (WDV): a fixed percentage of the balance left after earlier years, so the charge shrinks each year.',
     'Two ways to record it: credit the Asset account directly (the asset shows at book value), or credit a Provision for Depreciation account (the asset stays at cost). Syllabus limit: no change of method.',
   ],
@@ -19,7 +19,7 @@ export const depreciation: Lab = {
   fields: [
     { id: 'cost', label: 'Cost of asset (₹)', type: 'money' },
     { id: 'method', label: 'Method', type: 'select', options: [{ value: 'WDV', label: 'Written Down Value (WDV)' }, { value: 'SLM', label: 'Straight Line (SLM)' }] },
-    { id: 'rate', label: 'Rate of depreciation (% a year)', type: 'percent', help: 'On cost for SLM, on opening book value for WDV.' },
+    { id: 'rate', label: 'Rate of depreciation (% a year)', type: 'percent', help: 'Whole-number percentages only. On cost for SLM, on opening book value for WDV; residual value is assumed to be zero.' },
     { id: 'years', label: 'Number of years', type: 'int' },
     { id: 'months', label: 'Months in the first year (1–12)', type: 'int', help: 'Bought mid-year? Only that part of the year is charged.' },
     { id: 'recording', label: 'Record by', type: 'select', options: [{ value: 'ASSET_ACCOUNT', label: 'Crediting the asset account' }, { value: 'PROVISION', label: 'Provision for depreciation account' }] },
@@ -44,10 +44,23 @@ export const depreciation: Lab = {
     blocks.push({ kind: 'table', caption: `${method === 'SLM' ? 'Straight Line' : 'Written Down Value'} schedule`, head: ['Year', 'Opening value', 'Depreciation', 'Closing value'], numeric: [1, 2, 3],
       rows: rows.map(r => [String(r.year), R(r.opening), R(r.depreciation), R(r.closing)]), foot: ['Total', '', R(Money.sum(rows.map(r => r.depreciation))), ''] });
     blocks.push({ kind: 'bars', title: 'Book value at the end of each year', items: [{ ...bar('Cost', cost), tone: 'c' as const }, ...rows.map(r => bar(`End of year ${r.year}`, r.closing))] });
-    blocks.push({ kind: 'steps', title: 'Working notes', steps: rows.map(r => `Year ${r.year}: ${method === 'WDV' ? `${rate}% of opening ${R(r.opening)}` : `${rate}% of cost ${R(cost)}`}${r.year === 1 && months < 12 ? ` × ${months}/12` : ''} = ${R(r.depreciation)}`) });
+    blocks.push(note('Assumptions: no residual value; depreciation is rounded to the nearest paisa and cannot reduce book value below zero. Sale, if entered, occurs after the last year’s depreciation.', 'info'));
+    blocks.push({ kind: 'steps', title: 'Working notes', steps: rows.map(r => {
+      const base = method === 'WDV' ? r.opening : cost;
+      const period = r.year === 1 ? months : 12;
+      const calculated = pct(rate).mul(pct(period, 12)).of_(base, 'HALF_UP');
+      const formula = `${rate}% of ${method === 'WDV' ? 'opening' : 'cost'} ${R(base)}${period < 12 ? ` × ${period}/12` : ''}`;
+      return calculated.cmp(r.opening) > 0
+        ? `Year ${r.year}: ${formula} = ${R(calculated)}; limited to opening book value ${R(r.opening)} = ${R(r.depreciation)}.`
+        : `Year ${r.year}: ${formula}, rounded to nearest paisa = ${R(r.depreciation)}.`;
+    }) });
     const recording = v.recording === 'PROVISION' ? 'PROVISION' : 'ASSET_ACCOUNT';
-    blocks.push({ kind: 'heading', text: 'Journal entry for the first year' });
-    blocks.push({ kind: 'journal', entries: [depreciationEntry('Machinery', rows[0]!.depreciation, recording)] });
+    if (rows[0]!.depreciation.isZero()) {
+      blocks.push(note('No depreciation entry is needed for the first year because the charge is zero.'));
+    } else {
+      blocks.push({ kind: 'heading', text: 'Journal entry for the first year' });
+      blocks.push({ kind: 'journal', entries: [depreciationEntry('Machinery', rows[0]!.depreciation, recording)] });
+    }
     if ((v.sale ?? '').trim() !== '') {
       const sale = optMoney(v, 'sale', 'Sale price');
       const acc = cost.sub(rows[rows.length - 1]!.closing);

@@ -30,19 +30,23 @@ export function depreciationSchedule(o: {
   if (!Number.isInteger(fm) || fm < 1 || fm > 12) throw new RangeError('firstYearMonths must be 1–12');
   const part = (k: number) => (k === 1 ? Fraction.of(fm, 12) : Fraction.ONE);
 
-  let annualSLM: Money | undefined;
+  // Keep the annual rate exact until the period charge is rounded to paise.
+  let slmRate: Fraction | undefined;
   if (o.method === 'SLM') {
-    if (o.lifeYears) {
+    if (o.lifeYears !== undefined) {
       if (o.lifeYears < 1 || !Number.isInteger(o.lifeYears)) throw new RangeError('lifeYears must be a whole number ≥ 1');
-      annualSLM = o.cost.sub(scrap).mulRatio(1n, BigInt(o.lifeYears), R);
-    } else if (o.rate) annualSLM = o.rate.of_(o.cost, R);
+      slmRate = Fraction.of(1, o.lifeYears);
+    } else if (o.rate) slmRate = o.rate;
     else throw new RangeError('SLM needs either a rate or lifeYears');
   } else if (!o.rate) throw new RangeError('WDV needs a rate');
+  if (o.rate && (o.rate.isNegative() || o.rate.cmp(Fraction.ONE) > 0)) throw new RangeError('Rate must be between 0% and 100%');
 
   const rows: DepRow[] = [];
   let open = o.cost;
   for (let k = 1; k <= o.years; k++) {
-    let dep = o.method === 'SLM' ? part(k).of_(annualSLM!, R) : part(k).of_(o.rate!.of_(open, R), R);
+    const base = o.method === 'SLM' ? (o.lifeYears !== undefined ? o.cost.sub(scrap) : o.cost) : open;
+    const rate = o.method === 'SLM' ? slmRate! : o.rate!;
+    let dep = rate.mul(part(k)).of_(base, R);
     // never depreciate below scrap (and absorb rounding in the last year of a life-based SLM)
     const floor = scrap;
     if (o.method === 'SLM' && o.lifeYears && k === o.lifeYears && fm === 12) dep = open.sub(floor);
@@ -76,6 +80,9 @@ export interface DisposalResult {
  *  - Under PROVISION the asset is at cost, so it is transferred (with its provision) to an Asset Disposal A/c.
  */
 export function disposeAsset(o: { name: string; cost: Money; accumulated: Money; saleProceeds: Money; method: RecordingMethod }): DisposalResult {
+  if (o.cost.isNegative() || o.accumulated.isNegative() || o.accumulated.cmp(o.cost) > 0 || o.saleProceeds.isNegative()) {
+    throw new RangeError('Cost and sale proceeds must be non-negative; accumulated depreciation must be between zero and cost');
+  }
   const bv = o.cost.sub(o.accumulated);
   const pl = o.saleProceeds.sub(bv);
   const L = (account: string, side: 'DR' | 'CR', amount: Money) => ({ account, side, amount });
@@ -89,5 +96,5 @@ export function disposeAsset(o: { name: string; cost: Money; accumulated: Money;
       { narration: 'Sale proceeds', lines: [L('Bank A/c', 'DR', o.saleProceeds), L('Asset Disposal A/c', 'CR', o.saleProceeds)] },
       { narration: 'Profit / loss on sale', lines: nz(pl.isPositive() ? [L('Asset Disposal A/c', 'DR', pl), L('Profit & Loss A/c', 'CR', pl)] : [L('Profit & Loss A/c', 'DR', pl.neg()), L('Asset Disposal A/c', 'CR', pl.neg())]) },
     ];
-  return { bookValue: bv, saleProceeds: o.saleProceeds, profitOrLoss: pl, entries };
+  return { bookValue: bv, saleProceeds: o.saleProceeds, profitOrLoss: pl, entries: entries.filter(entry => entry.lines.some(line => !line.amount.isZero())) };
 }

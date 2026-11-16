@@ -3,6 +3,9 @@
 **Verdict: ready for a supervised classroom pilot. Not ready to be called "complete" or "production".** Every syllabus topic now has a lab, a page or a concept card, and everything that is
 claimed is tested — but the items under "Not done" matter before a wide release.
 
+
+**2026-11-16 audit update:** Step 1 addresses depreciation part-year rounding, capped working notes and zero-value disposal entries. See `AUDIT_STEP_1_DEPRECIATION.md` for test evidence, remaining limitations and review status. This targeted engineering review is not a teacher sign-off or a fresh verification of live deployment; the historical counts and statuses below have not all been re-audited.
+
 ## Works and is tested
 | Area | Evidence |
 |---|---|
