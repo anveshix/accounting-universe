@@ -87,7 +87,7 @@ function render() {
       case 'home': page = homePage(render); break;
       case 'class': page = classPage(a === 'XII' ? 'XII' : 'XI'); break;
       case 'labs': page = labsIndex(); break;
-      case 'lab': { const lab = a ? labById(a) : undefined; page = lab ? labPage(lab) : notFound(); break; }
+      case 'lab': { const lab = a ? labById(a) : undefined; page = lab ? labPage(lab, 'learn', b) : notFound(); break; }
       case 'ledger': page = ledgerPage(); break;
       case 'practice': page = practicePage(a, b, c); break;
       case 'cards': { const card = a ? CARDS.find(x => x.id === a) : undefined; page = card ? cardPage(card) : cardsIndex(); break; }
