@@ -220,7 +220,7 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 }
 .panel.dim { opacity: .78; }
 .labhead { margin-bottom: 1.2rem; padding-bottom: .6rem; border-bottom: 1px solid var(--line-2); }
-.eyebrow { text-transform: uppercase; letter-spacing: .11em; font-size: .72rem; font-weight: 800; color: var(--accent); margin: 0 0 .3rem; }
+.eyebrow { text-transform: uppercase; letter-spacing: .11em; font-size: .72rem; font-weight: 800; color: var(--eyebrow, var(--accent)); margin: 0 0 .3rem; }
 .lead { font-size: 1.06rem; color: var(--muted); max-width: 66ch; line-height: 1.55; }
 
 /* ---------- Hero — professional, not scattered ---------- */
