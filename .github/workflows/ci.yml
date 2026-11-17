@@ -41,6 +41,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app.cjs
       - name: Browser - web app (extra)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-extra.cjs
+      - name: Browser - lab UX
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-labs.cjs
       - name: Browser - state machines
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-states.cjs
       - name: Browser - tutor panel and proxy

@@ -111,6 +111,19 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
       ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `mobile 390: no horizontal scroll on ${hsh}`);
     }
     await axe('home (mobile)');
+    // CI found a 14px sideways scroll at 390px once the real web fonts loaded: emulate wider text and narrower phones
+    for (const w of [390, 360, 320]) for (const spacing of ['0', '0.06em', '0.12em']) {
+      await page.setViewportSize({ width: w, height: 800 }); await go('#/');
+      const tag = await page.addStyleTag({ content: `* { letter-spacing: ${spacing} !important; }` });
+      const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      ok(over <= 1, `phone header ${w}px, letter-spacing ${spacing}: sideways scroll ${over}px`);
+      await tag.evaluate(n => n.remove());
+    }
+    await page.setViewportSize({ width: 1280, height: 900 }); await go('#/');
+    const btn = sel => page.$eval(sel, e => { const s = getComputedStyle(e); return s.backgroundColor + '|' + s.color; });
+    ok(!(await btn('header .projector-toggle')).startsWith('rgb(255, 255, 255)|') && !(await btn('header [data-lang-toggle]')).startsWith('rgb(255, 255, 255)|'), 'header buttons are not white boxes on the dark bar: ' + await btn('header .projector-toggle'));
+    await go('#/crisis/7'); await page.waitForSelector('.crisis-hud');
+    ok(await page.$eval('.crisis-hud', e => getComputedStyle(e).display) === 'flex', 'crisis page styles are present (lost once in a merge)');
   } catch (e) { fails.push('crash: ' + (e && e.stack || e)); }
   ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
   await browser.close(); srv.kill();
