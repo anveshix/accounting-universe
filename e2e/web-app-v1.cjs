@@ -94,8 +94,9 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
       attempts: [ { t: now, skill: 'ledger-balance', clause: 'XI.2.ledger', seed: 1, mode: 'PRACTICE', marks: 1, outOf: 3, hintsUsed: 0, mistakes: [], correctParts: 1, parts: 2 },
                   { t: now + 1, skill: 'ledger-balance', clause: 'XI.2.ledger', seed: 2, mode: 'PRACTICE', marks: 0, outOf: 3, hintsUsed: 0, mistakes: [], correctParts: 0, parts: 2 } ], seen: [] };
     const tmp = path.join(require('os').tmpdir(), `au-v1-${process.pid}.json`); fs.writeFileSync(tmp, JSON.stringify(file));
-    await go('#/teacher'); await page.setInputFiles('#tfiles', tmp); fs.unlinkSync(tmp);
+    await go('#/teacher'); await page.setInputFiles('#tfiles', tmp);
     await page.waitForSelector('[data-report="outcomes"] tr[data-outcome]');
+    fs.unlinkSync(tmp);   // only after the page has read it (deleting first raced with the read on a busy machine)
     const row = await page.$eval('[data-report="outcomes"] tr[data-outcome="LO-XI.2-09"]', r => Array.from(r.querySelectorAll('td')).map(td => td.textContent));
     ok(JSON.stringify(row) === JSON.stringify(['1', '2', '17%', '1']), 'teacher: LO-XI.2-09 row = 1 student, 2 attempts, 1/6 = 17%, 1 struggling: ' + row);
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('text=⬇ Download outcome CSV')]);
