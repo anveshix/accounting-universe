@@ -102,6 +102,18 @@ describe('hand-worked oracle scenario', () => {
   });
 });
 
+describe('negative balances in the accounting equation', () => {
+  it('a loan and rent give positive assets, a liability and negative capital without breaking the equation', () => {
+    const l = new Ledger(starterChartClassXI());
+    l.post(draft('Bank loan', [dr('cash', '100'), cr('bank-loan', '100')]));
+    l.post(draft('Paid rent', [dr('rent', '60'), cr('cash', '60')]));
+    const eq = l.equation();
+    expect([eq.assets.toString(), eq.liabilities.toString(), eq.capital.toString()]).toEqual(['40.00', '100.00', '-60.00']);
+    expect(eq.balanced).toBe(true);
+    expect(l.trialBalance().balanced).toBe(true);
+  });
+});
+
 describe('regression: the legacy Simulator signed these accounts wrongly', () => {
   it('a credit sale leaves Debtors POSITIVE (+7,000), a cash purchase leaves Purchases POSITIVE (+4,000)', () => {
     const l = new Ledger(starterChartClassXI());

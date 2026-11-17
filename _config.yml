@@ -2,6 +2,8 @@
 # The symlink packages/curriculum/node_modules points at ../engine/node_modules, which does not exist on the Pages build machine
 # and made Jekyll fail with "No such file or directory @ rb_check_realpath_internal" — so it (and all node_modules) are excluded.
 # The symlink has since been removed (D9); the excludes stay as a safety net.
+# Legacy Jekyll configuration for branch-based Pages builds.
+# The supported deployment uses GitHub Actions to publish apps/web/dist instead.
 exclude:
   - node_modules
   - packages/curriculum/node_modules

@@ -51,8 +51,16 @@ function ratioChart(b: Extract<Block, { kind: 'ratio' }>): HTMLElement {
 }
 
 function equation(b: Extract<Block, { kind: 'equation' }>): HTMLElement {
-  const total = (xs: { value: number }[]) => xs.reduce((a, x) => a + Math.max(0, x.value), 0);
-  if (total(b.assets) === 0 && total(b.rhs) === 0) return h('p', { class: 'eqempty' }, 'Nothing posted yet — assets and capital are both ₹0.');
+  const all = [...b.assets, ...b.rhs];
+  if (all.some(x => x.value < 0)) {
+    const list = (heading: string, items: typeof b.assets) => h('section', {}, h('h4', {}, heading),
+      items.length ? h('ul', { class: 'eqlist' }, ...items.map(x => h('li', {}, h('span', {}, x.label), h('b', {}, x.text)))) : h('p', {}, '₹0.00'));
+    return h('figure', { class: 'figure equation-signed', role: 'group', 'aria-label': b.balanced ? 'Assets equal capital plus liabilities' : 'Assets do not equal capital plus liabilities' },
+      h('figcaption', {}, 'Signed balances: negative amounts reduce their side. The tank chart is hidden because it cannot represent negative components.'),
+      list('Assets', b.assets), list('Capital + Liabilities', b.rhs));
+  }
+  const total = (xs: { value: number }[]) => xs.reduce((a, x) => a + x.value, 0);
+  if (all.every(x => x.value === 0)) return h('p', { class: 'eqempty' }, 'All displayed balances are ₹0.');
   const max = Math.max(1, total(b.assets), total(b.rhs));
   const col = (title: string, xs: { label: string; value: number; text: string }[]) => {
     const t = total(xs);

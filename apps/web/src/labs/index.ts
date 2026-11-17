@@ -1,12 +1,24 @@
 import { CARDS, CLAUSES, UNITS, type ClassLevel } from '../../../../packages/curriculum/src';
-import type { Lab } from '../spec';
+import { InputError, type Lab } from '../spec';
 import { XI_LABS } from './xi';
 import { XI2_LABS } from './xi2';
 import { PARTNERSHIP_LABS } from './partnership';
 import { COMPANY_LABS } from './company';
 import { XII2_LABS } from './xii2';
+import { WHAT_IF } from './whatif';
 
-export const ALL_LABS: readonly Lab[] = [...XI_LABS, ...XI2_LABS, ...PARTNERSHIP_LABS, ...XII2_LABS, ...COMPANY_LABS];
+/** Every select must carry one of its declared options; anything else is a refusal the student can act on, never a crash inside compute(). */
+export function guarded(lab: Lab): Lab {
+  return { ...lab, ...(WHAT_IF[lab.id] ? { whatIf: WHAT_IF[lab.id] } : {}), compute: values => {
+    for (const f of lab.fields) {
+      if (f.type !== 'select' || !f.options) continue;
+      const v = values[f.id] ?? '';
+      if (!f.options.some(o => o.value === v)) throw new InputError(`${f.label}: choose one of the listed options.`, f.id);
+    }
+    return lab.compute(values);
+  } };
+}
+export const ALL_LABS: readonly Lab[] = [...XI_LABS, ...XI2_LABS, ...PARTNERSHIP_LABS, ...XII2_LABS, ...COMPANY_LABS].map(guarded);
 
 /** Interactive pages that are not form-and-result labs. */
 export interface PageEntry { readonly id: string; readonly title: string; readonly summary: string; readonly cls: 'XI' | 'XII'; readonly href: string; readonly clauses: readonly string[]; readonly route?: 'OPTION_I_ANALYSIS' | 'OPTION_II_COMPUTERISED'; }

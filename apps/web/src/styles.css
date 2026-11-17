@@ -6,6 +6,7 @@
 
 /* ---------- Design tokens ---------- */
 :root {
+  --eyebrow: #82540e;
   /* palette — trustworthy academic, warm paper */
   --ink: #152026;
   --ink-2: #243136;
@@ -44,6 +45,7 @@
   --s-1: .25rem; --s1: .5rem; --s2: .75rem; --s3: 1rem; --s4: 1.5rem; --s5: 2rem; --s6: 3rem;
   --r-sm: 10px; --r: 14px; --r-lg: 18px; --r-xl: 24px; --pill: 999px;
   --shadow-1: 0 1px 2px rgba(21,32,38,.06), 0 6px 18px rgba(21,32,38,.07);
+  --shadow: var(--shadow-1);
   --shadow-2: 0 4px 16px rgba(21,32,38,.1), 0 1px 3px rgba(21,32,38,.08);
   --shadow-hero: 0 16px 40px rgba(15,61,62,.18);
 
@@ -56,7 +58,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #eaf0f0; --ink-2: #d3dde0; --muted: #a8b8bc; --muted-2: #90a2a7;
+    --eyebrow: #f2c14e; --ink: #eaf0f0; --ink-2: #d3dde0; --muted: #a8b8bc; --muted-2: #90a2a7;
     --bg: #0c1416; --bg-2: #111d1f; --surface: #162528; --surface-2: #1b2e31;
     --line: #263d41; --line-2: #2e494d;
     --brand: #1a6a6c; --brand-2: #238789;
@@ -660,27 +662,9 @@ table.inputs td { white-space: pre-line; }
 /* print-like: no animations */
 .projector * { transition: none !important; animation: none !important; }
 
-/* ---------- Language toggle, Hindi draft badge, learning outcomes (V1) ---------- */
-.lang { background: rgba(255,255,255,.18); color: var(--brand-ink); border: 1px solid rgba(255,255,255,.4); font-size: .85rem; padding: .25rem .6rem; }
-.note.draft-hi { border-color: var(--warn); background: var(--warn-bg); font-size: .9rem; margin: .4rem 0; }
-[lang="hi"] { line-height: 1.7; }
-.lo-list li { margin-bottom: .35rem; } .lo-list code { font-size: .8rem; }
-/* contrast: the gold accent is too light for small text on the paper background (axe color-contrast); hero keeps its own colour */
-.eyebrow { color: #82540e; }
-@media (prefers-color-scheme: dark) { .eyebrow { color: #f2c14e; } }
-/* header buttons sit on the dark brand bar: same look as the language button */
-header.top .projector-toggle { background: rgba(255,255,255,.18); color: var(--brand-ink); border: 1px solid rgba(255,255,255,.4); font-size: .85rem; padding: .25rem .6rem; min-height: 0; }
-
-/* ---------- Trial Balance Crisis (what-if challenge) ---------- */
-.crisis-hud { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0 1rem; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: .4rem 0; }
-.crisis-hud .chip { font-weight: 650; }
-.crisis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; align-items: start; }
-.crisis-journal { padding-left: 1.2rem; } .crisis-journal li { margin-bottom: .35rem; }
-.crisis-step { border-left: 4px solid var(--accent); }
-.crisis-accounts button, .crisis-kinds button, .crisis-whatif button { text-align: left; }
-.crisis-whatif, .crisis-kinds { flex-direction: column; align-items: stretch; }
-.crisis-scale { height: 220px; } .crisis-scale-text { text-align: center; font-weight: 650; } .crisis-scale-text[data-balanced="true"] { color: var(--good); }
-.xp-pop { color: inherit; font-weight: 800; animation: xp-pop .6s ease-out; display: inline-block; }
-@keyframes xp-pop { from { transform: translateY(8px) scale(.7); opacity: 0; } 60% { transform: translateY(-3px) scale(1.25); opacity: 1; } to { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .xp-pop { animation: none; } }
-.crisis-end .solution { background: var(--info-bg); border-radius: 8px; padding: .6rem .9rem; margin: .6rem 0; }
+/* Lab "what if" experiments */
+.whatif { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.75rem 0; }
+.whatif .chip { border: 1px solid var(--accent); background: var(--accent-soft); color: inherit; border-radius: 999px; padding: 0.3rem 0.8rem; cursor: pointer; font: inherit; }
+.whatif .chip:hover, .whatif .chip:focus-visible { background: var(--accent-bg); }
+.whatif-prompt { flex-basis: 100%; margin: 0; }
+td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--accent); outline-offset: -2px; }

@@ -148,7 +148,7 @@ export function ledgerPage(): HTMLElement {
         h('div', { class: 'tcols' },
           h('ul', { 'aria-label': 'Debit side' }, h('li', { class: 'th' }, 'Dr.'), ...drs.map(r => h('li', {}, h('span', {}, r.entryId.slice(-2)), h('b', {}, r.amount.format())))),
           h('ul', { 'aria-label': 'Credit side' }, h('li', { class: 'th' }, 'Cr.'), ...crs.map(r => h('li', {}, h('span', {}, r.entryId.slice(-2)), h('b', {}, r.amount.format()))))),
-        h('div', { class: 'tbal' }, `Balance: ${bal.format()} ${bal.isZero() ? '' : (bal.isNegative() ? (nat === 'DR' ? 'Cr' : 'Dr') : nat === 'DR' ? 'Dr' : 'Cr')}`));
+        h('div', { class: 'tbal' }, `Balance: ${bal.abs().format()} ${bal.isZero() ? '' : (bal.isNegative() ? (nat === 'DR' ? 'Cr' : 'Dr') : nat === 'DR' ? 'Dr' : 'Cr')}`));
     });
     const liab = balOf('LIABILITY');
     const capitalParts = [...balOf('CAPITAL'), ...balOf('REVENUE'), ...balOf('EXPENSE').map(x => ({ ...x, label: 'less ' + x.label })), ...balOf('DRAWINGS').map(x => ({ ...x, label: 'less ' + x.label }))];
@@ -157,6 +157,8 @@ export function ledgerPage(): HTMLElement {
     // update 3D scale
     const assetsV = num(eq.assets);
     const rhsV = num(eq.liabilities) + num(eq.capital);
+    const signed = [...balOf('ASSET'), ...liab].some(x => x.value < 0) || eq.capital.isNegative();
+    scaleWrap.hidden = signed;
     scaleOverlay.replaceChildren(
       eq.balanced ? h('span', { class: 'ok' }, '✓ Balanced') : h('span', { class: 'bad' }, '✗ Not balanced'),
       h('span', { style: 'opacity:.6' }, '·'),
@@ -169,14 +171,16 @@ export function ledgerPage(): HTMLElement {
     const eqPanel = h('section', { class: 'panel' },
       h('div', { class: 'kicker' }, 'Live equation'),
       h('h3', { style: 'margin-top:.5rem' }, 'Assets = Capital + Liabilities'),
-      h('p', { class: 'hint', style: 'margin-bottom:.6rem' }, 'Watch the scale tilt when the books don’t balance. Every change here is driven by the ledger you build below.'),
+      h('p', { class: 'hint', style: 'margin-bottom:.6rem' }, 'Only balanced entries can be posted. A rejected entry leaves the books and scale unchanged.'),
       h('div', { style: 'display:grid;grid-template-columns:1fr;gap:1rem;' },
         scaleWrap,
-        renderBlock({ kind: 'equation', assets: balOf('ASSET'), rhs: [...liab, { label: 'Capital (incl. profit, less drawings)', value: Math.max(0, num(eq.capital)), text: eq.capital.format() }], balanced: eq.balanced }),
+        signed ? h('p', { class: 'hint' }, '3D scale hidden: negative balances cannot be represented as weights. See the signed amounts below.') : null,
+        renderBlock({ kind: 'equation', assets: balOf('ASSET'), rhs: [...liab, { label: 'Capital (incl. profit, less drawings)', value: num(eq.capital), text: eq.capital.format() }], balanced: eq.balanced }),
       ),
       h('p', { class: 'eqline' }, `Assets ${eq.assets.format()} = Liabilities ${eq.liabilities.format()} + Capital ${eq.capital.format()}`),
+      h('p', { class: 'hint' }, 'For this teaching ledger, purchases are treated as expenses until closing stock is adjusted. The live equation is not a finished balance sheet or a valuation of stock.'),
       capitalParts.length ? h('details', { style: 'margin-top:.6rem' }, h('summary', {}, 'What is inside capital?'), h('ul', {}, ...capitalParts.map(x => h('li', {}, `${x.label}: ${x.text}`)))) : null,
-      h('p', { class: 'experience-note', style: 'margin-top:.8rem' }, h('span', { 'aria-hidden': 'true' }, '💡'), h('span', {}, h('b', {}, 'Experiential: '), 'The 3D scale above is the same equation you see as bars. When you post an entry, both update together — because there is only one engine.'))
+      h('p', { class: 'experience-note', style: 'margin-top:.8rem' }, h('span', { 'aria-hidden': 'true' }, '💡'), h('span', {}, h('b', {}, 'Experiential: '), 'The figures come from the ledger. A balanced equation or trial balance does not prove that every entry was classified correctly.'))
     );
 
     mount(out,
@@ -193,7 +197,7 @@ export function ledgerPage(): HTMLElement {
         h('div', { class: 'tablewrap' }, h('table', { class: 'data' }, h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Account'), h('th', { scope: 'col', class: 'num' }, 'Debit (₹)'), h('th', { scope: 'col', class: 'num' }, 'Credit (₹)'))),
           h('tbody', {}, ...tb.rows.map(r => h('tr', {}, h('th', { scope: 'row' }, r.account.name), h('td', { class: 'num' }, r.debit.isZero() ? '' : r.debit.format()), h('td', { class: 'num' }, r.credit.isZero() ? '' : r.credit.format())))),
           h('tfoot', {}, h('tr', {}, h('td', {}, 'Total'), h('td', { class: 'num' }, tb.totalDebit.format()), h('td', { class: 'num' }, tb.totalCredit.format()))))),
-        tb.rows.length ? h('p', { class: 'note ' + (tb.balanced ? 'good' : 'bad') }, tb.balanced ? '✓ Trial balance agrees: total debit equals total credit.' : '✗ Trial balance does NOT agree.') : null),
+        tb.rows.length ? h('p', { class: 'note ' + (tb.balanced ? 'good' : 'bad') }, tb.balanced ? '✓ Trial balance agrees: total debit equals total credit. This does not prove that all accounting errors have been found.' : '✗ Trial balance does NOT agree.') : null),
       h('section', { class: 'panel' }, h('h3', {}, 'Audit trail'), ledger.auditTrail().length === 0 ? h('p', { class: 'empty' }, 'Every post and reversal is recorded here.') : h('ol', { class: 'audit' }, ...ledger.auditTrail().map(a => h('li', {}, `${a.type === 'POST' ? 'Posted' : 'Reversed'} ${a.entryId}${a.target ? ` (cancels ${a.target}: ${a.reason})` : ''}`)))),
     );
   }
@@ -204,9 +208,9 @@ export function ledgerPage(): HTMLElement {
       h('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' }, h('a', { href: '#/' }, 'Home'), h('span', { 'aria-hidden': 'true' }, '›'), h('a', { href: '#/labs' }, 'Labs'), h('span', { 'aria-hidden': 'true' }, '›'), h('span', { 'aria-current': 'page' }, 'Journal → Ledger')),
       h('p', { class: 'eyebrow' }, 'Class XI · Visual Lab'),
       h('h2', {}, 'Journal → Ledger → Trial Balance'),
-      h('p', { class: 'lead' }, 'Every transaction has two sides. Watch them travel from the journal to the ledger and into the trial balance — now with a 3D balance that you can feel tilt.')),
+      h('p', { class: 'lead' }, 'Watch transactions travel from the journal to the ledger and into the trial balance. Only balanced entries can be posted.')),
     h('section', { class: 'panel' }, h('div', { class: 'kicker' }, 'Guided tour'), h('h3', { style: 'margin-top:.5rem' }, 'Watch a business happen'), h('p', { class: 'hint' }, 'Ravi’s first week, one transaction at a time. Each step shows the rule that decides debit and credit. Press Play and watch the 3-D scale respond.'), controls, explain),
-    h('section', { class: 'panel' }, h('h3', {}, 'Post an entry yourself'), h('p', { class: 'hint' }, 'Total debit must equal total credit. Try an unbalanced entry to see what the engine says — and watch the scale refuse to balance.'),
+    h('section', { class: 'panel' }, h('h3', {}, 'Post an entry yourself'), h('p', { class: 'hint' }, 'Total debit must equal total credit. An unbalanced entry is rejected and does not change the ledger or scale.'),
       h('div', { class: 'formgrid' }, h('label', {}, 'Date', date), h('label', { class: 'wide' }, 'Narration', narr)), linesBox,
       h('div', { class: 'controls' }, h('button', { type: 'button', onclick: () => linesBox.append(lineRow('DR')) }, '+ Add line'), h('button', { type: 'button', class: 'primary', onclick: manual }, 'Post entry')), err),
     out);

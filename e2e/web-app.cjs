@@ -113,7 +113,8 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
 
     // ── progress reflects attempts; export is valid JSON and teacher dashboard reads it
     await go('progress');
-    ok((await page.$eval('.lead', e => e.textContent)).match(/[1-9]\d* practice attempts/) !== null, 'progress: attempts counted');
+    await page.waitForSelector('.progress .labhead .lead');
+    ok((await page.$eval('.progress .labhead .lead', e => e.textContent)).match(/[1-9]\d* practice attempts/) !== null, 'progress: attempts counted');
     ok(await page.$$eval('table.data tbody tr', r => r.length) > 10, 'progress: topic table');
     await page.fill('#pname', 'Asha'); await page.click('text=Save name');
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('text=Export my progress')]);

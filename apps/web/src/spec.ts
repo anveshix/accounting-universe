@@ -28,6 +28,9 @@ export class InputError extends Error {
   constructor(message: string, readonly field?: string) { super(message); this.name = 'InputError'; }
 }
 
+/** A guided experiment for the Try tab: change a few fields, then see what moved. */
+export interface WhatIf { readonly label: string; readonly prompt: string; readonly set: Readonly<Record<string, string>>; }
+
 export interface Lab {
   readonly id: string;
   readonly cls: 'XI' | 'XII';
@@ -44,6 +47,8 @@ export interface Lab {
   readonly compute: (values: Record<string, string>) => Block[];
   /** Practice skills (see packages/curriculum questions) that exercise this lab. */
   readonly skills: readonly string[];
+  /** Optional "what if…" experiments shown as chips on the Try tab. */
+  readonly whatIf?: readonly WhatIf[];
   /** Optional route restriction for Class XII. */
   readonly route?: 'OPTION_I_ANALYSIS' | 'OPTION_II_COMPUTERISED';
 }
