@@ -2,11 +2,28 @@
 
 ## Unreleased
 
+### Trial Balance Crisis — gamified what-if challenge (Class XI, clauses XI.2.tb and XI.2.errors)
+- New page `#/crisis` (listed under Visual Labs): a month of transactions is posted correctly, one posting in one ledger account is spoiled
+  (left out / wrong side / wrong amount) and the trial balance no longer agrees. Five steps: find the difference and the short side → audit the ledger
+  accounts against the journal and name the wrong one → name the kind of error → pass the rectifying entry through Suspense → answer a what-if about an
+  error the trial balance cannot reveal. Three lives (lost only for a wrong accusation or a wrong entry), XP with a ×1.5 streak, speed bonus, two badges,
+  3D balance scale that levels only when the entry is right, English and Hindi (draft). XP and badges stay on the device.
+- `packages/curriculum/src/crisis.ts` (scenario by the engine: `Money`, `suspenseFromTrialBalance`, `rectify`), `TB_CRISIS` state machine, 63 UI strings in the EN/HI catalogue.
+- Tests: `crisis.test.ts` (13; plain-arithmetic oracles, corruption checks, hand-worked XP), `e2e/web-app-crisis.cjs` (35; the test plays from what is on screen, axe, 390 px).
+
+### Audit of merged `main` (after PRs #6, #8, #9) — defects found and fixed
+- `npm ci` failed on `main`: `three` was in `apps/web/package.json` but not in the root lockfile → lockfile regenerated.
+- The web build failed on `main`: no types for `three` → `@types/three` added.
+- `styles.css` was corrupted by an automatic merge (old palette fragments spliced into the redesign; `lightningcss` rejected it) → rebuilt from the redesign plus the V1 additions.
+- The projector-mode button was created but never added to the page, and was white-on-white when shown → inserted into the header and styled.
+- The redesign shortened the Class XII Option II explanation (dropped the Spreadsheet Lab) → original wording restored.
+- Two axe colour-contrast failures on the gold `.eyebrow` label → darker in light mode; one unused-variable lint error and two unformatted files fixed.
+
 ### T0.1 (partial) — repo foundations
 - npm workspaces (`packages/*`, `apps/*`) with one root `package-lock.json`; `npm ci && npm run check` works from a fresh checkout (verified in a clean copy: 378 + 222 + 12 tests, web build).
 - ESLint 10 + typescript-eslint and Prettier 3 in `tools/lint` (outside the workspaces, see AGENTS.md). ESLint enforces AGENTS rule 1 in engine source (no `parseFloat`, `Math.round`, `toFixed`).
   Existing code was brought to zero lint errors (unused imports, needless escapes, an empty interface, one `let`→`const`; no behaviour change). Prettier runs as a ratchet over a 105-file baseline instead of reformatting the dense existing code.
-- `.gitignore` added (`node_modules/`, `dist/`). NOT done: symlink removal (D9), CI workflow (D12), deleting the superseded per-package lockfiles.
+- `.gitignore` added (`node_modules/`, `dist/`). Owner-approved afterwards: the tracked symlink `packages/curriculum/node_modules` is removed (D9) and `.github/workflows/ci.yml` is added (D12: install, lint, format, typecheck/unit tests, build, all browser suites incl. axe). NOT done: deleting the superseded per-package lockfiles.
 
 ### P0 — vertical V1 (Class XI: equation → rules → journal → ledger → trial balance), handoff T0.2–T0.8
 - **Learning outcomes (T0.2):** `outcomes.ts` — the 77 official unit learning outcomes transcribed from the 2026-27 PDF, mapped to clauses

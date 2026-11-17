@@ -107,7 +107,9 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok((await page.$eval('.trainer section .eyebrow', e => e.textContent)) === scoreText, 'trainer: a second Check cannot score twice');
     ok((await page.$eval('.trainer form + div', e => e.textContent)) === feedbackBefore, 'trainer: duplicate submission preserves feedback');
     // Every question has distinct debit and credit, so choosing cash on both sides is always wrong.
-    await page.goto(BASE + '#/trainer'); await page.waitForSelector('[data-machine="trainer-round"]');
+    // leave and come back: going to the address we are already on does not redraw the page, and the answered question would still be showing
+    await page.goto(BASE + '#/'); await page.waitForSelector('main[data-route="home"]');
+    await page.goto(BASE + '#/trainer'); await page.waitForSelector('[data-machine="trainer-round"][data-state="ASKING"]');
     const firstQuestion = await page.textContent('.trainer .stem');
     for (let k = 0; k < 15; k++) {
       await page.selectOption('#dr', 'cash'); await page.selectOption('#cr', 'cash'); await page.click('.trainer button[type=submit]');

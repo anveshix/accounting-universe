@@ -54,6 +54,23 @@ export const TRAINER_ROUND: MachineSpec<TrainerState, TrainerEvent, { hasBoth: b
   },
 };
 
+// ───────────────────────── Trial Balance Crisis (what-if challenge) ─────────────────────────
+export type CrisisState = 'DIAGNOSE' | 'LOCATE' | 'CLASSIFY' | 'RECTIFY' | 'WHAT_IF' | 'CLEARED' | 'FAILED';
+export type CrisisEvent = 'RIGHT' | 'WRONG' | 'OUT' | 'ANSWER' | 'AGAIN';
+const NO_LIVES = 'No lives left — look at the solution, then try a new crisis.', HAS_LIVES = 'You still have lives left — try again.';
+export const TB_CRISIS: MachineSpec<CrisisState, CrisisEvent, { lives: number }> = {
+  id: 'tb-crisis', doc: 'The Trial Balance Crisis challenge: five steps, three lives.', initial: 'DIAGNOSE',
+  states: {
+    DIAGNOSE: { doc: 'Find the difference between the totals and the short side (no lives at stake).', on: { RIGHT: 'LOCATE', WRONG: 'DIAGNOSE' } },
+    LOCATE: { doc: 'Audit the ledger accounts and name the one with the wrong posting (a wrong accusation costs a life).', on: { RIGHT: 'CLASSIFY', WRONG: { to: 'LOCATE', guard: c => c.lives > 0, reason: NO_LIVES }, OUT: { to: 'FAILED', guard: c => c.lives <= 0, reason: HAS_LIVES } } },
+    CLASSIFY: { doc: 'Name the kind of error (no lives at stake).', on: { RIGHT: 'RECTIFY', WRONG: 'CLASSIFY' } },
+    RECTIFY: { doc: 'Pass the rectifying entry through the Suspense Account (a wrong entry costs a life).', on: { RIGHT: 'WHAT_IF', WRONG: { to: 'RECTIFY', guard: c => c.lives > 0, reason: NO_LIVES }, OUT: { to: 'FAILED', guard: c => c.lives <= 0, reason: HAS_LIVES } } },
+    WHAT_IF: { doc: 'One critical-thinking question about a different error; any answer ends the challenge.', on: { ANSWER: 'CLEARED' } },
+    CLEARED: { doc: 'Books agree; XP, badges and the full solution are shown.', on: { AGAIN: 'DIAGNOSE' }, blocked: { RIGHT: 'This crisis is already solved — start a new one.', WRONG: 'This crisis is already solved — start a new one.' } },
+    FAILED: { doc: 'Out of lives; the full solution is shown.', on: { AGAIN: 'DIAGNOSE' }, blocked: { RIGHT: NO_LIVES, WRONG: NO_LIVES } },
+  },
+};
+
 // ───────────────────────── Concept card: one self-check question ─────────────────────────
 export type CheckState = 'UNANSWERED' | 'ANSWERED';
 export const CARD_CHECK: MachineSpec<CheckState, 'ANSWER', { hasChoice: boolean }> = {
@@ -179,6 +196,7 @@ export function shareStages(f: ShareFacts): { name: string; state: StageState }[
 /** Registry used by tests and by the generated documentation. */
 export const MACHINES = [
   { spec: LEDGER_PLAYER, where: 'apps/web/src/pages/ledger.ts', kind: 'UI' }, { spec: PRACTICE_QUESTION, where: 'apps/web/src/pages/practice.ts', kind: 'UI' }, { spec: TRAINER_ROUND, where: 'apps/web/src/pages/trainer.ts', kind: 'UI' },
+  { spec: TB_CRISIS, where: 'apps/web/src/pages/crisis.ts', kind: 'UI' },
   { spec: CARD_CHECK, where: 'apps/web/src/pages/cards.ts', kind: 'UI' }, { spec: ASYNC_RESOURCE, where: 'apps/web/src/async.ts (progress, rescue, assignment pages)', kind: 'UI' }, { spec: STORAGE, where: 'apps/web/src/store.ts', kind: 'UI' },
   { spec: APP_BOOT, where: 'apps/web/src/main.ts', kind: 'UI' }, { spec: NETWORK, where: 'apps/web/src/main.ts', kind: 'UI' }, { spec: CAS_VOUCHER, where: 'apps/web/src/pages/cas.ts', kind: 'UI' }, { spec: CAS_YEAR, where: 'apps/web/src/pages/cas.ts', kind: 'UI' },
   { spec: AI_ASK, where: 'apps/web/src/pages/tutor.ts', kind: 'UI' }, { spec: LAB_RUN, where: 'apps/web/src/pages/lab.ts', kind: 'UI' }, { spec: SHARE_LIFECYCLE, where: 'packages/curriculum/src/machines.ts → apps/web/src/labs/company.ts', kind: 'domain' },

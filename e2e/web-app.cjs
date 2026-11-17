@@ -170,6 +170,7 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     // ── accessibility basics on every page
     for (const h of ['', 'class/XI', 'labs', 'lab/xi-depreciation', 'ledger', 'practice', 'tutor', 'progress', 'teacher']) {
       await page.goto(BASE + '#/' + h); await page.waitForSelector('main > *');
+      await page.waitForSelector('main h2', { timeout: 5000 }).catch(() => {});   // pages that load saved data show a loading line first; the heading is still asserted below
       if (h.startsWith('lab/')) { await page.click('#tab-try'); await page.waitForSelector('.labform'); }
       const probs = await page.evaluate(() => {
         const p = [];

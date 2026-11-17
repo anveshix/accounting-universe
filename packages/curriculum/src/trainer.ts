@@ -1,7 +1,12 @@
 import type { ChartOfAccounts, Side } from '../../engine/src';
 
 /** A trainer question has exactly one debit and one credit account. */
-export interface TrainerItem { readonly text: string; readonly dr: string; readonly cr: string; readonly why: string }
+export interface TrainerItem {
+  readonly text: string;
+  readonly dr: string;
+  readonly cr: string;
+  readonly why: string;
+}
 
 /** Fisher–Yates sample without replacement; the optional RNG makes the selection testable. */
 export function trainerSample<T>(items: readonly T[], count: number, random: () => number = Math.random): T[] {
@@ -17,7 +22,8 @@ export function trainerSample<T>(items: readonly T[], count: number, random: () 
 export function trainerFeedback(chart: ChartOfAccounts, q: TrainerItem, selected: string, side: Side): string {
   const right = side === 'DR' ? q.dr : q.cr;
   const other = side === 'DR' ? q.cr : q.dr;
-  const chosen = chart.get(selected), expected = chart.get(right);
+  const chosen = chart.get(selected),
+    expected = chart.get(right);
   const word = side === 'DR' ? 'debit' : 'credit';
   if (selected === right) return `${expected.name} is the correct ${word} account.`;
   if (selected === other) return `${chosen.name} belongs on the other side of this entry. ${word === 'debit' ? 'Debit' : 'Credit'} ${expected.name} here.`;

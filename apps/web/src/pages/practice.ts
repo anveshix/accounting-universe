@@ -113,7 +113,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
         ? h('select', { id: `ans-${i}` }, h('option', { value: '' }, t(L, 'practice.choose')), ...(p.options ?? []).map(o => h('option', { value: o }, optLabel(i, o))))
         : h('input', { type: 'text', id: `ans-${i}`, inputmode: p.kind === 'FRACTION' ? 'text' : 'decimal', autocomplete: 'off', placeholder: p.kind === 'FRACTION' ? 'e.g. 3/10' : p.kind === 'TEXT' ? 'type your answer' : t(L, 'practice.amount') });
       inputs.push(inp);
-      return h('div', { class: 'field' }, h('label', { for: `ans-${i}` }, `${label} `, h('span', { class: 'marks' }, `[${p.marks} mark${p.marks > 1 ? 's' : ''}]`)), inp, p.unit ? h('small', {}, p.unit) : null);
+      return h('div', { class: 'field' }, h('label', { for: `ans-${i}` }, `${label} `, h('span', { class: 'marks' }, hi ? `[${p.marks} अंक]` : `[${p.marks} mark${p.marks > 1 ? 's' : ''}]`)), inp, p.unit ? h('small', {}, p.unit) : null);
     });
     qm.subscribe(() => refresh());
     mount(root,

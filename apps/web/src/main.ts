@@ -19,6 +19,7 @@ import { teacherPage } from './pages/teacher';
 import { tutorPage } from './pages/tutor';
 import { cardPage, cardsIndex } from './pages/cards';
 import { trainerPage } from './pages/trainer';
+import { crisisPage } from './pages/crisis';
 import { casPage } from './pages/cas';
 import { projectPage } from './pages/project';
 import { rescuePage } from './pages/rescue';
@@ -92,6 +93,7 @@ function render() {
       case 'practice': page = practicePage(a, b, c); break;
       case 'cards': { const card = a ? CARDS.find(x => x.id === a) : undefined; page = card ? cardPage(card) : cardsIndex(); break; }
       case 'trainer': page = trainerPage(); break;
+      case 'crisis': page = crisisPage(a); break;
       case 'cas': page = casPage(); break;
       case 'project': page = projectPage(a === 'XII' ? 'XII' : 'XI', state.profile.route); break;
       case 'rescue': page = rescuePage(a); break;
@@ -114,10 +116,10 @@ const notFound = () => h('div', { class: 'panel' }, h('h2', {}, 'Page not found'
 async function boot() {
   const app = document.getElementById('app')!;
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } }, '☰ Menu');
-  initProjectorToggle();
+  const projectorBtn = initProjectorToggle();
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, langBtn, menu),
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, projectorBtn, langBtn, menu),
     banner, nav, main);
   await ready();
   drawBanner(); storage.subscribe(drawBanner);

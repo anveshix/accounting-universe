@@ -53,6 +53,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     ok(opts.length === 2, 'tb-agree: side has exactly two options');
     await axe('practice (EN)');
 
+    ok((await page.getAttribute('[data-lang-toggle]', 'aria-label')).includes(await page.textContent('[data-lang-toggle]')), 'language button: accessible name contains its visible text (WCAG 2.5.3)');
     // ── Hindi draft toggle: persists, renders Devanagari with a draft badge, values stay English
     await page.click('[data-lang-toggle]');
     await page.waitForSelector('html[data-lang="hi"]');
@@ -68,6 +69,9 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     await page.click('[data-lang-toggle]'); await page.waitForSelector('html[data-lang="en"]');
     ok(await page.$('[data-hindi-draft]') === null, 'hindi: switching back to English removes Hindi');
 
+    // header controls are really on the page (the projector button used to be created but never inserted)
+    await go('#/'); ok(await page.isVisible('header .projector-toggle') && await page.isVisible('header [data-lang-toggle]'), 'header: projector and language buttons are visible');
+    await page.click('header .projector-toggle'); ok(await page.$eval('html', e => e.classList.contains('projector')), 'projector mode switches on'); await page.click('header .projector-toggle');
     // choosing Hinglish on a concept card must not switch practice questions to Hindi (regression)
     await go('#/cards'); await page.click('a.card'); await page.waitForSelector('[role=radiogroup]');
     await page.click('button[role=radio]:has-text("Hinglish")');
@@ -90,8 +94,9 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
       attempts: [ { t: now, skill: 'ledger-balance', clause: 'XI.2.ledger', seed: 1, mode: 'PRACTICE', marks: 1, outOf: 3, hintsUsed: 0, mistakes: [], correctParts: 1, parts: 2 },
                   { t: now + 1, skill: 'ledger-balance', clause: 'XI.2.ledger', seed: 2, mode: 'PRACTICE', marks: 0, outOf: 3, hintsUsed: 0, mistakes: [], correctParts: 0, parts: 2 } ], seen: [] };
     const tmp = path.join(require('os').tmpdir(), `au-v1-${process.pid}.json`); fs.writeFileSync(tmp, JSON.stringify(file));
-    await go('#/teacher'); await page.setInputFiles('#tfiles', tmp); fs.unlinkSync(tmp);
+    await go('#/teacher'); await page.setInputFiles('#tfiles', tmp);
     await page.waitForSelector('[data-report="outcomes"] tr[data-outcome]');
+    fs.unlinkSync(tmp);   // only after the page has read it (deleting first raced with the read on a busy machine)
     const row = await page.$eval('[data-report="outcomes"] tr[data-outcome="LO-XI.2-09"]', r => Array.from(r.querySelectorAll('td')).map(td => td.textContent));
     ok(JSON.stringify(row) === JSON.stringify(['1', '2', '17%', '1']), 'teacher: LO-XI.2-09 row = 1 student, 2 attempts, 1/6 = 17%, 1 struggling: ' + row);
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('text=⬇ Download outcome CSV')]);
@@ -106,6 +111,19 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
       ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `mobile 390: no horizontal scroll on ${hsh}`);
     }
     await axe('home (mobile)');
+    // CI found a 14px sideways scroll at 390px once the real web fonts loaded: emulate wider text and narrower phones
+    for (const w of [390, 360, 320]) for (const spacing of ['0', '0.06em', '0.12em']) {
+      await page.setViewportSize({ width: w, height: 800 }); await go('#/');
+      const tag = await page.addStyleTag({ content: `* { letter-spacing: ${spacing} !important; }` });
+      const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      ok(over <= 1, `phone header ${w}px, letter-spacing ${spacing}: sideways scroll ${over}px`);
+      await tag.evaluate(n => n.remove());
+    }
+    await page.setViewportSize({ width: 1280, height: 900 }); await go('#/');
+    const btn = sel => page.$eval(sel, e => { const s = getComputedStyle(e); return s.backgroundColor + '|' + s.color; });
+    ok(!(await btn('header .projector-toggle')).startsWith('rgb(255, 255, 255)|') && !(await btn('header [data-lang-toggle]')).startsWith('rgb(255, 255, 255)|'), 'header buttons are not white boxes on the dark bar: ' + await btn('header .projector-toggle'));
+    await go('#/crisis/7'); await page.waitForSelector('.crisis-hud');
+    ok(await page.$eval('.crisis-hud', e => getComputedStyle(e).display) === 'flex', 'crisis page styles are present (lost once in a merge)');
   } catch (e) { fails.push('crash: ' + (e && e.stack || e)); }
   ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
   await browser.close(); srv.kill();

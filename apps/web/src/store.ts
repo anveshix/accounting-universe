@@ -54,19 +54,49 @@ async function clearStore(store: string) {
   if (db) { try { await wrap(db.transaction(store, 'readwrite').objectStore(store).clear()); } catch { /* ignore */ } }
 }
 
+// ── replacing saves (profile, projects) ──
+// These used to be "read everything, clear the store, add the records back" as separate steps. Two quick saves could interleave and leave the OLDER
+// state on disk, and a reload between "clear" and "add" lost the data. Now each save is ONE IndexedDB transaction (all or nothing) and saves to the
+// same store run strictly one after another. <html data-saving="0|1"> tells tests (and anyone curious) when nothing is waiting to be written.
+let writing = 0;
+const queues: Record<string, Promise<unknown>> = {};
+const showSaving = () => { if (typeof document !== 'undefined') document.documentElement.setAttribute('data-saving', writing > 0 ? '1' : '0'); };
+showSaving();
+function serial<T>(store: string, job: () => Promise<T>): Promise<T> {
+  writing++; showSaving();
+  const run = (queues[store] ?? Promise.resolve()).then(job, job);
+  queues[store] = run.then(() => undefined, () => undefined).finally(() => { writing--; showSaving(); });
+  return run;
+}
+function replaceAll<T>(store: string, next: (current: T[]) => T[]): Promise<void> {
+  return serial(store, async () => {
+    const db = await open();
+    const inMemory = () => { const items = next(mem[store] as T[]); mem[store]!.splice(0, mem[store]!.length, ...items); };
+    if (!db) { inMemory(); return; }
+    try {
+      await new Promise<void>((res, rej) => {
+        const tx = db.transaction(store, 'readwrite'), os = tx.objectStore(store), got = os.getAll();
+        got.onsuccess = () => { const items = next([...(got.result as T[]), ...(mem[store] as T[])]); os.clear(); for (const it of items) os.add(it); };
+        tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+      });
+      mem[store]!.length = 0;          // anything parked in memory by an earlier failed write is now on disk
+    } catch { storage.send('WRITE_FAILED'); inMemory(); }
+  });
+}
+
 export const recordAttempt = (a: Attempt) => add('attempts', a);
 export const recordSeen = (s: Seen) => add('seen', s);
 export const attempts = () => all<Attempt>('attempts');
 export const seen = () => all<Seen>('seen');
 export async function getProfile(): Promise<Profile | null> { const p = await all<Profile>('profile'); return p.length ? p[p.length - 1]! : null; }
-export async function setProfile(p: Profile) { await clearStore('profile'); await add('profile', p); }
+export const setProfile = (p: Profile) => replaceAll<Profile>('profile', () => [p]);
 export async function resetAll() { for (const s of STORES) await clearStore(s); }
 
 // Assignments handed over by a teacher (files), and the student's own project notes. Both stay on this device.
 export const saveAssignment = async (a: unknown & { id: string }) => { const cur = await assignmentsAll(); if (cur.some(x => x.id === a.id)) return false; await add('assignments', a); return true; };
 export const assignmentsAll = () => all<{ id: string }>('assignments');
 export async function getProject(key: string): Promise<Record<string, unknown> | null> { const p = await all<{ key: string; data: Record<string, unknown> }>('projects'); const hit = [...p].reverse().find(x => x.key === key); return hit ? hit.data : null; }
-export async function setProject(key: string, data: Record<string, unknown>) { const keep = (await all<{ key: string; data: Record<string, unknown> }>('projects')).filter(x => x.key !== key); await clearStore('projects'); for (const x of keep) await add('projects', x); await add('projects', { key, data }); }
+export const setProject = (key: string, data: Record<string, unknown>) => replaceAll<{ key: string; data: Record<string, unknown> }>('projects', cur => [...cur.filter(x => x.key !== key), { key, data }]);
 export const ready = async () => { await open(); return storageMode; };
 
 export async function exportAll(): Promise<Export> { return { app: 'accounting-universe', version: 1, exportedAt: Date.now(), profile: await getProfile(), attempts: await attempts(), seen: await seen() }; }

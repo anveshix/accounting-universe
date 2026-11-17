@@ -74,8 +74,11 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     await page.selectOption('#vtype', 'PAYMENT'); await page.fill('#vnarr', 'Rent'); await fill(0, '5002', '5000'); await fill(1, '1001', '5000'); await page.click('text=Save voucher for verification');
     await page.selectOption('#role', 'CHECKER');
     while (await page.$('text=Verify & post')) await page.click('text=Verify & post');
-    // persistence: reload keeps the posted books and the role is restored
-    await page.reload(); await page.waitForSelector('.cas'); await page.waitForTimeout(400);
+    // persistence: reload keeps the posted books and the role is restored (wait until nothing is waiting to be written)
+    await page.waitForSelector('html[data-saving="0"]');
+    await page.reload(); await page.waitForSelector('.cas');
+    // the saved books come back asynchronously: wait for them instead of sleeping (a fixed 400 ms was too short on a busy machine)
+    await page.waitForFunction(() => (document.querySelector('main')?.textContent ?? '').includes('Cash sales'), null, { timeout: 10000 }).catch(() => {});
     ok((await page.$eval('main', e => e.textContent)).includes('Cash sales'), 'CAS: state restored after reload');
     // close the year → profit 25,000 moved to capital; next year opens with the closing balances
     await page.selectOption('#role', 'CHECKER'); await page.click('text=Close the year (closing entries)');
@@ -97,8 +100,12 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
 
     // ── project assistant: progress persists
     await go('project/XI');
-    await page.click('.steplist input[type=checkbox]'); await page.waitForTimeout(150);
-    await page.reload(); await page.waitForSelector('.steplist'); await page.waitForTimeout(300);
+    await page.click('.steplist input[type=checkbox]');
+    // eight more clicks in the same instant = eight overlapping saves; the LAST state (ticked) must be the one on disk
+    await page.evaluate(() => { for (let k = 0; k < 8; k++) document.querySelector('.steplist input[type=checkbox]').click(); });   // re-query: the list is redrawn after every click
+    ok(await page.$eval('.steplist input[type=checkbox]', e => e.checked), 'project: nine clicks leave the step ticked');
+    await page.waitForSelector('html[data-saving="0"]');
+    await page.reload(); await page.waitForSelector('.steplist'); await page.waitForFunction(() => document.querySelector('.steplist input[type=checkbox]')?.checked === true, null, { timeout: 10000 }).catch(() => {});
     ok(await page.$eval('.steplist input[type=checkbox]', e => e.checked), 'project: ticked step survives a reload');
     ok((await page.$eval('main', e => e.textContent)).includes('nothing here writes it for you'), 'project: integrity note shown');
 
