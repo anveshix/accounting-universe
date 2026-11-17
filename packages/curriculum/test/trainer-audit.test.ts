@@ -11,16 +11,31 @@ describe('Debit & Credit Trainer — hand-worked classroom cases', () => {
     // Independent expected entries: investment, asset purchase, credit purchase, cash/credit sale,
     // rent, salary, drawings, debtor, creditor, loan, bank deposit, interest, depreciation, bad debt.
     expect(TRAINER_EXAMPLES.map(q => [q.dr, q.cr])).toEqual([
-      ['cash', 'capital'], ['machinery', 'cash'], ['purchases', 'creditors'], ['cash', 'sales'], ['debtors', 'sales'],
-      ['rent', 'cash'], ['salary', 'cash'], ['drawings', 'cash'], ['cash', 'debtors'], ['creditors', 'cash'],
-      ['bank', 'bank-loan'], ['bank', 'cash'], ['cash', 'interest-received'], ['depreciation', 'machinery'], ['bad-debts', 'debtors'],
+      ['cash', 'capital'],
+      ['machinery', 'cash'],
+      ['purchases', 'creditors'],
+      ['cash', 'sales'],
+      ['debtors', 'sales'],
+      ['rent', 'cash'],
+      ['salary', 'cash'],
+      ['drawings', 'cash'],
+      ['cash', 'debtors'],
+      ['creditors', 'cash'],
+      ['bank', 'bank-loan'],
+      ['bank', 'cash'],
+      ['cash', 'interest-received'],
+      ['depreciation', 'machinery'],
+      ['bad-debts', 'debtors'],
     ]);
     for (const q of [...TRAINER_EXAMPLES, ...migratedTrainerScenes(chart.list())]) {
-      expect(chart.has(q.dr)).toBe(true); expect(chart.has(q.cr)).toBe(true); expect(q.dr).not.toBe(q.cr);
+      expect(chart.has(q.dr)).toBe(true);
+      expect(chart.has(q.cr)).toBe(true);
+      expect(q.dr).not.toBe(q.cr);
     }
   });
   it('explains reversed sides, capital assets versus goods, and personal drawings', () => {
-    const machinery = TRAINER_EXAMPLES[1]!, drawings = TRAINER_EXAMPLES[7]!;
+    const machinery = TRAINER_EXAMPLES[1]!,
+      drawings = TRAINER_EXAMPLES[7]!;
     expect(trainerFeedback(chart, machinery, 'cash', 'DR')).toContain('other side');
     expect(trainerFeedback(chart, machinery, 'purchases', 'DR')).toContain('goods bought for resale');
     expect(trainerFeedback(chart, drawings, 'rent', 'DR')).toContain('not a business expense');
@@ -28,7 +43,8 @@ describe('Debit & Credit Trainer — hand-worked classroom cases', () => {
     expect(trainerFeedback(chart, machinery, 'rent', 'CR')).toContain('not the expected credit');
   });
   it('samples without repeating or mutating the input', () => {
-    const values = [1, 2, 3, 4, 5], result = trainerSample(values, 3, () => 0);
+    const values = [1, 2, 3, 4, 5],
+      result = trainerSample(values, 3, () => 0);
     expect(result).toEqual([2, 3, 4]);
     expect(values).toEqual([1, 2, 3, 4, 5]);
     expect(new Set(result).size).toBe(3);
