@@ -6,6 +6,7 @@ import { labsOfClause } from '../labs';
 import { parseExport } from '../../../../packages/curriculum/src';
 import { announce } from '../ui';
 import { loadInto } from '../async';
+import { currentRewards, questBoard } from '../rewards-ui';
 
 export function download(name: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -51,6 +52,6 @@ export function progressPage(): HTMLElement {
           h('button', { type: 'button', onclick: () => fileIn.click() }, '⬆ Check a progress file'), fileIn,
           h('button', { type: 'button', class: 'danger', onclick: async () => { if (confirm('Delete ALL your progress on this device? This cannot be undone.')) { await resetAll(); announce('Progress deleted'); res.reload(); } } }, 'Delete my progress')), msg));
   }
-  const res = loadInto(root, async () => ({ a: await attempts(), s: await seen(), asg: (await assignmentsAll()) as unknown as Assignment[] }), d => view(d.a, d.s, d.asg), 'your progress');
+  const res = loadInto(root, async () => ({ ...(await currentRewards()), asg: (await assignmentsAll()) as unknown as Assignment[] }), d => { view(d.a, d.s, d.asg); root.querySelector('.labhead')?.after(questBoard(d.r, d.a, d.s, state.profile.cls)); }, 'your progress');
   return root;
 }
