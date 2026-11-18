@@ -3,10 +3,10 @@
  * tests and docs read it. Adding a page = one row here + one factory in main.ts.
  */
 export type RouteId = 'home' | 'class' | 'labs' | 'lab' | 'ledger' | 'practice' | 'cards' | 'trainer' | 'crisis' | 'cas' | 'project' | 'rescue' | 'assignment' | 'tutor' | 'progress' | 'teacher' | 'notfound';
-export type NavKey = 'HOME' | 'CLASS XI' | 'CLASS XII' | 'VISUAL LABS' | 'PRACTICE' | 'AI TUTOR' | 'MY PROGRESS' | 'TEACHER DASHBOARD';
+export type NavKey = 'HOME' | 'CLASS XI' | 'CLASS XII' | 'VISUAL LABS' | 'PRACTICE' | 'HELP' | 'MY PROGRESS' | 'TEACHER DASHBOARD';
 export const NAV: readonly { key: NavKey; hash: string }[] = [
   { key: 'HOME', hash: '#/' }, { key: 'CLASS XI', hash: '#/class/XI' }, { key: 'CLASS XII', hash: '#/class/XII' }, { key: 'VISUAL LABS', hash: '#/labs' },
-  { key: 'PRACTICE', hash: '#/practice' }, { key: 'AI TUTOR', hash: '#/tutor' }, { key: 'MY PROGRESS', hash: '#/progress' }, { key: 'TEACHER DASHBOARD', hash: '#/teacher' },
+  { key: 'PRACTICE', hash: '#/practice' }, { key: 'HELP', hash: '#/tutor' }, { key: 'MY PROGRESS', hash: '#/progress' }, { key: 'TEACHER DASHBOARD', hash: '#/teacher' },
 ];
 /** first path segment → route + the nav item it lives under. `valid` checks the remaining segments structurally. */
 const ROUTES: readonly { head: string; id: RouteId; nav: NavKey; valid?: (rest: string[]) => boolean }[] = [
@@ -14,7 +14,7 @@ const ROUTES: readonly { head: string; id: RouteId; nav: NavKey; valid?: (rest: 
   { head: 'labs', id: 'labs', nav: 'VISUAL LABS' }, { head: 'lab', id: 'lab', nav: 'VISUAL LABS', valid: r => !!r[0] }, { head: 'ledger', id: 'ledger', nav: 'VISUAL LABS' },
   { head: 'trainer', id: 'trainer', nav: 'VISUAL LABS' }, { head: 'crisis', id: 'crisis', nav: 'VISUAL LABS' }, { head: 'cas', id: 'cas', nav: 'VISUAL LABS' }, { head: 'cards', id: 'cards', nav: 'VISUAL LABS' }, { head: 'project', id: 'project', nav: 'VISUAL LABS' },
   { head: 'practice', id: 'practice', nav: 'PRACTICE' }, { head: 'assignment', id: 'assignment', nav: 'PRACTICE', valid: r => !!r[0] }, { head: 'rescue', id: 'rescue', nav: 'PRACTICE' },
-  { head: 'tutor', id: 'tutor', nav: 'AI TUTOR' }, { head: 'progress', id: 'progress', nav: 'MY PROGRESS' }, { head: 'teacher', id: 'teacher', nav: 'TEACHER DASHBOARD' },
+  { head: 'tutor', id: 'tutor', nav: 'HELP' }, { head: 'progress', id: 'progress', nav: 'MY PROGRESS' }, { head: 'teacher', id: 'teacher', nav: 'TEACHER DASHBOARD' },
 ];
 export interface Resolved { id: RouteId; nav: NavKey | null; rest: string[] }
 export function resolve(path: readonly string[]): Resolved {

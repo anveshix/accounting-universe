@@ -1,4 +1,5 @@
 import { EntryValidationError, Ledger, LedgerError, Money, starterChartClassXI, normalSide, type DraftLine, type Side } from '../../../../packages/engine/src';
+import { icon } from '../icons';
 import { h, mount, reducedMotion } from '../dom';
 import { renderBlock } from '../render';
 import { num } from '../inputs';
@@ -180,7 +181,7 @@ export function ledgerPage(): HTMLElement {
       h('p', { class: 'eqline' }, `Assets ${eq.assets.format()} = Liabilities ${eq.liabilities.format()} + Capital ${eq.capital.format()}`),
       h('p', { class: 'hint' }, 'For this teaching ledger, purchases are treated as expenses until closing stock is adjusted. The live equation is not a finished balance sheet or a valuation of stock.'),
       capitalParts.length ? h('details', { style: 'margin-top:.6rem' }, h('summary', {}, 'What is inside capital?'), h('ul', {}, ...capitalParts.map(x => h('li', {}, `${x.label}: ${x.text}`)))) : null,
-      h('p', { class: 'experience-note', style: 'margin-top:.8rem' }, h('span', { 'aria-hidden': 'true' }, '💡'), h('span', {}, h('b', {}, 'Experiential: '), 'The figures come from the ledger. A balanced equation or trial balance does not prove that every entry was classified correctly.'))
+      h('p', { class: 'experience-note', style: 'margin-top:.8rem' }, icon('lightbulb', 18), h('span', {}, h('b', {}, 'Experiential: '), 'The figures come from the ledger. A balanced equation or trial balance does not prove that every entry was classified correctly.'))
     );
 
     mount(out,

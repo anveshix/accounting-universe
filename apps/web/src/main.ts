@@ -4,6 +4,7 @@ import { parseHash } from './router';
 import { NAV, resolve } from './routes';
 import { Machine } from '../../../packages/engine/src';
 import { APP_BOOT, NETWORK } from '../../../packages/curriculum/src';
+import { icon } from './icons';
 import { register, runDisposers } from './machine-dom';
 import { state } from './state';
 import { t } from '../../../packages/curriculum/src/i18n';
@@ -43,20 +44,27 @@ function drawNav(active: string | null) {
   for (const n of NAV) nav.appendChild(h('a', { href: n.hash, ...(n.key === active ? { 'aria-current': 'page' } : {}) }, n.key));
 }
 
-// --- Projector-friendly mode: high-contrast, larger type, minimal chrome ---
-function initProjectorToggle(): HTMLButtonElement {
+// --- Display menu: projector mode (high contrast, larger type) lives here, out of the way of the main header ---
+function initDisplayMenu(): HTMLElement {
   const saved = (() => { try { return localStorage.getItem('au-projector') === '1'; } catch { return false; } })();
-  const btn = h('button', { type: 'button', class: 'small projector-toggle', 'aria-pressed': String(saved), title: saved ? 'Exit projector mode (high contrast, larger text)' : 'Projector mode: high contrast + larger text for classroom projection' }, saved ? '☀️ Projector: ON' : '🖥️ Projector');
+  const panelId = 'display-panel';
+  const toggle = h('button', { type: 'button', class: 'projector-toggle', role: 'switch', 'aria-checked': String(saved) }, h('span', { class: 'switch-track', 'aria-hidden': 'true' }, h('span', { class: 'switch-knob' })), h('span', {}, h('b', {}, 'Projector mode'), h('small', {}, 'High contrast and larger text for a classroom screen')));
+  const panel = h('div', { id: panelId, class: 'display-panel', role: 'group', 'aria-label': 'Display settings', hidden: true }, toggle);
+  const btn = h('button', { type: 'button', class: 'display-btn', 'aria-expanded': 'false', 'aria-controls': panelId, 'aria-label': 'Display settings' }, icon('display', 16), h('span', {}, 'Display'));
+  const wrap = h('div', { class: 'display-menu' }, btn, panel);
   const apply = (on: boolean) => {
     document.documentElement.classList.toggle('projector', on);
-    btn.textContent = on ? '☀️ Projector: ON' : '🖥️ Projector';
-    btn.setAttribute('aria-pressed', String(on));
-    btn.title = on ? 'Exit projector mode' : 'Projector mode: high contrast + larger text for classroom projection';
+    toggle.setAttribute('aria-checked', String(on));
     try { localStorage.setItem('au-projector', on ? '1' : '0'); } catch { /* storage may be blocked */ }
   };
+  const isOpen = () => !panel.hasAttribute('hidden');
+  const setOpen = (open: boolean) => { panel.toggleAttribute('hidden', !open); btn.setAttribute('aria-expanded', String(open)); };
   if (saved) document.documentElement.classList.add('projector');
-  btn.onclick = () => apply(!document.documentElement.classList.contains('projector'));
-  return btn;
+  toggle.onclick = () => apply(!document.documentElement.classList.contains('projector'));
+  btn.onclick = () => setOpen(!isOpen());
+  document.addEventListener('click', e => { if (isOpen() && !wrap.contains(e.target as Node)) setOpen(false); });
+  wrap.addEventListener('keydown', e => { if ((e as KeyboardEvent).key === 'Escape' && isOpen()) { setOpen(false); btn.focus(); } });
+  return wrap;
 }
 const boot_ = new Machine(APP_BOOT), network = new Machine(NETWORK);
 register(boot_); register(network);
@@ -116,10 +124,10 @@ const notFound = () => h('div', { class: 'panel' }, h('h2', {}, 'Page not found'
 async function boot() {
   const app = document.getElementById('app')!;
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } }, '☰ Menu');
-  const projectorBtn = initProjectorToggle();
+  const displayMenu = initDisplayMenu();
   app.append(
     h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, projectorBtn, langBtn, menu),
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, displayMenu, langBtn, menu),
     banner, nav, main);
   await ready();
   drawBanner(); storage.subscribe(drawBanner);

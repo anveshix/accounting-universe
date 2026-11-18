@@ -22,6 +22,7 @@ import { t, type Key } from '../../../../packages/curriculum/src/i18n';
 import { mountBalanceScale, type BalanceHandle } from '../experience/balanceScale';
 import { h, mount } from '../dom';
 import { hindiDraftNote } from '../i18n';
+import { icon } from '../icons';
 import { onDispose, track, unregister } from '../machine-dom';
 import { state } from '../state';
 import { recordAttempt, recordSeen } from '../store';
@@ -533,7 +534,9 @@ export function crisisPage(seedArg?: string): HTMLElement {
         ' · ',
         h('span', { 'data-total-xp': String(saved.xp) }, T('crisis.totalXp', { xp: saved.xp })),
       ),
-      badges.length ? h('p', { class: 'crisis-badges' }, ...badges.map(b => h('span', { class: 'chip badge', 'data-badge': b.id }, `🏅 ${T('crisis.badge')}: ${hi ? b.hi : b.en}`))) : null,
+      badges.length
+        ? h('p', { class: 'crisis-badges' }, ...badges.map(b => h('span', { class: 'chip badge', 'data-badge': b.id }, icon('medal', 15), ` ${T('crisis.badge')}: ${hi ? b.hi : b.en}`)))
+        : null,
       h(
         'div',
         {
@@ -608,10 +611,11 @@ export function crisisPage(seedArg?: string): HTMLElement {
       h(
         'span',
         { class: 'chip', 'data-hud': 'lives', 'data-lives': String(m!.ctx.lives), 'aria-label': `${T('crisis.lives')}: ${m!.ctx.lives}` },
-        `${T('crisis.lives')} ${'❤'.repeat(Math.max(0, m!.ctx.lives))}${'♡'.repeat(CRISIS_LIVES - Math.max(0, m!.ctx.lives))}`,
+        `${T('crisis.lives')} `,
+        ...Array.from({ length: CRISIS_LIVES }, (_, i) => icon(i < Math.max(0, m!.ctx.lives) ? 'heart' : 'heart-outline', 15)),
       ),
       h('span', { class: 'chip', 'data-hud': 'xp', 'data-xp': String(xp) }, `${T('crisis.xp')} ${xp}`, pop ? h('b', { class: 'xp-pop', 'data-pop': String(pop) }, ` +${pop}`) : null),
-      h('span', { class: 'chip', 'data-hud': 'streak', 'data-streak': String(streak) }, `${T('crisis.streak')} ${streak}${streak >= 2 ? ' 🔥 ×1.5' : ''}`),
+      h('span', { class: 'chip', 'data-hud': 'streak', 'data-streak': String(streak) }, `${T('crisis.streak')} ${streak}`, ...(streak >= 2 ? [' ', icon('flame', 15), ' ×1.5'] : [])),
       h('span', { class: 'chip' }, `${T('crisis.time')} `, h('span', { 'data-hud': 'time' }, clock())),
       idx >= 0 ? h('span', { class: 'chip', 'data-hud': 'step' }, T('crisis.step', { n: idx + 1 })) : null,
       h('span', { class: 'chip', 'data-hud': 'total' }, T('crisis.totalXp', { xp: saved.xp })),

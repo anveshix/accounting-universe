@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Phase 1 of the professional-site plan: look and message
+- **Home** speaks to learners (no "bigint paise"), names one first step per class and Class XII option ("Start here: …"), shows a three-step "how a session works" row, has a door for teachers, and no longer puts decorative 3D shapes behind the text.
+- **Labs index**: grouped by syllabus unit, searchable, with a "Class XI / Both classes" filter and a spoken result count; on a phone it is about half the old height (5,300 px, was 10,170).
+- **Class map** leads with the topic title; the syllabus code is a quiet tag after it.
+- **Icons**: one inline-SVG set (`icons.ts`) replaces emoji on the home, labs, class map, practice, ledger and Crisis screens (the ✓ ✗ marks in feedback text stay).
+- **Header**: projector mode moved into a "Display" menu (a labelled switch, closes on Escape or outside click, remembered); the AI Tutor nav item is now "Help" and the page no longer talks about servers, API keys or decisions.
+- Fixed on the way: breadcrumb stacked vertically on phones; low-contrast text on the selected class tile.
+- Tests: `e2e/web-app-polish.cjs` (54 checks incl. axe and 390/360/320 px); existing tests updated only where the change is intended (nav label, Display menu, labs list needs "Both classes").
+- Left in place, now unused: `apps/web/src/experience/heroScene.ts` (deleting it needs your approval).
+
 ### GitHub Pages: one workflow, both apps
 - `deploy-pages.yml` is now the only Pages workflow: new app at `/`, old single-file app at `/legacy/` (`tools/assemble-site.mjs`). `static.yml` (uploaded the whole repo, including backup files, and raced the app deploy) is removed.
 - The service worker never answers `/legacy/`. Test: `e2e/web-app-site.cjs` (11 checks: legacy file byte-identical, no backups published, assembling without a build is refused, `/legacy/` reachable with the worker installed).

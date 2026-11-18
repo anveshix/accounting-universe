@@ -24,12 +24,12 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     // ── shell & navigation
     await page.goto(BASE); await page.waitForSelector('.hero');
     const navLabels = await page.$$eval('nav a', as => as.map(a => a.textContent));
-    ok(JSON.stringify(navLabels) === JSON.stringify(['HOME', 'CLASS XI', 'CLASS XII', 'VISUAL LABS', 'PRACTICE', 'AI TUTOR', 'MY PROGRESS', 'TEACHER DASHBOARD']), 'nav labels: ' + navLabels);
+    ok(JSON.stringify(navLabels) === JSON.stringify(['HOME', 'CLASS XI', 'CLASS XII', 'VISUAL LABS', 'PRACTICE', 'HELP', 'MY PROGRESS', 'TEACHER DASHBOARD']), 'nav labels: ' + navLabels);
     ok(await page.$eval('h2', e => e.textContent).then(t => t.includes('Learn Accounting by Doing Accounting')), 'tagline');
     await shot('home-desktop');
 
     // ── every lab: example renders, "Try it" with the example renders, no engine error shown
-    const labIds = await (async () => { await go('labs'); return page.$$eval('a.card', as => as.map(a => a.getAttribute('href')).filter(h => h.startsWith('#/lab/')).map(h => h.slice(6))); })();
+    const labIds = await (async () => { await go('labs'); await page.click('[data-filter="ALL"]'); return page.$$eval('a.card', as => as.map(a => a.getAttribute('href')).filter(h => h.startsWith('#/lab/')).map(h => h.slice(6))); })();
     ok(new Set(labIds).size >= 30, 'lab count ' + new Set(labIds).size);
     for (const id of new Set(labIds)) {
       await go('lab/' + id);

@@ -697,7 +697,7 @@ table.inputs td { white-space: pre-line; }
 td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* header buttons sit on the dark brand bar: same look as the language button */
-header.top .projector-toggle { background: rgba(255,255,255,.18); color: var(--brand-ink); border: 1px solid rgba(255,255,255,.4); font-size: .85rem; padding: .25rem .6rem; min-height: 0; }
+
 
 /* ---------- Trial Balance Crisis (what-if challenge) ---------- */
 .crisis-hud { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0 1rem; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: .4rem 0; }
@@ -720,7 +720,65 @@ header.top .projector-toggle { background: rgba(255,255,255,.18); color: var(--b
   .top { flex-wrap: wrap; gap: .4rem .5rem; padding-top: .5rem; padding-bottom: .5rem; }
   .brand { flex: 1 1 100%; }
   .brand span { display: none; }
-  .top .net, .top .lang, .top .projector-toggle, .top .menu { font-size: .8rem; padding: .25rem .55rem; min-height: 36px; white-space: nowrap; }
+  .top .net, .top .lang, .top .display-btn, .top .menu { font-size: .8rem; padding: .25rem .55rem; min-height: 36px; white-space: nowrap; }
   .top .menu { margin-left: auto; }
   nav { position: static; }
 }
+
+/* ================= Phase 1 — professional look: icons, home, labs index, display menu ================= */
+.icon { display: inline-flex; align-items: center; justify-content: center; flex: none; line-height: 0; }
+.icon svg { display: block; }
+.card-icon { color: var(--brand); font-size: 0; }
+.experience-note .icon { color: var(--brand); margin-top: .1rem; }
+.hero-accent { color: #f0c75a; }
+.hero-actions { margin-top: 1.2rem; }
+.route-note { margin-top: .6rem; background: rgba(255,255,255,.92); color: var(--ink); border-radius: 8px; padding: .6rem .8rem; }
+.muted-line { color: var(--muted); margin: .3rem 0 .7rem; } .flush-top { margin-top: 0; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.5rem 0 .8rem; } .section-head h3 { margin: 0; }
+
+/* how a session works */
+.steps3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin: 1.2rem 0 .4rem; }
+.step3 { display: flex; gap: .8rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: .9rem 1rem; box-shadow: var(--shadow); }
+.step3-icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: var(--info-bg); color: var(--brand); flex: none; }
+.step3 b { display: block; margin-bottom: .15rem; } .step3 span { font-size: .88rem; color: var(--muted); line-height: 1.45; }
+
+/* teacher band */
+.teacher-band { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.2rem; border-left: 4px solid var(--accent); }
+.teacher-band-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft, var(--info-bg)); color: var(--brand); flex: none; }
+.teacher-band-text { flex: 1 1 18rem; } .teacher-band-text h3 { margin: 0 0 .2rem; } .teacher-band-text p { margin: 0; color: var(--muted); }
+
+/* labs index */
+.lab-tools { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: flex-end; margin: 0 0 .4rem; }
+.lab-tools .grow { flex: 1 1 18rem; margin: 0; }
+.class-head { margin: 1.4rem 0 .5rem; }
+.unit-group { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); margin: 0 0 .8rem; box-shadow: var(--shadow); }
+.unit-group > summary { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .7rem; cursor: pointer; padding: .8rem 1rem; font-weight: 650; list-style: none; min-height: 44px; }
+.unit-group > summary::-webkit-details-marker { display: none; }
+.unit-group > summary::before { content: ''; width: .55rem; height: .55rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; margin-right: .2rem; }
+.unit-group[open] > summary::before { transform: rotate(45deg); }
+.unit-group > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: var(--r); }
+.unit-group .unit-name { flex: 1 1 12rem; }
+.unit-group > .cards { padding: 0 1rem 1rem; }
+@media (prefers-reduced-motion: reduce) { .unit-group > summary::before { transition: none; } }
+
+/* display menu in the header */
+.display-menu { position: relative; }
+.display-btn { display: inline-flex; align-items: center; gap: .4rem; background: rgba(255,255,255,.18); color: var(--brand-ink); border: 1px solid rgba(255,255,255,.4); font-size: .85rem; padding: .3rem .7rem; }
+.display-panel { position: absolute; right: 0; top: calc(100% + .5rem); z-index: 40; width: min(20rem, 86vw); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: .6rem; }
+.display-panel[hidden] { display: none; }
+.projector-toggle { display: flex; align-items: center; gap: .8rem; width: 100%; text-align: left; background: transparent; border: 0; color: inherit; padding: .5rem; border-radius: 8px; }
+.projector-toggle b { display: block; } .projector-toggle small { display: block; color: var(--muted); font-size: .8rem; line-height: 1.35; }
+.switch-track { width: 2.6rem; height: 1.5rem; border-radius: 99px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+.switch-knob { position: absolute; top: .15rem; left: .15rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .15s; }
+.projector-toggle[aria-checked="true"] .switch-track { background: var(--brand); }
+.projector-toggle[aria-checked="true"] .switch-knob { transform: translateX(1.1rem); }
+@media (prefers-reduced-motion: reduce) { .switch-track, .switch-knob { transition: none; } }
+@media (max-width: 720px) { .display-panel { right: auto; left: 0; } .display-btn > span:not(.icon) { display: none; } .display-btn { padding: .3rem .55rem; } }
+.chip .icon { vertical-align: -3px; }
+.crisis-hud .chip { display: inline-flex; align-items: center; gap: .15rem; }
+
+/* the selected class tile is white: its small text must not be faded as well (axe color-contrast) */
+.bigchoice.on span { opacity: 1; }
+
+/* the phone-menu rules target every <nav>; the breadcrumb is a <nav> too and must stay a row */
+@media (max-width: 720px) { nav.breadcrumb { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: .1rem .3rem; } nav.breadcrumb a, nav.breadcrumb span { border: 0; padding-left: 0; padding-right: 0; } }

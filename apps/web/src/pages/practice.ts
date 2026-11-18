@@ -3,6 +3,7 @@ import { Money } from '../../../../packages/engine/src';
 import { Machine } from '../../../../packages/engine/src';
 import { PRACTICE_QUESTION, type QuestionCtx, type QuestionEvent, type QuestionState } from '../../../../packages/curriculum/src';
 import { register, track, unregister, onDispose } from '../machine-dom';
+import { icon } from '../icons';
 import { h, mount } from '../dom';
 import { hindiDraftNote } from '../i18n';
 import { attempts, recordAttempt } from '../store';
@@ -93,11 +94,11 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
       const r = qm.send('HINT'); if (!r.ok) { mount(hintBox, h('p', { class: 'hint' }, r.reason!)); return; }
       hintsShown++; qm.ctx.hintsLeft--; refresh();
       mount(hintBox, h('ol', { class: 'hintlist', ...(hi ? { lang: 'hi' } : {}) }, ...hints.slice(0, hintsShown).map(t => h('li', {}, t))));
-    } }, '💡 Next hint');
+    } }, icon('lightbulb', 16), ' Next hint');
     const stepBtn = h('button', { type: 'button', onclick: () => {
       const r = qm.send('STEP_SHOW'); if (!r.ok) { mount(workBox, h('p', { class: 'hint' }, r.reason!)); return; }
       stepsShown++; qm.ctx.stepsLeft--; refresh(); showWorking(stepsShown);
-    } }, '👣 Show next step');
+    } }, icon('steps', 16), ' Show next step');
     const nextBtn = h('button', { type: 'button', class: 'primary', hidden: true, onclick: () => { seed = Math.floor(Math.random() * 1_000_000); draw(); } }, 'Next question →');
 
     const submitBtn = h('button', { type: 'submit', class: 'primary' }, mode === 'BOARD' ? 'Submit answer' : 'Check');
@@ -121,7 +122,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
       h('div', { class: 'practice-top' },
         h('label', {}, 'Topic ', (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...SKILLS.filter(x => x.clause.startsWith(state.profile.cls + '.')).map(x => h('option', { value: x.skill }, x.title))); s.value = skill; return s; })()),
         h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Mode' }, ...MODES.map(m => h('button', { type: 'button', role: 'radio', 'aria-checked': String(m.id === mode), class: m.id === mode ? 'on' : '', onclick: () => { mode = m.id; draw(); } }, m.label))),
-        h('button', { type: 'button', onclick: () => { void recommend(); } }, '🎯 Pick what I should practise next')),
+        h('button', { type: 'button', onclick: () => { void recommend(); } }, icon('target', 16), ' Pick what I should practise next')),
       h('p', { class: 'hint' }, MODES.find(m => m.id === mode)!.blurb),
       qArticle = h('article', { class: 'question' },
         h('p', { class: 'eyebrow' }, `${q.clause} · ${q.marks} marks · ${t(L, `typology.${q.typology}`)}`), hi ? hindiDraftNote() : state.lang === 'hi' ? h('p', { class: 'note warn', lang: 'hi' }, t('hi', 'practice.noHindi')) : null, h('p', { class: 'stem', ...(hi ? { lang: 'hi' } : {}) }, stem),
