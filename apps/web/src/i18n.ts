@@ -18,7 +18,7 @@ export const HINDI_PAGES: ReadonlySet<string> = new Set(['home', 'class', 'labs'
 export function hindiBanner(): HTMLElement {
   return h(
     'div',
-    { class: 'banner draft-banner', role: 'note', 'data-hindi-draft': HINDI_REVIEWED ? 'reviewed' : 'draft', hidden: true },
+    { class: 'draft-banner', role: 'note', 'data-hindi-draft': HINDI_REVIEWED ? 'reviewed' : 'draft', hidden: true },
     h('b', { lang: 'hi' }, t('hi', 'draft.title')),
     h('span', { lang: 'en' }, t('en', 'draft.body')),
   );
