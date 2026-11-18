@@ -5,7 +5,7 @@ import { NAV, hashFor, resolve } from '../../../apps/web/src/routes';
 const OLD_NAV: { label: string; match: (p: string[]) => boolean }[] = [
   { label: 'HOME', match: p => p.length === 0 }, { label: 'CLASS XI', match: p => p[0] === 'class' && p[1] === 'XI' }, { label: 'CLASS XII', match: p => p[0] === 'class' && p[1] === 'XII' },
   { label: 'VISUAL LABS', match: p => ['labs', 'lab', 'ledger', 'trainer', 'cas', 'cards', 'project'].includes(p[0] ?? '') },
-  { label: 'PRACTICE', match: p => ['practice', 'assignment', 'rescue'].includes(p[0] ?? '') }, { label: 'HELP', match: p => p[0] === 'tutor' },   // was 'AI TUTOR' until Phase 1: the page is an offline helper, not an AI
+  { label: 'PRACTICE', match: p => ['practice', 'assignment', 'rescue'].includes(p[0] ?? '') }, { label: 'NOTES', match: p => p[0] === 'notes' }, { label: 'HELP', match: p => p[0] === 'tutor' },   // was 'AI TUTOR' until Phase 1: the page is an offline helper, not an AI
   { label: 'MY PROGRESS', match: p => p[0] === 'progress' }, { label: 'TEACHER DASHBOARD', match: p => p[0] === 'teacher' },
 ];
 const oldNav = (p: string[]) => OLD_NAV.find(n => n.match(p))?.label ?? null;
@@ -22,7 +22,7 @@ describe('route table', () => {
   it('agrees with the previous router and header highlighting on every path', () => {
     for (const p of PATHS) { const r = resolve(p); expect(r.id, JSON.stringify(p)).toBe(oldPage(p)); expect(r.nav, `nav ${JSON.stringify(p)}`).toBe(oldNav(p)); }
   });
-  it('the header lists the same eight items in the same order, each linking to a route that resolves to it', () => {
+  it('the header lists the same nine items in the same order, each linking to a route that resolves to it', () => {
     expect(NAV.map(n => n.key)).toEqual(OLD_NAV.map(n => n.label));
     for (const n of NAV) expect(resolve(n.hash.replace(/^#\/?/, '').split('/').filter(Boolean)).nav, n.key).toBe(n.key);
   });
