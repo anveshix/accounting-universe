@@ -70,7 +70,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     ok(await page.$('[data-hindi-draft]') === null, 'hindi: switching back to English removes Hindi');
 
     // header controls are really on the page (the projector button used to be created but never inserted)
-    await go('#/'); ok(await page.isVisible('header .projector-toggle') && await page.isVisible('header [data-lang-toggle]'), 'header: projector and language buttons are visible');
+    await go('#/'); ok(await page.isVisible('header .display-btn') && await page.isVisible('header [data-lang-toggle]'), 'header: display and language buttons are visible'); await page.click('header .display-btn');
     await page.click('header .projector-toggle'); ok(await page.$eval('html', e => e.classList.contains('projector')), 'projector mode switches on'); await page.click('header .projector-toggle');
     // choosing Hinglish on a concept card must not switch practice questions to Hindi (regression)
     await go('#/cards'); await page.click('a.card'); await page.waitForSelector('[role=radiogroup]');
@@ -121,7 +121,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     }
     await page.setViewportSize({ width: 1280, height: 900 }); await go('#/');
     const btn = sel => page.$eval(sel, e => { const s = getComputedStyle(e); return s.backgroundColor + '|' + s.color; });
-    ok(!(await btn('header .projector-toggle')).startsWith('rgb(255, 255, 255)|') && !(await btn('header [data-lang-toggle]')).startsWith('rgb(255, 255, 255)|'), 'header buttons are not white boxes on the dark bar: ' + await btn('header .projector-toggle'));
+    ok(!(await btn('header .display-btn')).startsWith('rgb(255, 255, 255)|') && !(await btn('header [data-lang-toggle]')).startsWith('rgb(255, 255, 255)|'), 'header buttons are not white boxes on the dark bar: ' + await btn('header .display-btn'));
     await go('#/crisis/7'); await page.waitForSelector('.crisis-hud');
     ok(await page.$eval('.crisis-hud', e => getComputedStyle(e).display) === 'flex', 'crisis page styles are present (lost once in a merge)');
   } catch (e) { fails.push('crash: ' + (e && e.stack || e)); }

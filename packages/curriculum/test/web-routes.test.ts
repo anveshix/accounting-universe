@@ -5,7 +5,7 @@ import { NAV, hashFor, resolve } from '../../../apps/web/src/routes';
 const OLD_NAV: { label: string; match: (p: string[]) => boolean }[] = [
   { label: 'HOME', match: p => p.length === 0 }, { label: 'CLASS XI', match: p => p[0] === 'class' && p[1] === 'XI' }, { label: 'CLASS XII', match: p => p[0] === 'class' && p[1] === 'XII' },
   { label: 'VISUAL LABS', match: p => ['labs', 'lab', 'ledger', 'trainer', 'cas', 'cards', 'project'].includes(p[0] ?? '') },
-  { label: 'PRACTICE', match: p => ['practice', 'assignment', 'rescue'].includes(p[0] ?? '') }, { label: 'AI TUTOR', match: p => p[0] === 'tutor' },
+  { label: 'PRACTICE', match: p => ['practice', 'assignment', 'rescue'].includes(p[0] ?? '') }, { label: 'HELP', match: p => p[0] === 'tutor' },   // was 'AI TUTOR' until Phase 1: the page is an offline helper, not an AI
   { label: 'MY PROGRESS', match: p => p[0] === 'progress' }, { label: 'TEACHER DASHBOARD', match: p => p[0] === 'teacher' },
 ];
 const oldNav = (p: string[]) => OLD_NAV.find(n => n.match(p))?.label ?? null;

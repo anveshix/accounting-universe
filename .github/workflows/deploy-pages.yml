@@ -1,4 +1,8 @@
-name: Deploy web app to GitHub Pages
+# The ONLY workflow that publishes to GitHub Pages (it replaces the old pair "deploy-pages" + "static", which both deployed on every push to main
+# and raced each other: whichever finished last decided whether visitors saw the new app or the old page).
+#   /        the new web app (apps/web, built from source)
+#   /legacy/ the old single-file app (index.html), unchanged
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -24,6 +28,9 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
+      - name: Add the legacy app under /legacy/
+        run: node tools/assemble-site.mjs
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist
