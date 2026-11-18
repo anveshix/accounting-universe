@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### GitHub Pages: one workflow, both apps
+- `deploy-pages.yml` is now the only Pages workflow: new app at `/`, old single-file app at `/legacy/` (`tools/assemble-site.mjs`). `static.yml` (uploaded the whole repo, including backup files, and raced the app deploy) is removed.
+- The service worker never answers `/legacy/`. Test: `e2e/web-app-site.cjs` (11 checks: legacy file byte-identical, no backups published, assembling without a build is refused, `/legacy/` reachable with the worker installed).
+
 ### Trial Balance Crisis — gamified what-if challenge (Class XI, clauses XI.2.tb and XI.2.errors)
 - New page `#/crisis` (listed under Visual Labs): a month of transactions is posted correctly, one posting in one ledger account is spoiled
   (left out / wrong side / wrong amount) and the trial balance no longer agrees. Five steps: find the difference and the short side → audit the ledger

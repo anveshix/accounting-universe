@@ -51,5 +51,7 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-v1.cjs
       - name: Browser - Trial Balance Crisis challenge
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-crisis.cjs
+      - name: Browser - published site layout (/ and /legacy/)
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-site.cjs
       - name: Browser - legacy app
         run: NODE_PATH="$(npm root -g)" node e2e/legacy-smoke.cjs && NODE_PATH="$(npm root -g)" node e2e/legacy-simulator-regression.cjs
