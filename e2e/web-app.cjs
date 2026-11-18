@@ -132,7 +132,7 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     // ── tutor
     await go('tutor'); await page.fill('#tq', 'forfeiture'); await page.click('.searchrow button');
     ok((await page.$$eval('.cardlist li', l => l.length)) > 0, 'tutor: search finds forfeiture');
-    ok((await page.$eval('.note.info', e => e.textContent)).includes('No AI language model is connected'), 'tutor: honest about no LLM');
+    ok((await page.$eval('.note.info', e => e.textContent)).includes('no AI is connected'), 'tutor: honest about no LLM');
     ok(!(await page.$('#aiq')), 'tutor: AI box hidden when no proxy is configured');
     await page.click('.modes button:has-text("Hinglish")'); ok((await page.$eval('.gloss', e => e.textContent)).includes('badhe'), 'tutor: Hinglish rules');
 

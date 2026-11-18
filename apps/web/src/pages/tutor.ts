@@ -89,7 +89,7 @@ export function tutorPage(): HTMLElement {
   return h('div', { class: 'tutor' },
     h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, TUTOR_URL ? 'AI tutor' : 'Help'), h('h2', {}, 'Find help, fast'),
       TUTOR_URL ? h('p', { class: 'note info' }, 'An AI tutor is connected through a server. It only explains figures the accounting engine has already worked out; it never calculates and cannot see your name or progress. The search and rule cards below work without it.')
-        : h('p', { class: 'note info' }, 'Search the course, see the mistakes you keep making, and read the key rules in plain words. Your numbers are always worked out by the accounting engine, never guessed.')),
+        : h('p', { class: 'note info' }, 'This is a help page, not a chatbot: no AI is connected. Search the course, see the mistakes you keep making, and read the key rules in plain words. Your numbers are always worked out by the accounting engine, never guessed.')),
     TUTOR_URL ? aiPanel() : null,
     h('section', { class: 'panel' }, h('h3', {}, 'Search the course'), h('form', { class: 'searchrow', onsubmit: (e: Event) => { e.preventDefault(); ask(); } }, h('label', { for: 'tq', class: 'sr-only' }, 'Search the course'), input, h('button', { type: 'submit', class: 'primary' }, 'Search')), results),
     h('section', { class: 'panel' }, h('h3', {}, 'Your repeated mistakes'), mist),
