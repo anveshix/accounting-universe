@@ -11,6 +11,7 @@ import {
 } from '../../engine/src';
 import { Rng } from './rng';
 import { V1_GENERATORS } from './questions-v1';
+import { V2_GENERATORS } from './questions-v2';
 
 export type PartKind = 'MONEY' | 'FRACTION' | 'TEXT' | 'CHOICE';
 export interface Part { readonly label: string; readonly kind: PartKind; readonly answer: string; readonly marks: number; readonly unit?: string; /** CHOICE only: the options shown (the answer is one of them). */ readonly options?: readonly string[]; }
@@ -519,7 +520,7 @@ export const GENERATORS: readonly Gen[] = [
   },
 ];
 
-export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS];
+export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS, ...V2_GENERATORS];
 export const SKILLS = ALL_GENERATORS.map(g => ({ skill: g.skill, clause: g.clause, title: g.title, typology: g.typology }));
 
 /** The generator's output exactly as written (no safety filtering) — used by tests to keep the generators themselves honest. */

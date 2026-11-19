@@ -1,0 +1,21 @@
+// New chapter-wise questions render in Practice: grouped topic list, concept MCQ and a numerical skill. Build apps/web first.
+const { chromium } = require('playwright');
+const { spawn } = require('child_process');
+const srv = spawn('npx', ['vite', 'preview', '--port', '4180', '--strictPort'], { cwd: 'apps/web', stdio: 'ignore' });
+let fails = 0;
+const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
+(async () => {
+  await new Promise(r => setTimeout(r, 2500));
+  const b = await chromium.launch(), page = await b.newPage(), U = 'http://localhost:4180/';
+  await page.goto(U + '#/practice/mcq-gst');
+  await page.waitForSelector('#skillsel');
+  ok((await page.locator('#skillsel optgroup').count()) >= 3, 'topics are grouped by unit');
+  ok((await page.locator('#skillsel option').count()) >= 30, 'Class XI now lists 30+ practice topics');
+  ok((await page.locator('main select:not(#skillsel) option').count()) >= 4, 'the concept question shows its options');
+  await page.goto(U + '#/practice/gp-np');
+  await page.waitForSelector('#skillsel');
+  ok((await page.textContent('main')).includes('gross profit'), 'gross profit and net profit question renders');
+  await b.close();
+  srv.kill();
+  process.exit(fails ? 1 : 0);
+})();

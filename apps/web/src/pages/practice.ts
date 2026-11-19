@@ -1,4 +1,4 @@
-import { SKILLS, checkAnswer, makeQuestion, nextSkill, type Question } from '../../../../packages/curriculum/src';
+import { SKILLS, UNITS, checkAnswer, makeQuestion, nextSkill, type Question } from '../../../../packages/curriculum/src';
 import { Money } from '../../../../packages/engine/src';
 import { Machine } from '../../../../packages/engine/src';
 import { PRACTICE_QUESTION, type QuestionCtx, type QuestionEvent, type QuestionState } from '../../../../packages/curriculum/src';
@@ -120,7 +120,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
     mount(root,
       h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, `Class ${state.profile.cls}`), h('h2', {}, 'Practice'), h('p', { class: 'lead' }, 'Every question is made fresh and marked by the accounting engine. Wrong answers are explained, not just crossed out.')),
       h('div', { class: 'practice-top' },
-        h('label', {}, 'Topic ', (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...SKILLS.filter(x => x.clause.startsWith(state.profile.cls + '.')).map(x => h('option', { value: x.skill }, x.title))); s.value = skill; return s; })()),
+        h('label', {}, 'Topic ', (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...UNITS.filter(u => u.cls === state.profile.cls).map(u => { const here = SKILLS.filter(x => x.clause.startsWith(u.id + '.')); return here.length ? h('optgroup', { label: u.title }, ...here.map(x => h('option', { value: x.skill }, x.title))) : null; })); s.value = skill; return s; })()),
         h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Mode' }, ...MODES.map(m => h('button', { type: 'button', role: 'radio', 'aria-checked': String(m.id === mode), class: m.id === mode ? 'on' : '', onclick: () => { mode = m.id; draw(); } }, m.label))),
         h('button', { type: 'button', onclick: () => { void recommend(); } }, icon('target', 16), ' Pick what I should practise next')),
       h('p', { class: 'hint' }, MODES.find(m => m.id === mode)!.blurb),
