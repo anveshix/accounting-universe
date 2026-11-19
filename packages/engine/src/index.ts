@@ -12,3 +12,4 @@ export * from './analysis';
 export * from './cashflow';
 export * from './extras';
 export * from './machine';
+export * from './accountsExtended';

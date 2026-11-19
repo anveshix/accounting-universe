@@ -822,3 +822,4 @@ td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--ac
 .mmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(1.9rem, 1fr)); gap: 4px; max-width: 42rem; }
 .mcell { aspect-ratio: 1; display: grid; place-items: center; border-radius: 6px; font-size: .72rem; font-weight: 800; text-decoration: none; color: #0b2b26; background: var(--line-2); border: 2px solid transparent; }
 .mcell.l1 { background: #e3f1ec; } .mcell.l2 { background: #bfe3d0; } .mcell.l3 { background: #7cc6a0; } .mcell.l4 { background: #36a06b; color: #fff; } .mcell.l5 { background: #f2c14e; box-shadow: 0 0 0 2px #b7791f inset; } .mcell.weak { border-color: var(--bad); }
+.acctcell { display: grid; gap: .3rem; min-width: 0; } .acctcell input, .acctcell select { width: 100%; }

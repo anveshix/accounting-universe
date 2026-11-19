@@ -1,7 +1,7 @@
 import { Machine } from '../../../../packages/engine/src';
 import { TRAINER_ROUND } from '../../../../packages/curriculum/src';
 import { migratedTrainerScenes } from '../../../../packages/curriculum/src/questions-v1';
-import { trainerFeedback, trainerSample, type TrainerItem } from '../../../../packages/curriculum/src/trainer';
+import { generateTrainerItems, trainerFeedback, trainerSample, type TrainerItem } from '../../../../packages/curriculum/src/trainer';
 import { onDispose, track, unregister } from '../machine-dom';
 import { starterChartClassXI, type Side } from '../../../../packages/engine/src';
 import { h, mount } from '../dom';
@@ -13,7 +13,7 @@ import { TRAINER_EXAMPLES } from '../trainer-examples';
 export function trainerPage(): HTMLElement {
   const chart = starterChartClassXI();
   // pool = the 15 hand-written items + verified legacy scenes whose accounts exist in this chart; each round is 15 random items
-  const pool: TrainerItem[] = [...TRAINER_EXAMPLES, ...migratedTrainerScenes(chart.list()).filter(m => !TRAINER_EXAMPLES.some(q => q.text === m.text))];
+  const pool: TrainerItem[] = [...TRAINER_EXAMPLES, ...migratedTrainerScenes(chart.list()).filter(m => !TRAINER_EXAMPLES.some(q => q.text === m.text)), ...generateTrainerItems(1500, Date.now() % 100000)];
   const draw15 = () => trainerSample(pool, 15);
   const order = draw15();
   let i = 0, score = 0, review = false;
