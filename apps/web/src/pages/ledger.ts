@@ -1,4 +1,4 @@
-import { EntryValidationError, Ledger, LedgerError, Money, starterChartClassXI, normalSide, type DraftLine, type Side } from '../../../../packages/engine/src';
+import { ACCOUNT_TYPES, EntryValidationError, Ledger, LedgerError, Money, chartWithParties, normalSide, type AccountType, type DraftLine, type Side } from '../../../../packages/engine/src';
 import { icon } from '../icons';
 import { h, mount, reducedMotion } from '../dom';
 import { renderBlock } from '../render';
@@ -23,9 +23,13 @@ const SCENARIO: Step[] = [
 ];
 
 export function ledgerPage(): HTMLElement {
-  let ledger = new Ledger(starterChartClassXI());
+  const chart = chartWithParties(500);                               // 130+ named accounts plus 500 debtors and 500 creditors
+  const CUSTOM = 'au-custom-accounts';
+  const saveCustom = (a: { id: string; name: string; type: AccountType }[]) => { try { localStorage.setItem(CUSTOM, JSON.stringify(a)); } catch { /* storage blocked: kept for this visit only */ } };
+  const customs: { id: string; name: string; type: AccountType }[] = (() => { try { const v = JSON.parse(localStorage.getItem(CUSTOM) ?? '[]'); return Array.isArray(v) ? v : []; } catch { return []; } })();
+  for (const a of customs) if (a && typeof a.id === 'string' && ACCOUNT_TYPES.includes(a.type) && !chart.has(a.id)) chart.add(a);
+  let ledger = new Ledger(chart);
   let step = 0, timer: number | undefined, speed = 1;
-  const chart = ledger.chart;
   const out = h('div', { class: 'ledger-out' });
   const explain = h('div', { class: 'explain', 'aria-live': 'polite' });
   const err = h('div', { class: 'formerr', role: 'alert' });
@@ -33,14 +37,19 @@ export function ledgerPage(): HTMLElement {
   const date = h('input', { type: 'date', value: '2026-04-01', id: 'je-date', 'aria-label': 'Date' });
   const narr = h('input', { type: 'text', id: 'je-narr', placeholder: 'Narration, e.g. Paid rent', 'aria-label': 'Narration' });
   const linesBox = h('div', { class: 'lines' });
-  const accOptions = () => chart.list().map(a => h('option', { value: a.id }, `${a.name} (${TYPE_WORD[a.type]})`));
+  const acctList = h('datalist', { id: 'acct-list' });
+  const fillList = () => mount(acctList, ...chart.list().map(a => h('option', { value: a.name }, TYPE_WORD[a.type])));
+  fillList();
+  const byName = (v: string) => { const t = v.trim().toLowerCase(); return chart.list().find(a => a.name.toLowerCase() === t || a.id === t); };
   const lineRow = (side: Side = 'DR') => {
-    const sel = h('select', { 'aria-label': 'Account' }, ...accOptions());
+    const sel = h('input', { type: 'text', list: 'acct-list', placeholder: 'Type to search 1,000+ accounts, or a new name', 'aria-label': 'Account', autocomplete: 'off', 'data-acct': '' });
+    const ty = h('select', { 'aria-label': 'Type of the new account', 'data-newtype': '', hidden: true, title: 'This name is new: choose what kind of account it is' }, h('option', { value: '' }, 'New account: choose type'), ...ACCOUNT_TYPES.map(t => h('option', { value: t }, TYPE_WORD[t])));
+    sel.addEventListener('input', () => { ty.hidden = !sel.value.trim() || !!byName(sel.value); });
     const sd = h('select', { 'aria-label': 'Debit or credit' }, h('option', { value: 'DR' }, 'Dr'), h('option', { value: 'CR' }, 'Cr'));
     sd.value = side;
     const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: 'Amount ₹', 'aria-label': 'Amount' });
     const rm = h('button', { type: 'button', class: 'ghost', 'aria-label': 'Remove line', onclick: () => { if (linesBox.children.length > 2) row.remove(); } }, '✕');
-    const row = h('div', { class: 'linerow' }, sd, sel, amt, rm);
+    const row = h('div', { class: 'linerow' }, sd, h('div', { class: 'acctcell' }, sel, ty), amt, rm);
     return row;
   };
   linesBox.append(lineRow('DR'), lineRow('CR'));
@@ -89,13 +98,23 @@ export function ledgerPage(): HTMLElement {
   function manual() {
     const lines: DraftLine[] = [];
     for (const r of Array.from(linesBox.children)) {
-      const [sd, sel, amt] = Array.from(r.querySelectorAll('select,input')) as (HTMLSelectElement | HTMLInputElement)[];
-      const raw = amt!.value.replace(/[₹,\s]/g, '');
+      const sd = r.querySelector<HTMLSelectElement>('select[aria-label="Debit or credit"]')!, sel = r.querySelector<HTMLInputElement>('input[data-acct]')!, amt = r.querySelector<HTMLInputElement>('input[aria-label="Amount"]')!, ty = r.querySelector<HTMLSelectElement>('select[data-newtype]')!;
+      let acct = byName(sel.value);
+      if (!acct) {
+        const name = sel.value.trim().replace(/\s+/g, ' ');
+        if (!name) { err.textContent = 'Choose an account for every line.'; return; }
+        if (!ty.value) { err.textContent = `“${name}” is a new account. Choose its type (asset, liability, income, expense…) so the rules of debit and credit can apply.`; ty.hidden = false; ty.focus(); return; }
+        const id = 'my-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        if (!id.slice(3)) { err.textContent = 'Use letters or numbers in the account name.'; return; }
+        if (!chart.has(id)) { const a = { id, name, type: ty.value as AccountType }; chart.add(a); customs.push(a); saveCustom(customs); fillList(); announce(`Account ${name} added`); }
+        acct = chart.get(id);
+      }
+      const raw = amt.value.replace(/[₹,\s]/g, '');
       let m: Money;
-      try { m = Money.parse(raw === '' ? 'x' : raw); } catch { err.textContent = `"${amt!.value}" is not a valid amount.`; return; }
-      lines.push({ accountId: sel!.value, side: sd!.value as Side, amount: m });
+      try { m = Money.parse(raw === '' ? 'x' : raw); } catch { err.textContent = `"${amt.value}" is not a valid amount.`; return; }
+      lines.push({ accountId: acct.id, side: sd.value as Side, amount: m });
     }
-    if (post(date.value, narr.value, lines)) { narr.value = ''; for (const i of Array.from(linesBox.querySelectorAll('input'))) i.value = ''; }
+    if (post(date.value, narr.value, lines)) { narr.value = ''; for (const i of Array.from(linesBox.querySelectorAll('input'))) i.value = ''; for (const t of Array.from(linesBox.querySelectorAll<HTMLSelectElement>('select[data-newtype]'))) { t.value = ''; t.hidden = true; } }
   }
 
   // ── the animated story, driven by the `ledger-player` machine (see docs/STATE_MACHINES.md) ──
@@ -213,6 +232,6 @@ export function ledgerPage(): HTMLElement {
     h('section', { class: 'panel' }, h('div', { class: 'kicker' }, 'Guided tour'), h('h3', { style: 'margin-top:.5rem' }, 'Watch a business happen'), h('p', { class: 'hint' }, 'Ravi’s first week, one transaction at a time. Each step shows the rule that decides debit and credit. Press Play and watch the 3-D scale respond.'), controls, explain),
     h('section', { class: 'panel' }, h('h3', {}, 'Post an entry yourself'), h('p', { class: 'hint' }, 'Total debit must equal total credit. An unbalanced entry is rejected and does not change the ledger or scale.'),
       h('div', { class: 'formgrid' }, h('label', {}, 'Date', date), h('label', { class: 'wide' }, 'Narration', narr)), linesBox,
-      h('div', { class: 'controls' }, h('button', { type: 'button', onclick: () => linesBox.append(lineRow('DR')) }, '+ Add line'), h('button', { type: 'button', class: 'primary', onclick: manual }, 'Post entry')), err),
+      h('div', { class: 'controls' }, acctList, h('button', { type: 'button', onclick: () => linesBox.append(lineRow('DR')) }, '+ Add line'), h('button', { type: 'button', class: 'primary', onclick: manual }, 'Post entry')), err),
     out);
 }

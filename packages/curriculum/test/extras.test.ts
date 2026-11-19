@@ -55,7 +55,7 @@ describe('rescue plan', () => {
     expect(p.next!.level).toBe(5); expect(p.next!.href).toMatch(/\/board$/);
   });
   it('theory-only topics stop at level 3 and say so', () => {
-    const p = rescuePlan({ clause: 'XI.1.gst', labs: ['card:gst'], attempts: [], seen: [] });
+    const p = rescuePlan({ clause: 'XII.P.project', labs: [], attempts: [], seen: [] });
     expect(p.steps.map(s => s.level)).toEqual([1, 2, 3]);
   });
   it('orders weak topics first', () => {

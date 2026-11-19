@@ -57,3 +57,8 @@ D1 strangler stack (assumed) · D2 omit redemption (assumed) · D3 Option II aft
 
 ## Data & privacy
 Progress is stored on the device (IndexedDB, memory fallback). Nothing is uploaded. The proxy receives only a question, a chapter name and engine figures — no names or progress. No API key exists anywhere in the repository.
+
+## Question bank expansion (V2)
+- Added 18 numerical generators (trading and P&L, closing capital, outstanding/prepaid, missing TB figure, purchases book, credit sales, error correction, fixed/fluctuating capitals, past adjustments, death of a partner, goodwill from capital, premium issue, paid-up capital, comparative and common-size, profitability and receivables ratios, investing/financing cash flows) and 20 concept banks (about 142 authored MCQs) for the theory chapters of Classes XI and XII.
+- Tests: packages/curriculum/test/questions-v2.test.ts (hand-worked oracles) plus the generic per-generator suite; e2e/web-app-questions.cjs.
+- Not yet: Hindi for V2 questions, questions for the two project clauses, and a PGT review pass of the MCQ wording.
