@@ -15,6 +15,15 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++
   await page.goto(U + '#/practice/gp-np');
   await page.waitForSelector('#skillsel');
   ok((await page.textContent('main')).includes('gross profit'), 'gross profit and net profit question renders');
+  await page.goto(U + '#/practice/ar-concepts');
+  await page.waitForSelector('#skillsel');
+  ok((await page.textContent('main')).includes('Assertion (A)') && (await page.locator('main select:not(#skillsel) option').count()) >= 4, 'assertion-reason question shows A, R and four options');
+  await page.goto(U + '#/practice/step-dep-sale');
+  await page.waitForSelector('#skillsel');
+  ok((await page.textContent('main')).includes('Step 4'), 'step-wise question shows its four steps');
+  await page.goto(U + '#/practice/case-admission');
+  await page.waitForSelector('#skillsel');
+  ok((await page.locator('main select:not(#skillsel)').count()) === 4, 'case-based question shows four linked sub-questions');
   await b.close();
   srv.kill();
   process.exit(fails ? 1 : 0);
