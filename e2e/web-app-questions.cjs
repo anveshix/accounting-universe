@@ -24,6 +24,12 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++
   await page.goto(U + '#/practice/case-admission');
   await page.waitForSelector('#skillsel');
   ok((await page.locator('main select:not(#skillsel)').count()) === 4, 'case-based question shows four linked sub-questions');
+  await page.goto(U + '#/practice/final-accounts-tb');
+  await page.waitForSelector('#skillsel');
+  ok((await page.textContent('main')).includes('Trial balance') && (await page.textContent('main')).includes('Step 4'), 'final accounts from a trial balance shows the TB and four steps');
+  await page.goto(U + '#/practice/mcq-spot-error');
+  await page.waitForSelector('#skillsel');
+  ok((await page.textContent('main')).includes('Entry given'), 'spot-the-error shows the transaction and the entry');
   await b.close();
   srv.kill();
   process.exit(fails ? 1 : 0);

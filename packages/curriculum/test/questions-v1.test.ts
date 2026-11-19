@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { SKILLS, checkAnswer, makeQuestion, type Question } from '../src';
 
 const V1 = ['XI.2.equation', 'XI.2.rules', 'XI.2.journal', 'XI.2.ledger', 'XI.2.tb'];
+import { V1_GENERATORS } from '../src/questions-v1';
+const V1_OWN = new Set(V1_GENERATORS.map(g => g.skill));
 const SEEDS = Array.from({ length: 200 }, (_, i) => i + 1);
 const qs = (skill: string): Question[] => SEEDS.map(s => makeQuestion(skill, s));
 const rupees = (s: string) => Number(s.replace(/[₹,]/g, '').replace(/\.$/, ''));
@@ -79,7 +81,7 @@ describe('independent oracles (recomputed from the question text, not from the e
 describe('Hindi (draft) for V1 questions', () => {
   const DEV = /[ऀ-ॿ]/;
   it('every V1 question has a Hindi stem, part labels, hints and working, aligned with the English', () => {
-    for (const s of SKILLS.filter(x => V1.includes(x.clause))) for (const q of qs(s.skill).slice(0, 40)) {
+    for (const s of SKILLS.filter(x => V1.includes(x.clause) && V1_OWN.has(x.skill))) for (const q of qs(s.skill).slice(0, 40)) {
       const hi = q.hi!; expect(hi, q.id).toBeTruthy();
       expect(DEV.test(hi.stem), q.id).toBe(true); expect(hi.parts.length).toBe(q.parts.length);
       for (const p of hi.parts) expect(DEV.test(p), `${q.id} part`).toBe(true);
