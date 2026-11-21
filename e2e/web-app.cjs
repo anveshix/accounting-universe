@@ -73,6 +73,8 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     // unbalanced manual entry is rejected with a reason
     await page.fill('#je-narr', 'test');
     const amts = await page.$$('.linerow input[aria-label="Amount"]');
+    const accts = await page.$$('.linerow input[aria-label="Account"]');
+    await accts[0].fill('Cash'); await accts[1].fill('Capital');
     await amts[0].fill('1000'); await amts[1].fill('900');
     await page.click('text=Post entry');
     ok((await page.$eval('.formerr', e => e.textContent)).includes('Dual aspect broken'), 'ledger: unbalanced entry refused');
