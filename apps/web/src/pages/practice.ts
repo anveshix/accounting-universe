@@ -1,4 +1,4 @@
-import { SKILLS, checkAnswer, makeQuestion, nextSkill, type Question } from '../../../../packages/curriculum/src';
+import { SKILLS, UNITS, checkAnswer, makeQuestion, nextSkill, type Question } from '../../../../packages/curriculum/src';
 import { Money } from '../../../../packages/engine/src';
 import { Machine } from '../../../../packages/engine/src';
 import { PRACTICE_QUESTION, type QuestionCtx, type QuestionEvent, type QuestionState } from '../../../../packages/curriculum/src';
@@ -120,10 +120,10 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
     mount(root,
       h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, tr('ui.class', { cls: state.profile.cls })), h('h2', {}, tr('prac.h2')), h('p', { class: 'lead' }, tr('prac.lead'))),
       h('div', { class: 'practice-top' },
-        h('label', {}, tr('prac.topic'), (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...SKILLS.filter(x => x.clause.startsWith(state.profile.cls + '.')).map(x => h('option', { value: x.skill, lang: 'en' }, x.title))); s.value = skill; return s; })()),
-        h('div', { class: 'modes', role: 'radiogroup', 'aria-label': tr('prac.mode') }, ...MODES.map(m => h('button', { type: 'button', role: 'radio', 'aria-checked': String(m === mode), class: m === mode ? 'on' : '', onclick: () => { mode = m; draw(); } }, tr(`prac.m.${m}` as Key)))),
-        h('button', { type: 'button', onclick: () => { void recommend(); } }, icon('target', 16), tr('prac.recommend'))),
-      h('p', { class: 'hint' }, tr(`prac.b.${mode}` as Key)),
+        h('label', {}, 'Topic ', (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...UNITS.filter(u => u.cls === state.profile.cls).map(u => { const here = SKILLS.filter(x => x.clause.startsWith(u.id + '.')); return here.length ? h('optgroup', { label: u.title }, ...here.map(x => h('option', { value: x.skill }, x.title))) : null; })); s.value = skill; return s; })()),
+        h('div', { class: 'modes', role: 'radiogroup', 'aria-label': 'Mode' }, ...MODES.map(m => h('button', { type: 'button', role: 'radio', 'aria-checked': String(m.id === mode), class: m.id === mode ? 'on' : '', onclick: () => { mode = m.id; draw(); } }, m.label))),
+        h('button', { type: 'button', onclick: () => { void recommend(); } }, icon('target', 16), ' Pick what I should practise next')),
+      h('p', { class: 'hint' }, MODES.find(m => m.id === mode)!.blurb),
       qArticle = h('article', { class: 'question' },
         h('p', { class: 'eyebrow' }, h('span', { lang: 'en' }, q.clause), ` · ${tr('ui.marks', { n: q.marks })} · ${t(L, `typology.${q.typology}`)}`), hi ? null : state.lang === 'hi' ? h('p', { class: 'note warn', lang: 'hi' }, t('hi', 'practice.noHindi')) : null, h('p', { class: 'stem', ...(hi ? { lang: 'hi' } : qlang) }, stem),
         h('form', { onsubmit: (e: Event) => { e.preventDefault(); check(); } }, ...partsUi,

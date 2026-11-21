@@ -18,6 +18,8 @@ import { labPage } from './pages/lab';
 import { ledgerPage } from './pages/ledger';
 import { practicePage } from './pages/practice';
 import { progressPage } from './pages/progress';
+import { hudElement, initRewards } from './rewards-ui';
+import { notesPage } from './pages/notes';
 import { teacherPage } from './pages/teacher';
 import { tutorPage } from './pages/tutor';
 import { cardPage, cardsIndex } from './pages/cards';
@@ -129,6 +131,7 @@ function render() {
       case 'tutor': page = tutorPage(); break;
       case 'progress': page = progressPage(); break;
       case 'teacher': page = teacherPage(); break;
+      case 'notes': page = notesPage(a); break;
       default: page = notFound();
     }
   } catch (e) {
@@ -153,9 +156,8 @@ async function boot() {
   const tagline = h('span', {});
   relabel.push(() => { menu.textContent = tr('ui.menu'); skip.textContent = tr('ui.skip'); tagline.textContent = tr('ui.tagline'); });
   app.append(
-    skip,
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline), net, displayMenu, langBtn, menu),
-    draftBanner,
+    h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, hudElement(), displayMenu, langBtn, menu),
     banner, nav, main);
   for (const f of relabel) f();                              // header words in the saved language before the first paint of the page
   await ready();
@@ -165,7 +167,7 @@ async function boot() {
   drawLang();
   window.addEventListener('hashchange', () => { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); render(); });
   window.addEventListener('online', drawNet); window.addEventListener('offline', drawNet);
-  drawNet(); render();
+  drawNet(); render(); initRewards();
   boot_.send('BOOTED');
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => { /* offline support is optional */ });
 }

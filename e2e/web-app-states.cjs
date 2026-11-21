@@ -51,10 +51,10 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     await page.goto(BASE + '#/ledger'); await page.waitForSelector('.ledger-lab');
     const postLedger = async (narration, debit, credit, amount) => {
       await page.fill('#je-narr', narration);
-      await page.selectOption('.linerow:nth-child(1) select:nth-of-type(2)', debit);
-      await page.selectOption('.linerow:nth-child(2) select:nth-of-type(2)', credit);
-      await page.fill('.linerow:nth-child(1) input', amount);
-      await page.fill('.linerow:nth-child(2) input', amount);
+      await page.fill('.linerow:nth-child(1) input[data-acct]', debit);
+      await page.fill('.linerow:nth-child(2) input[data-acct]', credit);
+      await page.fill('.linerow:nth-child(1) input[aria-label="Amount"]', amount);
+      await page.fill('.linerow:nth-child(2) input[aria-label="Amount"]', amount);
       await page.click('text=Post entry');
     };
     await postLedger('Loan', 'cash', 'bank-loan', '100');

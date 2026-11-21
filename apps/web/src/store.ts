@@ -84,7 +84,11 @@ function replaceAll<T>(store: string, next: (current: T[]) => T[]): Promise<void
   });
 }
 
-export const recordAttempt = (a: Attempt) => add('attempts', a);
+export const recordAttempt = async (a: Attempt) => {
+  const before = { attempts: await all<Attempt>('attempts'), seen: await all<Seen>('seen') };
+  await add('attempts', a);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('au:attempt', { detail: { before, a } }));   // the rewards UI listens; the store stays ignorant of it
+};
 export const recordSeen = (s: Seen) => add('seen', s);
 export const attempts = () => all<Attempt>('attempts');
 export const seen = () => all<Seen>('seen');
