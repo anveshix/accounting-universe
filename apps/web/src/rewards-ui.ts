@@ -13,12 +13,12 @@ export async function currentRewards(): Promise<{ r: Rewards; a: Attempt[]; s: S
 }
 
 // ── header HUD: level, XP bar, streak. Always visible, links to the quest board ──
-const hud = h('a', { class: 'hud', href: '#/progress', 'aria-label': 'Your level and streak' });
+const hud = h('a', { class: 'hud', href: '#/progress', title: 'Your level and streak' });
 export const hudElement = () => hud;
 export async function drawHud() {
   const { r } = await currentRewards(), L = r.level;
   hud.setAttribute('data-level', String(L.level)); hud.setAttribute('data-xp', String(r.xp)); hud.setAttribute('data-streak', String(r.streak));
-  hud.setAttribute('aria-label', `Level ${L.level} ${L.title}, ${r.xp} XP, ${r.streak} day streak`);
+  hud.setAttribute('title', `Lv ${L.level}, ${r.xp} XP, ${r.streak} day streak, ${L.title}`);
   mount(hud, h('span', { class: 'hud-lv' }, `Lv ${L.level}`), h('span', { class: 'hud-bar', 'aria-hidden': 'true' }, h('i', { style: `width:${Math.floor((100 * L.into) / L.span)}%` })), h('span', { class: 'hud-xp' }, `${r.xp} XP`), h('span', { class: 'hud-streak' + (r.streak ? ' on' : '') }, icon('flame', 14), String(r.streak)));
 }
 
