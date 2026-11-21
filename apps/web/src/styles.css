@@ -747,3 +747,23 @@ td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--ac
 .modes button.on:hover:not(:disabled) { background: var(--brand); border-color: var(--brand); color: #fff; }
 .tabs button:hover:not(:disabled) { background: var(--info-bg); border-color: transparent; }
 .tabs button[aria-selected="true"]:hover:not(:disabled) { background: var(--surface); }
+
+/* breadcrumb is a <nav> too: undo the app-nav bar styling */
+nav.breadcrumb { position: static; display: flex; flex-direction: row; flex-wrap: wrap; gap: .375rem; align-items: center; padding: 0; margin: 0 0 .75rem; background: none; border: 0; overflow: visible; font-size: .85rem; color: var(--muted); }
+nav.breadcrumb a { display: inline; min-height: 0; padding: 0; border: 0; font-size: inherit; font-weight: 400; color: var(--muted); text-decoration: none; }
+nav.breadcrumb a:hover { background: none; color: var(--brand); text-decoration: underline; }
+nav.breadcrumb [aria-current] { color: var(--ink); }
+
+/* secondary controls need a clearly visible edge; quest board rhythm; segmented controls never clip */
+:root { --line-ctl: #cfc8ba; }
+@media (prefers-color-scheme: dark) { :root { --line-ctl: #3d3d42; } }
+button, .button { border-color: var(--line-ctl); }
+.primary, .ghost, .tabs button, .hero button { border-color: transparent; }
+.primary { border-color: var(--brand); }
+.hero button:not(.primary):not(.bigchoice) { border-color: rgba(255,255,255,.45); }
+.quest h4 { margin: 1.5rem 0 .5rem; }
+.quest .note { margin: .75rem 0 0; }
+.quest-top { margin-bottom: .5rem; }
+.modes { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.modes::-webkit-scrollbar { display: none; }
+.modes button { white-space: nowrap; flex: none; }
