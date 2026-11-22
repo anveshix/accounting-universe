@@ -56,7 +56,7 @@ One switch for the whole app is in and tested. Hindi pages: header, navigation, 
 * **Not verified:** axe on routes other than the V1 views, screen readers, Lighthouse, Safari/Firefox, real phones, a teacher's or accountant's review of wording and conventions, classes of 30+ student files.
 
 ## Study guide, practice paper, About page (2026-11-22)
-* **Study guide** (`#/study`): all 54 syllabus topics have a page (notes, formats, steps, mistakes, how it is asked, 17 verified worked examples, official outcomes, links to labs/practice, print). Original text; tests recompute every example and check excluded topics are not taught (`study.test.ts`, `e2e/web-app-study.cjs`). **Not reviewed by a subject teacher (D11); English only.** Many topics have no worked example yet.
+* **Study guide** (`#/study`): all 54 syllabus topics have a page (notes, formats, steps, mistakes, how it is asked, a verified worked example on every topic (54 of 54; each figure is re-worked in `study-examples.test.ts` and `study.test.ts`), official outcomes, links to labs/practice, print). Original text; tests recompute every example and check excluded topics are not taught (`study.test.ts`, `e2e/web-app-study.cjs`). **Not reviewed by a subject teacher (D11); English only.**
 * **Practice paper** (`#/paper`): see above (`paper.test.ts`, `e2e/web-app-paper.cjs`). Same number = same paper, shareable link, print view.
 * **About and trust** (`#/about`): states what is official, what is ours, review status and data handling; counts come from code.
 * Not done: Notes library still has placeholder text and a client-side-only paywall (cannot protect content); Hindi for study/paper pages; a guided learning path; shared XP/badges for paper results.

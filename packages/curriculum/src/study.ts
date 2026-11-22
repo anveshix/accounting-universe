@@ -9,6 +9,8 @@
  *
  * Worked examples carry hand-checked figures; `test/study.test.ts` recomputes each of them independently and through the engine.
  */
+import { MORE_EXAMPLES } from './study-examples';
+
 export interface StudyExample {
   readonly q: string;
   readonly a: string;
@@ -34,7 +36,7 @@ export const STUDY_STATUS = 'Original revision notes, not yet reviewed by a subj
 
 const G = (clause: string, g: Omit<StudyGuide, 'clause'>): [string, StudyGuide] => [clause, { clause, ...g }];
 
-export const STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries([
+const BASE_STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries([
   // ───────────────────────── Class XI · Unit 1 — Theoretical Framework ─────────────────────────
   G('XI.1.intro', {
     summary:
@@ -885,5 +887,10 @@ export const STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries([
     asked: 'Assessed by your school (file and viva); this app’s Project Assistant helps you plan and tick off the stages.',
   }),
 ]);
+
+/** The guides, with the worked examples from study-examples.ts added to the topics that have none inline (an inline example always wins). */
+export const STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries(
+  Object.entries(BASE_STUDY).map(([id, g]) => [id, g.example || !MORE_EXAMPLES[id] ? g : { ...g, example: MORE_EXAMPLES[id] }]),
+);
 
 export const studyOf = (clause: string): StudyGuide | undefined => STUDY[clause];

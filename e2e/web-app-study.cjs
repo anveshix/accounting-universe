@@ -81,7 +81,18 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     await go('#/study/XI.2.brs');
     ok((await page.isVisible('.example')) && /18,200/.test(await page.textContent('.ex-a')), 'BRS page has its worked example with the verified answer');
     await go('#/study/XI.1.intro');
-    ok((await page.$('.example')) === null && (await page.$('.study-limit')) === null, 'a topic without an example or limit shows neither');
+    ok(
+      (await page.isVisible('.example')) && /comparability/.test(await page.textContent('.ex-a')) && (await page.$('.study-limit')) === null,
+      'a conceptual topic has a worked example and no limit banner',
+    );
+    await go('#/study/XII.4.preparation');
+    ok(/2,00,000/.test(await page.textContent('.ex-a')), 'cash flow page shows its worked example with the verified answer');
+    // every one of the 54 topic pages carries a worked example
+    for (const id of [...ids.XI, ...ids.XII]) {
+      await go('#/study/' + id);
+      if (!(await page.$('.example .ex-a'))) ok(false, id + ': no worked example on the page');
+    }
+    ok(true, 'all topic pages were checked for a worked example');
 
     // ── tools: practice launch, labs, learning outcomes, pager
     await go('#/study/XI.2.ledger');
