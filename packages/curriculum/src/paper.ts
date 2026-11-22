@@ -202,7 +202,12 @@ export interface PaperReport {
   readonly marks: number;
   readonly byMarks: Readonly<Record<string, number>>;
   readonly unitMarks: Readonly<Record<string, number>>;
+  /** what the paper ACTUALLY contains: marks of each question by that question's own typology */
   readonly typologyMarks: Readonly<Record<Typology, number>>;
+  /** what the blueprint asked for (40 / 30 / 30 of the marks) */
+  readonly typologyTarget: Readonly<Record<Typology, number>>;
+  /** how many questions are the same question type as an earlier one (different numbers) */
+  readonly repeatedTypes: number;
   readonly composite: number;
   readonly singles: number;
   readonly choices: number;
@@ -327,14 +332,18 @@ export function buildPaper(opts: { cls: PaperClass; route?: PaperRoute; seed: nu
   const official = opts.cls === 'XII';
   const byMarks: Record<string, number> = {},
     unitMarks: Record<string, number> = {},
+    typologyTarget: Record<Typology, number> = { RU: 0, AP: 0, AEC: 0 },
     typologyMarks: Record<Typology, number> = { RU: 0, AP: 0, AEC: 0 };
   let mismatch = 0;
   for (const q of questions) {
     byMarks[String(q.marks)] = (byMarks[String(q.marks)] ?? 0) + 1;
     unitMarks[q.unit] = (unitMarks[q.unit] ?? 0) + q.marks;
-    typologyMarks[q.typology] += q.marks;
+    typologyTarget[q.typology] += q.marks;
+    for (const it of q.items) for (const part of it.question.parts) typologyMarks[it.question.typology] += part.marks;
     if (q.items[0]!.question.typology !== q.typology) mismatch++;
   }
+  const skillsUsed = questions.flatMap(q => q.items.map(i => i.question.skill)),
+    repeatedTypes = skillsUsed.length - new Set(skillsUsed).size;
   const maxMarks = questions.reduce((s, q) => s + q.marks, 0);
   return {
     cls: opts.cls,
@@ -354,6 +363,8 @@ export function buildPaper(opts: { cls: PaperClass; route?: PaperRoute; seed: nu
       byMarks,
       unitMarks,
       typologyMarks,
+      typologyTarget,
+      repeatedTypes,
       composite: questions.filter(q => q.composite).length,
       singles: questions.filter(q => !q.composite).length,
       choices: questions.filter(q => q.alt).length,

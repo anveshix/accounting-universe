@@ -98,3 +98,21 @@ describe('marking scheme', () => {
     expect(sum(ms.map(e => e.marks))).toBe(80);
   });
 });
+
+describe('the report states what the paper really contains', () => {
+  it('actual typology marks add up to 80 and come from the questions themselves; the target stays 32 / 24 / 24', () => {
+    for (const [c, r] of CASES) {
+      const p = buildPaper({ cls: c, route: r, seed: 21 });
+      expect(p.report.typologyMarks.RU + p.report.typologyMarks.AP + p.report.typologyMarks.AEC).toBe(80);
+      expect(p.report.typologyTarget).toEqual({ RU: 32, AP: 24, AEC: 24 });
+      const own = { RU: 0, AP: 0, AEC: 0 };
+      for (const q of p.questions) for (const it of q.items) for (const part of it.question.parts) own[it.question.typology] += part.marks;
+      expect(p.report.typologyMarks).toEqual(own);
+    }
+  });
+  it('counts repeated question types', () => {
+    const p = buildPaper({ cls: 'XII', seed: 4 });
+    const skills = p.questions.flatMap(q => q.items.map(i => i.question.skill));
+    expect(p.report.repeatedTypes).toBe(skills.length - new Set(skills).size);
+  });
+});

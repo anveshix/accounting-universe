@@ -285,7 +285,22 @@ function sheetPage(p: Paper): HTMLElement {
                 .join(', '),
             ),
           ),
-          h('tr', {}, h('th', {}, 'Typology marks'), h('td', {}, `Recall/understand ${r.typologyMarks.RU}, apply ${r.typologyMarks.AP}, analyse/evaluate ${r.typologyMarks.AEC}`)),
+          h(
+            'tr',
+            {},
+            h('th', {}, 'Typology marks (what is in this paper)'),
+            h(
+              'td',
+              {},
+              `Recall/understand ${r.typologyMarks.RU}, apply ${r.typologyMarks.AP}, analyse/evaluate ${r.typologyMarks.AEC}. The board asks for about ${r.typologyTarget.RU} / ${r.typologyTarget.AP} / ${r.typologyTarget.AEC}; this app has few higher-order questions, so the mix differs.`,
+            ),
+          ),
+          h(
+            'tr',
+            {},
+            h('th', {}, 'Repeated question types'),
+            h('td', {}, r.repeatedTypes === 0 ? 'None' : `${r.repeatedTypes} questions are the same type as an earlier one, with different numbers.`),
+          ),
           h('tr', {}, h('th', {}, 'Internal choice'), h('td', {}, `${r.choices} questions`)),
         ),
       ),
