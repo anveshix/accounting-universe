@@ -104,7 +104,6 @@ describe('Bloom Hindi (draft, all six levels)', () => {
     for (const g of BLOOM_GENERATORS) {
       for (let s = 1; s <= 8; s++) {
         const q = makeQuestion(g.skill, s);
-        if (!true) continue;
         const hi = q.hi!;
         expect(hi, q.id).toBeDefined();
         const en = q.parts[0]!.options!,
