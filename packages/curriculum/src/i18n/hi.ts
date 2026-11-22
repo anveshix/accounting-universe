@@ -18,6 +18,12 @@ export const HI: Record<Key, string> = {
   'typology.RU': 'स्मरण एवं बोध',
   'typology.AP': 'अनुप्रयोग',
   'typology.AEC': 'विश्लेषण एवं मूल्यांकन',
+  'bloom.REMEMBER': 'स्मरण',
+  'bloom.UNDERSTAND': 'समझ',
+  'bloom.APPLY': 'अनुप्रयोग',
+  'bloom.ANALYSE': 'विश्लेषण',
+  'bloom.EVALUATE': 'मूल्यांकन',
+  'bloom.CREATE': 'सृजन (सबसे उचित रचना चुनें)',
   'learn.outcomes': 'आधिकारिक अधिगम परिणाम',
   'learn.outcomesNote': 'अधिगम परिणाम CBSE पाठ्यक्रम के आधिकारिक अंग्रेज़ी पाठ में उद्धृत हैं।',
   // Trial Balance Crisis (what-if challenge)
@@ -306,4 +312,5 @@ export const HI: Record<Key, string> = {
   'paper.pattern.xi': 'कक्षा XI के आधिकारिक इकाई-अंक (12 / 44 / 24) और कक्षा XII का प्रश्न-प्रारूप; कक्षा XI का नमूना प्रश्न-पत्र अभी प्रकाशित नहीं हुआ है।',
   'paper.status.mixed': ' जुड़े हुए {n} प्रश्न एक ही इकाई के अलग-अलग विषयों को मिलाते हैं।',
   'paper.status.repeats': ' {n} प्रश्न इसी प्रश्न-पत्र के किसी प्रश्न को दोहराते हैं, क्योंकि इस इकाई में अलग-अलग प्रश्न बहुत कम हैं।',
+  'study.sec.extra': 'पाठ्यक्रम के अन्य बिंदु',
 };

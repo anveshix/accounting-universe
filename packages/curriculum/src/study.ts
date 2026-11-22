@@ -10,6 +10,7 @@
  * Worked examples carry hand-checked figures; `test/study.test.ts` recomputes each of them independently and through the engine.
  */
 import { MORE_EXAMPLES } from './study-examples';
+import { MORE } from './study-more';
 
 export interface StudyExample {
   readonly q: string;
@@ -30,6 +31,8 @@ export interface StudyGuide {
   /** the forms in which the topic is usually asked (no marks or frequency claims: those come from the official sample paper only) */
   readonly asked: string;
   readonly example?: StudyExample;
+  /** points the official syllabus lists for this topic that the notes above do not cover (see study-more.ts) */
+  readonly extra?: readonly string[];
 }
 
 export const STUDY_STATUS = 'Original revision notes, not yet reviewed by a subject teacher (D11). Check against your prescribed textbook.';
@@ -890,7 +893,7 @@ const BASE_STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries([
 
 /** The guides, with the worked examples from study-examples.ts added to the topics that have none inline (an inline example always wins). */
 export const STUDY: Readonly<Record<string, StudyGuide>> = Object.fromEntries(
-  Object.entries(BASE_STUDY).map(([id, g]) => [id, g.example || !MORE_EXAMPLES[id] ? g : { ...g, example: MORE_EXAMPLES[id] }]),
+  Object.entries(BASE_STUDY).map(([id, g]) => [id, { ...g, ...(g.example || !MORE_EXAMPLES[id] ? {} : { example: MORE_EXAMPLES[id] }), ...(MORE[id] ? { extra: MORE[id] } : {}) }]),
 );
 
 export const studyOf = (clause: string): StudyGuide | undefined => STUDY[clause];

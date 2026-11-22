@@ -14,6 +14,8 @@ import { V1_GENERATORS } from './questions-v1';
 import { V2_GENERATORS } from './questions-v2';
 import { V3_GENERATORS } from './questions-v3';
 import { V4_GENERATORS } from './questions-v4';
+import { V5_GENERATORS } from './questions-v5';
+import { BLOOM_GENERATORS } from './bloom';
 
 export type PartKind = 'MONEY' | 'FRACTION' | 'TEXT' | 'CHOICE';
 export interface Part { readonly label: string; readonly kind: PartKind; readonly answer: string; readonly marks: number; readonly unit?: string; /** CHOICE only: the options shown (the answer is one of them). */ readonly options?: readonly string[]; }
@@ -32,6 +34,8 @@ export interface Question {
   readonly distractors: readonly Distractor[];
   readonly marks: number;
   readonly typology: Typology;
+  /** Bloom level, set on questions from the Bloom bank (see bloom.ts). */
+  readonly bloom?: 'REMEMBER' | 'UNDERSTAND' | 'APPLY' | 'ANALYSE' | 'EVALUATE' | 'CREATE';
   /** Optional Hindi version (draft — see HindiText). */
   readonly hi?: HindiText;
 }
@@ -522,7 +526,7 @@ export const GENERATORS: readonly Gen[] = [
   },
 ];
 
-export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS, ...V2_GENERATORS, ...V3_GENERATORS, ...V4_GENERATORS];
+export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS, ...V2_GENERATORS, ...V3_GENERATORS, ...V4_GENERATORS, ...V5_GENERATORS, ...BLOOM_GENERATORS];
 export const SKILLS = ALL_GENERATORS.map(g => ({ skill: g.skill, clause: g.clause, title: g.title, typology: g.typology }));
 
 /** The generator's output exactly as written (no safety filtering) — used by tests to keep the generators themselves honest. */

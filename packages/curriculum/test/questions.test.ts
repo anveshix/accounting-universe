@@ -23,7 +23,7 @@ describe('every generator, many seeds', () => {
         for (const seed of [1, 7, 42, 99]) expect(makeQuestion(skill, seed)).toEqual(makeQuestion(skill, seed));
       });
       it('varies with the seed (not one fixed question)', () => {
-        expect(new Set(SEEDS.map(s => makeQuestion(skill, s).stem)).size).toBeGreaterThan(5);
+        expect(new Set(SEEDS.map(s => makeQuestion(skill, s).stem)).size).toBeGreaterThan(skill.startsWith('bl-') ? 1 : 5); // Bloom banks are small authored sets; test/bloom.test.ts checks they all appear
       });
       it('accepts its own answers and rejects a wrong one', () => {
         for (const seed of SEEDS.slice(0, 40)) {

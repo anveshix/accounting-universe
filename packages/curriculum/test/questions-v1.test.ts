@@ -79,7 +79,7 @@ describe('independent oracles (recomputed from the question text, not from the e
 describe('Hindi (draft) for V1 questions', () => {
   const DEV = /[ऀ-ॿ]/;
   it('every V1 question has a Hindi stem, part labels, hints and working, aligned with the English', () => {
-    for (const s of SKILLS.filter(x => V1.includes(x.clause))) for (const q of qs(s.skill).slice(0, 40)) {
+    for (const s of SKILLS.filter(x => V1.includes(x.clause) && !x.skill.startsWith('bl-'))) for (const q of qs(s.skill).slice(0, 40)) {
       const hi = q.hi!; expect(hi, q.id).toBeTruthy();
       expect(DEV.test(hi.stem), q.id).toBe(true); expect(hi.parts.length).toBe(q.parts.length);
       for (const p of hi.parts) expect(DEV.test(p), `${q.id} part`).toBe(true);
@@ -160,7 +160,7 @@ describe('second wave of V1 skills — independent oracles', () => {
     }
   });
   it('every V1 clause now has items; rules RU, journal AP+AEC, ledger RU+AP+AEC, tb RU+AEC; all three bands overall', () => {
-    const bands = (c: string) => new Set(SKILLS.filter(s => s.clause === c).map(s => s.typology));
+    const bands = (c: string) => new Set(SKILLS.filter(s => s.clause === c && !s.skill.startsWith('bl-')).map(s => s.typology));
     expect(bands('XI.2.ledger')).toEqual(new Set(['RU', 'AP', 'AEC']));
     expect(bands('XI.2.journal')).toEqual(new Set(['AP', 'AEC']));
     expect(bands('XI.2.tb')).toEqual(new Set(['RU', 'AEC']));

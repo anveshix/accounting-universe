@@ -54,9 +54,10 @@ describe('rescue plan', () => {
     p = rescuePlan({ clause: 'XI.2.depreciation', labs, attempts: [...three, at({ t: 9, seed: 9 })], seen });
     expect(p.next!.level).toBe(5); expect(p.next!.href).toMatch(/\/board$/);
   });
-  it('theory-only topics stop at level 3 and say so', () => {
+  it('theory topics now have Bloom practice, so their plan reaches level 5 like the numeric ones', () => {
     const p = rescuePlan({ clause: 'XII.P.project', labs: [], attempts: [], seen: [] });
-    expect(p.steps.map(s => s.level)).toEqual([1, 2, 3]);
+    expect(p.steps.map(s => s.level)).toEqual([1, 2, 3, 4, 5]);
+    expect(p.steps[2]!.href).toMatch(/#\/practice\/bl-xii-p-project-/);
   });
   it('orders weak topics first', () => {
     expect(rescueOrder([{ clause: 'a', level: 3, weak: false, attempts: 3 }, { clause: 'b', level: 2, weak: true, attempts: 4 }, { clause: 'c', level: 5, weak: false, attempts: 9 }])).toEqual(['b', 'a']);
