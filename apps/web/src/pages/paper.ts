@@ -115,7 +115,7 @@ function setupPage(): HTMLElement {
         h(
           'li',
           {},
-          'The questions are generated here (original wording). A 3-, 4- or 6-mark question is often a set of linked smaller questions on one topic, and the paper says so. Real board questions are longer, so use past papers and your textbook too.',
+          'The questions are generated here (original wording). Each 6-mark question is one multi-step problem, marked step by step. Some 3- and 4-mark questions are sets of linked smaller questions on one topic, and the paper says so. Real board questions are longer, so use past papers and your textbook too.',
         ),
         h('li', {}, 'No subject teacher has reviewed these papers or the marking scheme yet.'),
         h('li', {}, 'More on what is official and what is not: ', h('a', { href: '#/about' }, 'About and trust'), '.'),
