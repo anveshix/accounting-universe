@@ -192,6 +192,8 @@ export interface PaperQuestion {
   /** the question: one generated question, or a composite of linked smaller ones from the same unit */
   readonly items: readonly PaperItem[];
   readonly composite: boolean;
+  /** a composite whose parts all come from ONE syllabus topic (false when they come from different topics of the same unit) */
+  readonly oneTopic: boolean;
   /** internal choice: the alternative ("OR"), same marks */
   readonly alt?: readonly PaperItem[];
 }
@@ -210,6 +212,11 @@ export interface PaperReport {
   readonly repeatedTypes: number;
   readonly composite: number;
   readonly singles: number;
+  /** linked questions whose parts all belong to one topic, and those that combine topics of the same unit */
+  readonly compositeOneTopic: number;
+  readonly compositeMixedTopic: number;
+  /** questions whose text already appears elsewhere in this paper (only when a unit has too few distinct questions); 0 is the goal */
+  readonly repeatedQuestions: number;
   readonly choices: number;
   /** slots where the first item's typology differs from the slot's (the pool for that unit had none of the wanted kind) */
   readonly typologyMismatch: number;
@@ -255,19 +262,33 @@ function shuffled<T>(xs: readonly T[], rng: Rng): T[] {
   return a;
 }
 
-/** Find a question of exactly `size` marks from one generator (the seed is searched, so it is reproducible from the paper seed). */
-function questionOfSize(skill: string, size: number, rng: Rng): Question | null {
+/** The text that makes a question "the same question": a paper never holds two with equal text. */
+const keyOf = (q: Question) => q.stem.trim();
+
+/** Find a question of exactly `size` marks from one generator (the seed is searched, so it is reproducible from the paper seed).
+ *  With `taken`, a question whose text is already in the paper is skipped. */
+function questionOfSize(skill: string, size: number, rng: Rng, taken: ReadonlySet<string> | null): Question | null {
   for (let t = 0; t < 80; t++) {
     const q = makeQuestion(skill, rng.int(1, 999_999));
-    if (q.marks === size) return q;
+    if (q.marks === size && !(taken && taken.has(keyOf(q)))) return q;
   }
   return null;
 }
 
-function fill(slot: Slot, rng: Rng, used: Set<string>, avoid: Set<string>): { items: PaperItem[]; composite: boolean } {
+interface Filled {
+  items: PaperItem[];
+  composite: boolean;
+  repeats: number;
+}
+
+/**
+ * Fill one slot. In order of preference: (1) questions whose text is new to this paper, with linked parts from ONE topic; (2) new text, parts from the same unit;
+ * only if the pool for the unit is too small (3) a repeat of a question already in the paper, which the report counts and the page admits.
+ */
+function fill(slot: Slot, rng: Rng, used: Set<string>, avoid: Set<string>, taken: Set<string>): Filled {
   const pool = ALL_GENERATORS.filter(g => inUnit(g, slot.unit));
-  const choose = (size: number, wantTy: Typology | null, preferClause: string | null): { skill: string; q: Question } | null => {
-    const can = pool.filter(g => sizesOf(g.skill).has(size) && !avoid.has(g.skill));
+  const choose = (size: number, wantTy: Typology | null, preferClause: string | null, onlyClause: boolean, distinct: boolean): { skill: string; q: Question } | null => {
+    const can = pool.filter(g => sizesOf(g.skill).has(size) && !avoid.has(g.skill) && (!onlyClause || preferClause === null || g.clause === preferClause));
     const tiers = [
       can.filter(g => !used.has(g.skill) && (wantTy === null || g.typology === wantTy) && (preferClause === null || g.clause === preferClause)),
       can.filter(g => !used.has(g.skill) && (wantTy === null || g.typology === wantTy)),
@@ -279,30 +300,51 @@ function fill(slot: Slot, rng: Rng, used: Set<string>, avoid: Set<string>): { it
     for (const t of tiers) {
       const order = shuffled(t, rng);
       for (const g of order) {
-        const q = questionOfSize(g.skill, size, rng);
+        const q = questionOfSize(g.skill, size, rng, distinct ? taken : null);
         if (q) return { skill: g.skill, q };
       }
     }
     return null;
   };
-  for (const parts of PARTITIONS[slot.marks]) {
-    const picked: { skill: string; q: Question }[] = [],
-      tmpUsed = new Set<string>();
-    let ok = true,
-      clause: string | null = null;
-    for (let i = 0; i < parts.length && ok; i++) {
-      const pick = choose(parts[i]!, i === 0 ? slot.typology : null, clause);
-      if (!pick) {
-        ok = false;
-        break;
+  for (const distinct of [true, false]) {
+    for (const oneTopic of [true, false]) {
+      for (const parts of PARTITIONS[slot.marks]) {
+        if (!oneTopic && parts.length === 1 && !distinct) continue;
+        const picked: { skill: string; q: Question }[] = [],
+          addedKeys: string[] = [],
+          addedSkills: string[] = [];
+        let ok = true,
+          clause: string | null = null;
+        for (let i = 0; i < parts.length && ok; i++) {
+          const pick = choose(parts[i]!, i === 0 ? slot.typology : null, clause, oneTopic && i > 0, distinct);
+          if (!pick) {
+            ok = false;
+            break;
+          }
+          picked.push(pick);
+          const k = keyOf(pick.q);
+          if (!taken.has(k)) {
+            taken.add(k);
+            addedKeys.push(k);
+          }
+          if (!used.has(pick.skill)) {
+            used.add(pick.skill);
+            addedSkills.push(pick.skill);
+          }
+          clause = pick.q.clause;
+        }
+        if (ok) {
+          const keys = picked.map(p => keyOf(p.q));
+          return {
+            items: picked.map((p, i) => ({ question: p.q, label: parts.length > 1 ? `(${String.fromCharCode(97 + i)})` : '' })),
+            composite: parts.length > 1,
+            repeats: distinct ? 0 : keys.length - addedKeys.length,
+          };
+        }
+        for (const k of addedKeys) taken.delete(k);
+        for (const sk of addedSkills) used.delete(sk);
       }
-      picked.push(pick);
-      tmpUsed.add(pick.skill);
-      used.add(pick.skill);
-      clause = pick.q.clause;
     }
-    if (ok) return { items: picked.map((p, i) => ({ question: p.q, label: parts.length > 1 ? `(${String.fromCharCode(97 + i)})` : '' })), composite: parts.length > 1 };
-    for (const s of tmpUsed) used.delete(s);
   }
   throw new Error(`paper: no way to fill a ${slot.marks}-mark slot in unit ${slot.unit}`);
 }
@@ -314,12 +356,28 @@ export function buildPaper(opts: { cls: PaperClass; route?: PaperRoute; seed: nu
   const route = opts.route ?? 'OPTION_I_ANALYSIS',
     slots = blueprint(opts.cls, route),
     rng = new Rng(opts.seed * 2654435761 + 97);
-  const used = new Set<string>();
+  const used = new Set<string>(),
+    taken = new Set<string>();
+  let repeatedQuestions = 0;
   const questions: PaperQuestion[] = slots.map(slot => {
-    const main = fill(slot, rng, used, new Set());
-    let alt: { items: PaperItem[]; composite: boolean } | undefined;
-    if (slot.choice) alt = fill(slot, rng, used, new Set(main.items.map(i => i.question.skill)));
-    return { no: slot.no, part: slot.part, unit: slot.unit, marks: slot.marks, typology: slot.typology, items: main.items, composite: main.composite, ...(alt ? { alt: alt.items } : {}) };
+    const main = fill(slot, rng, used, new Set(), taken);
+    repeatedQuestions += main.repeats;
+    let alt: Filled | undefined;
+    if (slot.choice) {
+      alt = fill(slot, rng, used, new Set(main.items.map(i => i.question.skill)), taken);
+      repeatedQuestions += alt.repeats;
+    }
+    return {
+      no: slot.no,
+      part: slot.part,
+      unit: slot.unit,
+      marks: slot.marks,
+      typology: slot.typology,
+      items: main.items,
+      composite: main.composite,
+      oneTopic: new Set(main.items.map(i => i.question.clause)).size === 1,
+      ...(alt ? { alt: alt.items } : {}),
+    };
   });
   const official = opts.cls === 'XII';
   const byMarks: Record<string, number> = {},
@@ -359,6 +417,9 @@ export function buildPaper(opts: { cls: PaperClass; route?: PaperRoute; seed: nu
       repeatedTypes,
       composite: questions.filter(q => q.composite).length,
       singles: questions.filter(q => !q.composite).length,
+      compositeOneTopic: questions.filter(q => q.composite && q.oneTopic).length,
+      compositeMixedTopic: questions.filter(q => q.composite && !q.oneTopic).length,
+      repeatedQuestions,
       choices: questions.filter(q => q.alt).length,
       typologyMismatch: mismatch,
     },

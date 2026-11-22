@@ -1,6 +1,6 @@
 import { LEVELS, assignmentProgress, clauseById, mistakeTally, nextSkill, parseAssignment, SKILLS, summariseClauses, type Assignment } from '../../../../packages/curriculum/src';
 import { h, mount } from '../dom';
-import { type Attempt, type Seen, assignmentsAll, exportAll, resetAll, saveAssignment, setProfile, storageMode } from '../store';
+import { type Attempt, type Seen, assignmentsAll, exportAll, importProgress, resetAll, saveAssignment, setProfile, storageMode } from '../store';
 import { state } from '../state';
 import { labsOfClause } from '../labs';
 import { parseExport } from '../../../../packages/curriculum/src';
@@ -31,7 +31,15 @@ export function progressPage(): HTMLElement {
     } });
     const fileIn = h('input', { type: 'file', accept: 'application/json,.json', 'aria-label': 'Import a progress file', hidden: true, onchange: async (e: Event) => {
       const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return;
-      try { const p = parseExport(JSON.parse(await f.text())); msg.textContent = p.ok ? `This file has ${p.value.attempts.length} attempts. Importing replaces nothing — to merge on a new device, use it on a fresh install.` : `Cannot import: ${p.reason}.`; } catch { msg.textContent = 'Cannot import: the file is not valid JSON.'; }
+      try {
+        const p = parseExport(JSON.parse(await f.text()));
+        if (!p.ok) { msg.textContent = `Cannot restore: ${p.reason}.`; return; }
+        const r = await importProgress(p.value);
+        msg.textContent = r.attemptsAdded === 0 && r.seenAdded === 0 && !r.profileTaken
+          ? `Nothing new: all ${p.value.attempts.length} attempts in this file are already on this device.`
+          : `Restored ${r.attemptsAdded} attempt${r.attemptsAdded === 1 ? '' : 's'}${r.attemptsAlreadyHere ? ` (${r.attemptsAlreadyHere} already here)` : ''}. Reloading…`;
+        if (r.attemptsAdded > 0 || r.seenAdded > 0 || r.profileTaken) setTimeout(() => location.reload(), 900);
+      } catch { msg.textContent = 'Cannot restore: the file is not valid JSON.'; }
     } });
     mount(root,
       h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, 'My progress'), h('h2', {}, `Class ${cls}`), h('p', { class: 'lead' }, `${a.length} practice attempts · ${started.length} of ${sum.length} topics started. Saved on this device only (${storageMode === 'indexeddb' ? 'IndexedDB' : 'memory — will be lost on close'}).`)),
@@ -48,8 +56,8 @@ export function progressPage(): HTMLElement {
         h('div', { class: 'field' }, h('label', { for: 'pname' }, 'Name'), name),
         h('div', { class: 'actions' },
           h('button', { type: 'button', onclick: () => { state.profile = { ...state.profile, name: name.value.trim() }; void setProfile(state.profile); announce('Name saved'); msg.textContent = 'Saved.'; } }, 'Save name'),
-          h('button', { type: 'button', class: 'primary', onclick: async () => { download(`accounting-universe-${(state.profile.name || 'progress').replace(/[^\w-]+/g, '_')}.json`, JSON.stringify(await exportAll(), null, 2), 'application/json'); msg.textContent = 'Downloaded. Give this file to your teacher if they ask for it.'; } }, '⬇ Export my progress'),
-          h('button', { type: 'button', onclick: () => fileIn.click() }, '⬆ Check a progress file'), fileIn,
+          h('button', { type: 'button', class: 'primary', onclick: async () => { download(`accounting-universe-${(state.profile.name || 'progress').replace(/[^\w-]+/g, '_')}.json`, JSON.stringify(await exportAll(), null, 2), 'application/json'); msg.textContent = 'Downloaded. Keep this file safe: it is your backup (use “Restore” on a new phone or after clearing your browser). Give it to your teacher if they ask for it.'; } }, '⬇ Export my progress'),
+          h('button', { type: 'button', onclick: () => fileIn.click() }, '⬆ Restore from a progress file'), fileIn,
           h('button', { type: 'button', class: 'danger', onclick: async () => { if (confirm('Delete ALL your progress on this device? This cannot be undone.')) { await resetAll(); announce('Progress deleted'); res.reload(); } } }, 'Delete my progress')), msg));
   }
   const res = loadInto(root, async () => ({ ...(await currentRewards()), asg: (await assignmentsAll()) as unknown as Assignment[] }), d => { view(d.a, d.s, d.asg); root.querySelector('.labhead')?.after(questBoard(d.r, d.a, d.s, state.profile.cls)); }, 'your progress');

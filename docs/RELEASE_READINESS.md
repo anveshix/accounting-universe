@@ -61,6 +61,12 @@ One switch for the whole app is in and tested. Hindi pages: header, navigation, 
 * **About and trust** (`#/about`): states what is official, what is ours, review status and data handling; counts come from code.
 * Hindi for the practice paper: headings, instructions, marks, OR, scheme and report are Hindi; question text is Hindi only for the skills that already have it (V1), the rest is English with a notice. Not done: Notes library still has placeholder text and a client-side-only paywall (cannot protect content); a guided learning path; shared XP/badges for paper results.
 
+## Fixes after the critic and student review (2026-11-22)
+* **Progress restore** (`#/progress` → "Restore from a progress file"): the old control only previewed a file and never wrote anything, so a lost phone or cleared browser lost all progress. It now merges the file into the device (never replaces; the same attempt is never added twice; the device's own name is kept unless empty; XP and levels come back because they are computed from attempts). Tests: `progress-restore.test.ts` (hand-worked merge cases) and `e2e/web-app-restore.cjs`.
+* **Practice paper never repeats a question**: before, identical questions appeared twice in 37 % (Class XII Option I), 96 % (Option II) and 81 % (Class XI) of papers; now 0 of 100 for each type, enforced by test. If a unit ever had too few distinct questions the repeat would be counted in the report and stated on the page.
+* **"Linked" questions come from one topic**: before, 55 % of them mixed topics; now 100 % of Class XII and 97 % of Class XI do, and the report counts the Class XI exceptions and the page says so.
+* Still open from the review: 6-mark slots are predictable (one generator per unit), Notes library is a sample with a browser-only paywall, first load on slow phones, 200 % zoom overflow on home and paper, format-based board questions (journal / ledger layout).
+
 ## Owner decisions
 D1 strangler stack (assumed) · D2 omit redemption (assumed) · D3 Option II after Option I (done) · **D4 deploy the tutor proxy and supply a key** · D5 backend/minors' data · D6 repository licence · D7 Class XI sample paper to validate against.
 

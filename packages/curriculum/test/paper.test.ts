@@ -116,3 +116,43 @@ describe('the report states what the paper really contains', () => {
     expect(p.report.repeatedTypes).toBe(skills.length - new Set(skills).size);
   });
 });
+
+describe('no question appears twice, and linked parts belong together', () => {
+  const norm = (s: string) => s.trim();
+  it('no paper of any type holds two questions with the same text (60 papers each)', () => {
+    for (const [c, r] of CASES) {
+      for (let seed = 1; seed <= 60; seed++) {
+        const p = buildPaper({ cls: c, route: r, seed });
+        const texts = p.questions.flatMap(q => [...q.items, ...(q.alt ?? [])].map(i => norm(i.question.stem)));
+        expect(new Set(texts).size, `${c} ${r} seed ${seed}`).toBe(texts.length);
+        expect(p.report.repeatedQuestions, `${c} ${r} seed ${seed}`).toBe(0);
+      }
+    }
+  });
+  it('the two sides of an internal choice are different questions', () => {
+    for (const [c, r] of CASES)
+      for (let seed = 1; seed <= 30; seed++)
+        for (const q of buildPaper({ cls: c, route: r, seed }).questions) if (q.alt) expect(q.alt.map(i => norm(i.question.stem))).not.toEqual(q.items.map(i => norm(i.question.stem)));
+  });
+  it('Class XII linked questions always combine parts of ONE topic', () => {
+    for (const r of ['OPTION_I_ANALYSIS', 'OPTION_II_COMPUTERISED'] as const) {
+      for (let seed = 1; seed <= 60; seed++) {
+        const p = buildPaper({ cls: 'XII', route: r, seed });
+        for (const q of p.questions) if (q.composite) expect(new Set(q.items.map(i => i.question.clause)).size, `${r} ${seed} Q${q.no}`).toBe(1);
+        expect(p.report.compositeMixedTopic).toBe(0);
+      }
+    }
+  });
+  it('the report counts one-topic and mixed-topic linked questions exactly, for Class XI too', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const p = buildPaper({ cls: 'XI', seed });
+      const mixed = p.questions.filter(q => q.composite && new Set(q.items.map(i => i.question.clause)).size > 1).length;
+      expect(p.report.compositeMixedTopic).toBe(mixed);
+      expect(p.report.compositeOneTopic + p.report.compositeMixedTopic).toBe(p.report.composite);
+    }
+  });
+  it('papers are still reproducible from the seed', () => {
+    const sig = (p: ReturnType<typeof buildPaper>) => JSON.stringify(p.questions.map(q => [...q.items, ...(q.alt ?? [])].map(i => i.question.id)));
+    expect(sig(buildPaper({ cls: 'XII', seed: 31 }))).toBe(sig(buildPaper({ cls: 'XII', seed: 31 })));
+  });
+});
