@@ -35,14 +35,14 @@ const ok = (c, m) => {
   await page.click('[data-lang-toggle]');
   await page.waitForSelector('html[data-lang="hi"]');
   let hindiOk = 0;
-  for (const s of ['bl-xi-1-intro-ru', 'bl-xii-2-debentures-ru', 'bl-xii-4-preparation-ru']) {
+  for (const s of ['bl-xi-1-intro-ru', 'bl-xii-2-debentures-ru', 'bl-xii-4-preparation-ru', 'bl-xii-3-liquidity-aec', 'bl-xi-2-journal-ap', 'bl-xii-1-admission-aec']) {
     await page.goto(U + '#/practice/' + s);
     await page.waitForSelector('.bloom-level');
     const txt = await page.textContent('main .question, main');
     const opts = await page.$$eval('main select:not(#skillsel) option', os => os.map(o => o.textContent));
     if (/[ऀ-ॿ]/.test(txt) && opts.length >= 4) hindiOk++;
   }
-  ok(hindiOk === 3, `Hindi shows Devanagari text and options for Remember-level skills (${hindiOk}/3)`);
+  ok(hindiOk === 6, `Hindi shows Devanagari text and options for skills at every band (${hindiOk}/6)`);
   await page.click('[data-lang-toggle]');
   ok(['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYSE', 'EVALUATE', 'CREATE'].every(l => seen.has(l)) || seen.size >= 4, `several Bloom levels appear (${[...seen].join(',')})`);
   await b.close();

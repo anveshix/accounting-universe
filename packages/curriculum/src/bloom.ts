@@ -19,6 +19,14 @@ import { XII4 } from './bloom/xii4';
 import { APPLY_MORE } from './bloom/apply';
 import { EXTRA_ITEMS } from './bloom/more';
 import { HI_REMEMBER, type HiBloom } from './bloom/hi-remember';
+import { HI_APPLY_1 } from './bloom/hi-apply-1';
+import { HI_APPLY_2 } from './bloom/hi-apply-2';
+import { HI_ANALYSE_1 } from './bloom/hi-analyse-1';
+import { HI_ANALYSE_2 } from './bloom/hi-analyse-2';
+import { HI_EVALUATE_1 } from './bloom/hi-evaluate-1';
+import { HI_EVALUATE_2 } from './bloom/hi-evaluate-2';
+import { HI_CREATE } from './bloom/hi-create';
+import { HI_UNDERSTAND } from './bloom/hi-understand';
 
 export type BloomLevel = 'REMEMBER' | 'UNDERSTAND' | 'APPLY' | 'ANALYSE' | 'EVALUATE' | 'CREATE';
 type Code = 'R' | 'U' | 'A' | 'N' | 'E' | 'C';
@@ -53,7 +61,8 @@ function shuffle<T>(r: Rng, xs: readonly T[]): T[] {
 const slug = (clause: string) => clause.toLowerCase().replace(/\./g, '-');
 
 /** Hindi text for one item, where it exists (Remember level so far); key = "<topic>#<index in that topic's bank>". */
-export const bloomHindi = (clause: string, index: number): HiBloom | undefined => HI_REMEMBER[`${clause}#${index}`];
+export const bloomHindi = (clause: string, index: number, k = `${clause}#${index}`): HiBloom | undefined =>
+  HI_REMEMBER[k] ?? HI_UNDERSTAND[k] ?? HI_APPLY_1[k] ?? HI_APPLY_2[k] ?? HI_ANALYSE_1[k] ?? HI_ANALYSE_2[k] ?? HI_EVALUATE_1[k] ?? HI_EVALUATE_2[k] ?? HI_CREATE[k];
 
 const HINTS_HI = ['उत्तर विकल्पों को देखने से पहले इस टॉपिक के अध्ययन नोट्स याद करें।', 'हर विकल्प को प्रश्न के सटीक शब्दों से मिलाकर देखें; प्रायः दो विकल्प तुरंत हट जाते हैं।'];
 
