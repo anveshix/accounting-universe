@@ -176,6 +176,7 @@ function topicPage(id: string): HTMLElement {
       progress,
     ),
     section(tr('study.sec.know'), list('study-list', gh ? gh.mustKnow : guide.mustKnow, false, !english)),
+    section(tr('study.sec.extra'), guide.extra ? list('study-extra', gh?.extra ?? guide.extra, false, !english) : null),
     section(tr('study.sec.formats'), guide.formats ? list('study-formats', gh?.formats ?? guide.formats, false, !english) : null),
     section(tr('study.sec.steps'), guide.steps ? list('study-steps', gh?.steps ?? guide.steps, true, !english) : null),
     section(tr('study.sec.mistakes'), list('study-mistakes', gh ? gh.mistakes : guide.mistakes, false, !english), 'mistakes'),

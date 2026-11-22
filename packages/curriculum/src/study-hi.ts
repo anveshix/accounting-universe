@@ -12,6 +12,7 @@ import type { StudyExample } from './study';
 import { HI_B1 } from './study-hi-b1';
 import { HI_B2 } from './study-hi-b2';
 import { HI_B3 } from './study-hi-b3';
+import { MORE_HI } from './study-more-hi';
 
 export interface StudyHi {
   readonly summary: string;
@@ -19,6 +20,8 @@ export interface StudyHi {
   readonly formats?: readonly string[];
   readonly steps?: readonly string[];
   readonly mistakes: readonly string[];
+  /** Hindi of study-more.ts ("also in the official syllabus"), same number of points as the English */
+  readonly extra?: readonly string[];
   readonly asked: string;
   readonly example: StudyExample;
 }
@@ -289,7 +292,8 @@ const CORE_HI: Readonly<Record<string, StudyHi>> = {
 };
 
 /** All Hindi notes: the first twelve topics plus each later batch (see study-hi-b*.ts). */
-export const STUDY_HI: Readonly<Record<string, StudyHi>> = { ...CORE_HI, ...HI_B1, ...HI_B2, ...HI_B3 };
+const ALL_HI: Readonly<Record<string, StudyHi>> = { ...CORE_HI, ...HI_B1, ...HI_B2, ...HI_B3 };
+export const STUDY_HI: Readonly<Record<string, StudyHi>> = Object.fromEntries(Object.entries(ALL_HI).map(([id, g]) => [id, MORE_HI[id] ? { ...g, extra: MORE_HI[id] } : g]));
 
 export const studyHiOf = (clause: string): StudyHi | undefined => STUDY_HI[clause];
 export const titleHiOf = (clause: string): string | undefined => TITLE_HI[clause];

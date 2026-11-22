@@ -60,3 +60,25 @@ describe('Hindi study guide (draft, unreviewed)', () => {
     for (const [id, g] of Object.entries(STUDY_HI)) expect(taught([g.summary, ...g.mustKnow, ...g.mistakes, g.example.q, g.example.a].join('।')), id).not.toMatch(banned);
   });
 });
+
+describe('"also in the official syllabus" points: Hindi lines up with the English and changes no figure', () => {
+  it('the Hindi has the same topics and the same number of points', async () => {
+    const { MORE } = await import('../src/study-more');
+    const { MORE_HI } = await import('../src/study-more-hi');
+    expect(Object.keys(MORE_HI).sort()).toEqual(Object.keys(MORE).sort());
+    for (const id of Object.keys(MORE)) {
+      expect(MORE_HI[id]!.length, id).toBe(MORE[id]!.length);
+      for (const t of MORE_HI[id]!) expect(t, id).toMatch(DEVANAGARI);
+      expect(nums(...MORE_HI[id]!), `${id} numbers`).toEqual(nums(...MORE[id]!));
+    }
+  });
+  it('they reach the guides (English and Hindi)', () => {
+    expect(studyOf('XI.2.depreciation')!.extra!.length).toBe(6);
+    expect(STUDY_HI['XI.2.depreciation']!.extra!.length).toBe(6);
+  });
+  it('they never teach an excluded topic (except to say it is excluded)', async () => {
+    const { MORE } = await import('../src/study-more');
+    const banned = /piecemeal|insolvency of partners|sale to a company|conversion method|\bdirect method|redemption (accounting|of debentures)|weighted average|\bTDS\b|interest on calls/i;
+    for (const [id, pts] of Object.entries(MORE)) for (const t of pts) if (!/not|excluded|outside/i.test(t)) expect(t, id).not.toMatch(banned);
+  });
+});

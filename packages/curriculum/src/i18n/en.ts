@@ -307,5 +307,6 @@ export const EN = {
   'paper.pattern.xi': 'Official Class XI unit marks (12 / 44 / 24) with the Class XII question pattern; no Class XI sample paper is published yet.',
   'paper.status.mixed': ' {n} of the linked questions combine different topics of the same unit.',
   'paper.status.repeats': ' {n} question(s) repeat one already in this paper, because this unit has too few different questions.',
+  'study.sec.extra': 'Also in the official syllabus',
 } as const;
 export type Key = keyof typeof EN;

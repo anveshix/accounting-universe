@@ -156,3 +156,47 @@ describe('no question appears twice, and linked parts belong together', () => {
     expect(sig(buildPaper({ cls: 'XII', seed: 31 }))).toBe(sig(buildPaper({ cls: 'XII', seed: 31 })));
   });
 });
+
+describe('the Part B layouts of a Class XII Option I paper (ratios or cash flow as the 6-mark question)', () => {
+  for (const variant of [0, 1]) {
+    it(`layout ${variant}: official unit marks 36 / 24 / 12 / 8, 20×1 + 6×3 + 3×4 + 5×6, choice in two of each of 3, 4 and 6 marks, typology 32 / 24 / 24`, () => {
+      const b = blueprint('XII', 'OPTION_I_ANALYSIS', variant);
+      const units: Record<string, number> = {};
+      for (const s of b) units[s.unit] = (units[s.unit] ?? 0) + s.marks;
+      expect(units).toEqual({ 'XII.1': 36, 'XII.2': 24, 'XII.3': 12, 'XII.4': 8 });
+      const n = (m: number) => b.filter(s => s.marks === m).length;
+      expect([n(1), n(3), n(4), n(6)]).toEqual([20, 6, 3, 5]);
+      const ch = b.filter(s => s.choice);
+      expect([3, 4, 6].map(m => ch.filter(s => s.marks === m).length)).toEqual([2, 2, 2]);
+      const t = { RU: 0, AP: 0, AEC: 0 };
+      for (const s of b) t[s.typology] += s.marks;
+      expect(t).toEqual({ RU: 32, AP: 24, AEC: 24 });
+    });
+  }
+  it('odd seeds put the cash flow statement in the 6-mark slot of Part B; even seeds put the ratios there', () => {
+    let cash = 0,
+      ratio = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const p = buildPaper({ cls: 'XII', route: 'OPTION_I_ANALYSIS', seed });
+      const six = p.questions.filter(q => q.part === 'B' && q.marks === 6)[0]!;
+      expect(six.composite, `seed ${seed}`).toBe(false);
+      if (six.unit === 'XII.4') {
+        cash++;
+        expect(seed % 2).toBe(1);
+        expect(six.items[0]!.question.clause).toBe('XII.4.preparation');
+      } else {
+        ratio++;
+        expect(six.unit).toBe('XII.3');
+        expect(seed % 2).toBe(0);
+      }
+    }
+    expect([cash, ratio]).toEqual([20, 20]);
+  });
+  it('the OR side of a 6-mark cash flow question is a different cash flow question', () => {
+    const p = buildPaper({ cls: 'XII', route: 'OPTION_I_ANALYSIS', seed: 7 });
+    const six = p.questions.filter(q => q.part === 'B' && q.marks === 6)[0]!;
+    expect(six.alt).toBeDefined();
+    expect(six.alt![0]!.question.skill).not.toBe(six.items[0]!.question.skill);
+    expect(six.alt!.length).toBe(1);
+  });
+});

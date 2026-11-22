@@ -148,6 +148,21 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     );
     await page.emulateMedia({ media: 'screen' });
 
+    // ── "Also in the official syllabus": points the official list has that the short notes did not
+    await go('#/study/XI.2.depreciation');
+    ok(
+      /Also in the official syllabus/.test(await page.textContent('.study-sec:has(.study-extra) h3')) && (await page.$$('.study-extra li')).length === 6,
+      'depreciation: six extra syllabus points (causes, factors, depletion, amortisation, SLM vs WDV, features)',
+    );
+    ok(/amortisation/i.test(await page.textContent('.study-extra')) && /depletion/i.test(await page.textContent('.study-extra')), 'depreciation: depletion and amortisation are taught');
+    await go('#/study/XII.4.preparation');
+    ok(
+      /short-term borrowings/.test(await page.textContent('.study-extra')) && /marketable/.test(await page.textContent('.study-extra')),
+      'cash flow statement: overdraft, current investments and dividend rules are taught',
+    );
+    await go('#/study/XI.1.concepts');
+    ok((await page.$('.study-extra')) === null, 'a topic with nothing extra shows no empty section');
+    await axe('study topic with extra points');
     // ── Hindi mode: titles for all topics; full Hindi notes where they exist; English notes marked lang="en" with a notice where they do not
     await page.click('[data-lang-toggle]');
     await page.waitForSelector('html[data-lang="hi"]');
@@ -168,7 +183,7 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
       await go('#/study/' + id);
       const bad = await page.evaluate(() => {
         const dev = /[\u0900-\u097F]/;
-        const lis = [...document.querySelectorAll('.study-list li, .study-mistakes li, .study-steps li')];
+        const lis = [...document.querySelectorAll('.study-list li, .study-extra li, .study-mistakes li, .study-steps li')];
         return {
           notice: !!document.querySelector('.study-english'),
           english: lis.filter(li => !dev.test(li.textContent)).length,

@@ -76,6 +76,19 @@ const XII_B1: readonly Row[] = [
   ['XII.3', 4, 'RU', true],
   ['XII.3', 6, 'AP', true],
 ];
+/** The same unit marks (XII.3 = 12, XII.4 = 8) and the same question counts, with the 6-mark question on the cash flow statement instead of the ratios.
+ *  Papers alternate between the two layouts by seed, so the 6-mark question in Part B is not always the same topic. */
+const XII_B1_CASH: readonly Row[] = [
+  ['XII.3', 1, 'RU'],
+  ['XII.3', 1, 'AP'],
+  ['XII.4', 1, 'RU'],
+  ['XII.4', 1, 'RU'],
+  ['XII.3', 3, 'AP'],
+  ['XII.3', 3, 'RU'],
+  ['XII.3', 4, 'RU', true],
+  ['XII.4', 6, 'AEC', true],
+];
+
 /** Class XII Part B, Option II (Q27-34): XII.C = 20 marks. */
 const XII_B2: readonly Row[] = [
   ['XII.C', 1, 'RU'],
@@ -130,7 +143,7 @@ const XI_ROWS: readonly Row[] = [
 ];
 
 /** Typology for XI is assigned by the rows above; the totals are checked in the tests (32 / 24 / 24). */
-export function blueprint(cls: PaperClass, route: PaperRoute = 'OPTION_I_ANALYSIS'): Slot[] {
+export function blueprint(cls: PaperClass, route: PaperRoute = 'OPTION_I_ANALYSIS', variant = 0): Slot[] {
   if (cls === 'XI') {
     // order for printing: by mark size within the unit order, numbered 1..34
     const order = (r: Row) => [UNITS.findIndex(u => u.id === r[0]), r[1]] as const;
@@ -138,7 +151,7 @@ export function blueprint(cls: PaperClass, route: PaperRoute = 'OPTION_I_ANALYSI
     const part = (i: number) => (i < 26 ? 'A' : 'B') as 'A' | 'B';
     return withTypology(rows.map((r, i) => ({ no: i + 1, part: part(i), unit: r[0], marks: r[1], typology: r[2], choice: r[3] === true })));
   }
-  return withTypology([...toSlots('A', XII_A, 1), ...toSlots('B', route === 'OPTION_I_ANALYSIS' ? XII_B1 : XII_B2, 27)]);
+  return withTypology([...toSlots('A', XII_A, 1), ...toSlots('B', route === 'OPTION_I_ANALYSIS' ? (variant % 2 === 1 ? XII_B1_CASH : XII_B1) : XII_B2, 27)]);
 }
 
 /** Typology target of the paper design: 40 % Remembering and Understanding, 30 % Applying, 30 % Analysing / Evaluating / Creating. */
@@ -156,7 +169,8 @@ function withTypology(slots: Slot[]): Slot[] {
         const n = [a + (k === 'RU' ? sl.marks : 0), b + (k === 'AP' ? sl.marks : 0), c + (k === 'AEC' ? sl.marks : 0)];
         if (n[0]! > TARGET.RU + 2 || n[1]! > TARGET.AP + 2 || n[2]! > TARGET.AEC + 2) continue;
         // small recall bias: 1-mark slots prefer RU, 6-mark slots prefer higher order
-        const bias = (sl.marks === 1 && k !== 'RU' ? 0.1 : 0) + (sl.marks === 6 && k === 'RU' ? 0.3 : 0);
+        // and keep the typology the blueprint rows were designed with wherever the totals allow, so the slots of one unit are not all the same kind
+        const bias = (sl.marks === 1 && k !== 'RU' ? 0.1 : 0) + (sl.marks === 6 && k === 'RU' ? 0.3 : 0) + (k !== sl.typology ? 0.05 : 0);
         const kk = n.join(','),
           cost = st.cost + bias;
         const cur = next.get(kk);
@@ -354,7 +368,7 @@ export const PAPER_MINUTES = 180;
 /** Build the paper for a seed: the same seed always gives the same paper. */
 export function buildPaper(opts: { cls: PaperClass; route?: PaperRoute; seed: number }): Paper {
   const route = opts.route ?? 'OPTION_I_ANALYSIS',
-    slots = blueprint(opts.cls, route),
+    slots = blueprint(opts.cls, route, opts.seed % 2),
     rng = new Rng(opts.seed * 2654435761 + 97);
   const used = new Set<string>(),
     taken = new Set<string>();

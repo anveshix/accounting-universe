@@ -67,6 +67,12 @@ One switch for the whole app is in and tested. Hindi pages: header, navigation, 
 * **"Linked" questions come from one topic**: before, 55 % of them mixed topics; now 100 % of Class XII and 97 % of Class XI do, and the report counts the Class XI exceptions and the page says so.
 * Still open from the review: 6-mark slots are predictable (one generator per unit), Notes library is a sample with a browser-only paywall, first load on slow phones, 200 % zoom overflow on home and paper, format-based board questions (journal / ledger layout).
 
+## Completeness review as a team of PGT teachers (2026-11-22)
+* **Notes**: every sub-topic of the official matrix (276 in 54 topics) is now checked by `study-coverage.test.ts`. 50 were missing (for example depreciation causes, factors, depletion, amortisation and the SLM-vs-WDV differences; the cash-flow rules for overdraft, current investments and dividends; dissolution asset rules; the debenture write-off rule; incomplete-records features and limitations). They are in the new "Also in the official syllabus" section (`study-more.ts`, with Hindi in `study-more-hi.ts`; numbers checked unchanged).
+* **Practice**: seven more step-wise problems for thin topics (`questions-v5.ts`): cash flow statement (two kinds, 6 marks), death of a partner, share issue with over-subscription, solvency ratios (answers from the engine), fixed and fluctuating capital, past adjustment, debentures at a discount or premium; each re-worked by hand in `questions-v5.test.ts`.
+* **Papers**: Class XII Option I alternates between ratios and the cash flow statement as the Part B 6-mark question (same official unit marks); the exact-mix search now keeps the designed typology of each slot, which brought dissolution and guarantee back into the partnership 6-mark slots (they had been crowded out).
+* Still thin on practice (one multiple-choice skill each): the theory topics of Class XI Unit 1, XII.2.fundamentals, XII.3.statements, XII.C.cas and XII.C.using. Not teacher-reviewed (D11).
+
 ## Owner decisions
 D1 strangler stack (assumed) · D2 omit redemption (assumed) · D3 Option II after Option I (done) · **D4 deploy the tutor proxy and supply a key** · D5 backend/minors' data · D6 repository licence · D7 Class XI sample paper to validate against.
 
