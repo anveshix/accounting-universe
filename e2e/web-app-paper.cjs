@@ -107,6 +107,16 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
       await go(bad);
       ok((await page.getAttribute('main', 'data-route')) === 'notfound', 'bad address is not found: ' + bad);
     }
+    // ── About and trust page
+    await go('#/paper');
+    await page.click('a[href="#/about"]');
+    await page.waitForSelector('.aboutpage');
+    const about = await page.textContent('.aboutpage');
+    ok(
+      /54 syllabus topics/.test(about) && /saved on this device only/i.test(about) && /not been reviewed/i.test(about) && /Class XI practice paper is labelled as not official/i.test(about),
+      'about: counts, data handling and review status are stated',
+    );
+    await axe('about');
     // ── Practice page links to it
     await go('#/practice');
     ok(await page.isVisible('.paper-link a[href="#/paper"]'), 'practice page links to the paper builder');

@@ -49,11 +49,17 @@ One switch for the whole app is in and tested. Hindi pages: header, navigation, 
 * **AI tutor is not live.** Code, guard and tests exist (`apps/tutor-proxy`) but it was never run against the real API, is not deployed, and needs your API key and a host (D4). The app works fully without it.
 * **No accounts, sync or central teacher view** (D5): teachers work from files students hand over. By design, nothing about minors leaves the device.
 * **CI is written but unobserved** — `.github/workflows/ci.yml` (D12) mirrors `tools/check-all.sh`; it has not yet been seen running on GitHub. 
-* **Board-exam blueprint mock paper** (Class XII: 34 questions, 1/3/4/6-mark mix) is not built; Board *mode* gives single skill questions, not a full paper.
+* **Practice paper** (`#/paper`) is built and tested against the Class XII blueprint (34 questions, 20×1/6×3/3×4/5×6, unit marks, typology 32/24/24, internal choice in six). Its 3-, 4- and 6-mark questions are often *sets of linked smaller generated questions*, not long board-style questions; no generator makes a true 6-mark question yet. The Class XI paper uses the official unit marks with the Class XII pattern and is labelled not official (D7). Marking scheme = engine answers, not an official CBSE scheme.
 * **Dissolution** is a calculator, not a step-by-step realisation simulation. Animation controls exist only on the ledger page.
 * **Directive items deliberately not done:** debenture *redemption* entries (not prescribed in 2026-27, D2); segment reports (listed only as a project aspect).
 * **Hinglish/Hindi** covers concept cards, rule cards and the explanation text of 4 labs (draft, unreviewed); the other 26 labs are English.
 * **Not verified:** axe on routes other than the V1 views, screen readers, Lighthouse, Safari/Firefox, real phones, a teacher's or accountant's review of wording and conventions, classes of 30+ student files.
+
+## Study guide, practice paper, About page (2026-11-22)
+* **Study guide** (`#/study`): all 54 syllabus topics have a page (notes, formats, steps, mistakes, how it is asked, 17 verified worked examples, official outcomes, links to labs/practice, print). Original text; tests recompute every example and check excluded topics are not taught (`study.test.ts`, `e2e/web-app-study.cjs`). **Not reviewed by a subject teacher (D11); English only.** Many topics have no worked example yet.
+* **Practice paper** (`#/paper`): see above (`paper.test.ts`, `e2e/web-app-paper.cjs`). Same number = same paper, shareable link, print view.
+* **About and trust** (`#/about`): states what is official, what is ours, review status and data handling; counts come from code.
+* Not done: Notes library still has placeholder text and a client-side-only paywall (cannot protect content); Hindi for study/paper pages; a guided learning path; shared XP/badges for paper results.
 
 ## Owner decisions
 D1 strangler stack (assumed) · D2 omit redemption (assumed) · D3 Option II after Option I (done) · **D4 deploy the tutor proxy and supply a key** · D5 backend/minors' data · D6 repository licence · D7 Class XI sample paper to validate against.
