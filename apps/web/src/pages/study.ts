@@ -1,5 +1,7 @@
-import { CLAUSES, SKILLS, STUDY_STATUS, UNITS, outcomesOf, OUTCOME_MAPPING_STATUS, studyOf, type ClassLevel } from '../../../../packages/curriculum/src';
+import { CLAUSES, SKILLS, STUDY_STATUS, UNITS, outcomesOf, OUTCOME_MAPPING_STATUS, studyOf, studyHiOf, titleHiOf, type ClassLevel } from '../../../../packages/curriculum/src';
+import type { Key } from '../../../../packages/curriculum/src/i18n';
 import { h } from '../dom';
+import { en, tr } from '../i18n';
 import { icon } from '../icons';
 import { hrefOf, isCard, labsOfClause, titleOf } from '../labs';
 import { state } from '../state';
@@ -8,8 +10,13 @@ import { attempts, recordSeen } from '../store';
 /** Hash of the study page for a topic or a class. */
 export const studyHref = (id: string) => `#/study/${id}`;
 
+const hi = () => state.lang === 'hi';
+/** Topic and unit titles: Hindi when the app is in Hindi (all 54 titles exist), the original English otherwise. */
+const topicTitle = (id: string, title: string) => (hi() ? (titleHiOf(id) ?? title) : title);
+const unitTitle = (u: { id: string; title: string }) => (hi() ? tr(`unit.${u.id}` as Key) : u.title);
 const isClass = (x: string | undefined): x is ClassLevel => x === 'XI' || x === 'XII';
-const list = (cls: string, items: readonly string[], ordered = false) => h(ordered ? 'ol' : 'ul', { class: cls }, ...items.map(t => h('li', {}, t)));
+/** A list whose lines are Hindi (`inHindi`) or English text that has no Hindi version yet (marked lang="en" inside a Hindi page). */
+const list = (cls: string, items: readonly string[], ordered = false, inHindi = true) => h(ordered ? 'ol' : 'ul', { class: cls }, ...items.map(t => h('li', {}, inHindi ? t : en(t))));
 
 /** How much the learner has practised a topic: from the attempts saved on this device (never uploaded). */
 async function progressFor(clause: string): Promise<{ n: number; pct: number } | null> {
@@ -25,6 +32,9 @@ export function studyPage(arg?: string): HTMLElement {
   return indexPage(isClass(arg) ? arg : state.profile.cls);
 }
 
+/** The study status note: English wording is the constant the tests know; Hindi has its own sentence. */
+const statusNote = () => h('p', { class: 'note info study-status' }, hi() ? tr('study.status') : STUDY_STATUS);
+
 // ───────────────────────── chapter index ─────────────────────────
 function indexPage(cls: ClassLevel): HTMLElement {
   const route = state.profile.route;
@@ -38,9 +48,9 @@ function indexPage(cls: ClassLevel): HTMLElement {
       h(
         'div',
         { class: 'unit-head' },
-        h('h3', {}, u.title),
-        h('span', { class: 'chip' }, `${u.marks} marks`),
-        u.route !== 'COMMON' ? h('span', { class: 'chip alt' }, u.route === 'OPTION_I_ANALYSIS' ? 'Option I' : 'Option II') : null,
+        h('h3', {}, unitTitle(u)),
+        h('span', { class: 'chip' }, tr('study.marks', { n: u.marks })),
+        u.route !== 'COMMON' ? h('span', { class: 'chip alt' }, tr(u.route === 'OPTION_I_ANALYSIS' ? 'study.optI' : 'study.optII')) : null,
       ),
       h(
         'ol',
@@ -51,19 +61,19 @@ function indexPage(cls: ClassLevel): HTMLElement {
           const prog = h('span', { class: 'chip topic-progress', 'data-progress': c.id, hidden: true });
           void progressFor(c.id).then(p => {
             if (p) {
-              prog.textContent = `${p.pct}% · ${p.n} tried`;
+              prog.textContent = tr('study.tried', { pct: p.pct, n: p.n });
               prog.removeAttribute('hidden');
             }
           });
           return h(
             'li',
             {},
-            h('a', { class: 'topic-link', href: studyHref(c.id), 'data-topic': c.id }, h('span', { class: 'topic-no' }, String(i + 1)), h('span', { class: 'topic-title' }, c.title)),
+            h('a', { class: 'topic-link', href: studyHref(c.id), 'data-topic': c.id }, h('span', { class: 'topic-no' }, String(i + 1)), h('span', { class: 'topic-title' }, topicTitle(c.id, c.title))),
             h(
               'span',
               { class: 'topic-meta' },
-              labs ? h('span', { class: 'chip' }, `${labs} lab${labs > 1 ? 's' : ''}`) : null,
-              skills ? h('span', { class: 'chip' }, `${skills} practice skill${skills > 1 ? 's' : ''}`) : null,
+              labs ? h('span', { class: 'chip' }, tr(labs > 1 ? 'study.lab.many' : 'study.lab.one', { n: labs })) : null,
+              skills ? h('span', { class: 'chip' }, tr(skills > 1 ? 'study.skill.many' : 'study.skill.one', { n: skills })) : null,
               prog,
             ),
           );
@@ -80,25 +90,23 @@ function indexPage(cls: ClassLevel): HTMLElement {
       h(
         'nav',
         { class: 'breadcrumb', 'aria-label': 'Breadcrumb' },
-        h('a', { href: '#/' }, 'Home'),
+        h('a', { href: '#/' }, tr('study.home')),
         h('span', { 'aria-hidden': 'true' }, ' › '),
-        h('a', { href: `#/class/${cls}` }, `Class ${cls}`),
+        h('a', { href: `#/class/${cls}` }, tr('study.classCrumb', { cls })),
         h('span', { 'aria-hidden': 'true' }, ' › '),
-        h('span', { 'aria-current': 'page' }, 'Study guide'),
+        h('span', { 'aria-current': 'page' }, tr('study.crumb')),
       ),
-      h('p', { class: 'eyebrow' }, 'Chapter-wise study guide'),
-      h('h2', {}, `Class ${cls}: every topic, in syllabus order`),
-      h(
-        'p',
-        { class: 'lead' },
-        'Short revision notes for each topic: what to know, formats and formulae, how to solve, the mistakes that lose marks, and how it is asked. Then try it in a lab and practise.',
-      ),
-      h('p', { class: 'note info study-status' }, STUDY_STATUS),
+      h('p', { class: 'eyebrow' }, tr('study.eyebrow')),
+      h('h2', {}, tr('study.h2', { cls })),
+      h('p', { class: 'lead' }, tr('study.lead')),
+      statusNote(),
     ),
     h(
       'div',
       { class: 'actions' },
-      ...(['XI', 'XII'] as const).map(c => h('a', { class: 'button' + (c === cls ? ' primary' : ''), href: `#/study/${c}`, 'aria-current': c === cls ? 'page' : undefined }, `Class ${c}`)),
+      ...(['XI', 'XII'] as const).map(c =>
+        h('a', { class: 'button' + (c === cls ? ' primary' : ''), href: `#/study/${c}`, 'aria-current': c === cls ? 'page' : undefined }, tr('study.classCrumb', { cls: c })),
+      ),
     ),
     ...sections,
   );
@@ -108,8 +116,7 @@ function indexPage(cls: ClassLevel): HTMLElement {
 function topicPage(id: string): HTMLElement {
   const clause = CLAUSES.find(c => c.id === id),
     guide = clause ? studyOf(clause.id) : undefined;
-  if (!clause || !guide)
-    return h('div', { class: 'panel' }, h('h2', {}, 'Topic not found'), h('p', {}, 'There is no study guide at this address.'), h('a', { class: 'button', href: '#/study' }, 'Open the study guide'));
+  if (!clause || !guide) return h('div', { class: 'panel' }, h('h2', {}, tr('study.notFound.h')), h('p', {}, tr('study.notFound.p')), h('a', { class: 'button', href: '#/study' }, tr('study.open')));
   void recordSeen({ lab: `study:${clause.id}`, tab: 'learn', t: Date.now() });
   const unit = UNITS.find(u => u.id === clause.unit)!,
     cls = unit.cls;
@@ -123,15 +130,22 @@ function topicPage(id: string): HTMLElement {
     skills = SKILLS.filter(s => s.clause === clause.id),
     los = outcomesOf(clause.id);
 
+  // Hindi notes exist for some topics only; the rest stay English (marked lang="en") with a notice, never machine-translated at run time.
+  const gh = hi() ? studyHiOf(clause.id) : undefined,
+    english = hi() && !gh;
+  const text = (hindi: string | undefined, original: string) => (gh && hindi !== undefined ? hindi : english ? en(original) : original);
+  const ex = gh ? gh.example : guide.example;
+
   const progress = h('p', { class: 'note study-progress', 'data-study-progress': '', hidden: true });
   void progressFor(clause.id).then(p => {
     if (p) {
-      progress.textContent = `Your practice on this topic: ${p.n} question${p.n > 1 ? 's' : ''}, ${p.pct}% of the marks so far. Saved on this device only.`;
+      progress.textContent = tr(p.n > 1 ? 'study.progress.many' : 'study.progress.one', { n: p.n, pct: p.pct });
       progress.removeAttribute('hidden');
     }
   });
 
   const section = (title: string, body: Node | null, cls = '') => (body ? h('section', { class: `panel study-sec ${cls}` }, h('h3', {}, title), body) : null);
+  const [outPre = '', outPost = ''] = tr('study.outcomes.note', { status: '\u0000' }).split('\u0000');
 
   return h(
     'article',
@@ -142,65 +156,66 @@ function topicPage(id: string): HTMLElement {
       h(
         'nav',
         { class: 'breadcrumb no-print', 'aria-label': 'Breadcrumb' },
-        h('a', { href: '#/' }, 'Home'),
+        h('a', { href: '#/' }, tr('study.home')),
         h('span', { 'aria-hidden': 'true' }, ' › '),
-        h('a', { href: `#/study/${cls}` }, `Class ${cls} study guide`),
+        h('a', { href: `#/study/${cls}` }, tr('study.classGuide', { cls })),
         h('span', { 'aria-hidden': 'true' }, ' › '),
-        h('span', { 'aria-current': 'page' }, `Topic ${at + 1}`),
+        h('span', { 'aria-current': 'page' }, tr('study.topicN', { n: at + 1 })),
       ),
-      h('p', { class: 'eyebrow' }, `${unit.title} · ${unit.marks} marks`),
-      h('h2', {}, clause.title),
-      clause.limit ? h('p', { class: 'note warn study-limit' }, h('b', {}, 'Official syllabus limit: '), clause.limit) : null,
-      h('p', { class: 'lead' }, guide.summary),
+      h('p', { class: 'eyebrow' }, `${unitTitle(unit)} · ${tr('study.marks', { n: unit.marks })}`),
+      h('h2', {}, topicTitle(clause.id, clause.title)),
+      english ? h('p', { class: 'note warn study-english', lang: 'hi' }, tr('study.contentEnglish')) : null,
+      clause.limit ? h('p', { class: 'note warn study-limit' }, h('b', {}, tr('study.limit')), hi() ? en(clause.limit) : clause.limit) : null,
+      h('p', { class: 'lead' }, text(gh?.summary, guide.summary)),
       h(
         'div',
         { class: 'actions no-print' },
-        skills[0] ? h('a', { class: 'button primary', href: `#/practice/${skills[0].skill}` }, icon('target', 16), ' Practise this topic') : null,
-        h('button', { type: 'button', 'data-print': '', onclick: () => window.print() }, 'Print or save as PDF'),
+        skills[0] ? h('a', { class: 'button primary', href: `#/practice/${skills[0].skill}` }, icon('target', 16), ' ', tr('study.practise')) : null,
+        h('button', { type: 'button', 'data-print': '', onclick: () => window.print() }, tr('study.print')),
       ),
       progress,
     ),
-    section('What to know', list('study-list', guide.mustKnow)),
-    section('Formats and formulae', guide.formats ? list('study-formats', guide.formats) : null),
-    section('How to solve it', guide.steps ? list('study-steps', guide.steps, true) : null),
-    section('Mistakes that lose marks', list('study-mistakes', guide.mistakes), 'mistakes'),
-    section('How it is asked', h('p', {}, guide.asked)),
-    guide.example
+    section(tr('study.sec.know'), list('study-list', gh ? gh.mustKnow : guide.mustKnow, false, !english)),
+    section(tr('study.sec.formats'), guide.formats ? list('study-formats', gh?.formats ?? guide.formats, false, !english) : null),
+    section(tr('study.sec.steps'), guide.steps ? list('study-steps', gh?.steps ?? guide.steps, true, !english) : null),
+    section(tr('study.sec.mistakes'), list('study-mistakes', gh ? gh.mistakes : guide.mistakes, false, !english), 'mistakes'),
+    section(tr('study.sec.asked'), h('p', {}, text(gh?.asked, guide.asked))),
+    ex
       ? h(
           'section',
           { class: 'panel study-sec example' },
-          h('h3', {}, 'Worked example'),
-          h('p', { class: 'ex-q' }, h('b', {}, 'Question. '), guide.example.q),
-          h('details', { class: 'ex-a', open: true }, h('summary', {}, 'Answer'), h('p', {}, guide.example.a)),
+          h('h3', {}, tr('study.sec.example')),
+          h('p', { class: 'ex-q' }, h('b', {}, tr('study.ex.q')), english ? en(ex.q) : ex.q),
+          h('details', { class: 'ex-a', open: true }, h('summary', {}, tr('study.ex.a')), h('p', {}, english ? en(ex.a) : ex.a)),
         )
       : null,
     los.length
       ? h(
           'section',
           { class: 'panel study-sec outcomes' },
-          h('h3', {}, 'Official learning outcomes'),
-          h('p', { class: 'muted-line' }, `Wording from the CBSE 2026-27 curriculum. Which outcomes this topic serves is ${OUTCOME_MAPPING_STATUS}.`),
-          h('ul', { class: 'lo-list' }, ...los.map(o => h('li', { 'data-outcome': o.id }, h('code', {}, o.id), ' ', o.text))),
+          h('h3', {}, tr('study.sec.outcomes')),
+          h('p', { class: 'muted-line' }, outPre, en(OUTCOME_MAPPING_STATUS), outPost),
+          h('ul', { class: 'lo-list' }, ...los.map(o => h('li', { 'data-outcome': o.id }, h('code', {}, o.id), ' ', en(o.text)))),
         )
       : null,
     h(
       'section',
       { class: 'panel study-sec tools no-print' },
-      h('h3', {}, 'Learn, try, practise'),
+      h('h3', {}, tr('study.sec.tools')),
       h(
         'ul',
         { class: 'tool-links' },
-        ...labs.map(l => h('li', {}, h('a', { href: hrefOf(l) }, isCard(l) ? 'Read: ' : 'Try it: ', titleOf(l).replace(/^Card: /, '')))),
-        ...skills.map(s => h('li', {}, h('a', { href: `#/practice/${s.skill}` }, 'Practise: ', s.title))),
-        labs.length + skills.length === 0 ? h('li', {}, 'No lab or practice skill for this topic yet.') : null,
+        ...labs.map(l => h('li', {}, h('a', { href: hrefOf(l) }, isCard(l) ? tr('study.read') : tr('study.try'), en(titleOf(l).replace(/^Card: /, ''))))),
+        ...skills.map(s => h('li', {}, h('a', { href: `#/practice/${s.skill}` }, tr('study.practiseLink'), en(s.title)))),
+        labs.length + skills.length === 0 ? h('li', {}, tr('study.none')) : null,
       ),
     ),
     h(
       'nav',
-      { class: 'study-pager no-print', 'aria-label': 'Previous and next topic' },
-      prev ? h('a', { class: 'button', rel: 'prev', href: studyHref(prev.id) }, '← ', prev.title) : h('span', {}),
-      next ? h('a', { class: 'button primary', rel: 'next', href: studyHref(next.id) }, next.title, ' →') : h('span', {}),
+      { class: 'study-pager no-print', 'aria-label': tr('study.pager.aria') },
+      prev ? h('a', { class: 'button', rel: 'prev', href: studyHref(prev.id) }, '← ', topicTitle(prev.id, prev.title)) : h('span', {}),
+      next ? h('a', { class: 'button primary', rel: 'next', href: studyHref(next.id) }, topicTitle(next.id, next.title), ' →') : h('span', {}),
     ),
-    h('p', { class: 'note info study-status' }, STUDY_STATUS),
+    statusNote(),
   );
 }

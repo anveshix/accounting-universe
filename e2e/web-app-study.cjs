@@ -148,15 +148,37 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     );
     await page.emulateMedia({ media: 'screen' });
 
-    // ── Hindi mode: the page is English-only and says so
+    // ── Hindi mode: titles for all topics; full Hindi notes where they exist; English notes marked lang="en" with a notice where they do not
     await page.click('[data-lang-toggle]');
     await page.waitForSelector('html[data-lang="hi"]');
+    ok((await page.$('[data-english-only]')) === null, 'Hindi mode: study pages are no longer English-only');
+    ok((await page.$$eval('[data-hindi-draft]', e => e.filter(x => !x.hidden).length)) === 1, 'Hindi mode: exactly one draft notice');
+    ok((await page.$eval('html', e => e.getAttribute('lang'))) === 'hi', 'Hindi mode: page language is hi');
+    await go('#/study/XI');
+    const hiTitles = await page.$$eval('.topic-title', e => e.map(x => x.textContent));
+    ok(hiTitles.length === 24 && hiTitles.every(t => /[\u0900-\u097F]/.test(t)), 'Hindi index: all 24 Class XI topic titles are in Hindi');
+    ok(/अध्यायवार/.test(await page.textContent('.eyebrow')) && /कक्षा XI/.test(await page.textContent('h2')), 'Hindi index: heading is Hindi');
+    await go('#/study/XII.1.admission');
+    const adm = await page.textContent('article.study');
+    ok(/त्याग अनुपात/.test(adm) && /12 : 8 : 5/.test(adm) && /3 : 2/.test(adm), 'Hindi topic with notes: Hindi text and the same figures (12 : 8 : 5)');
+    ok((await page.$('.study-english')) === null, 'Hindi topic with notes: no "English notes" notice');
+    ok(/हल किया हुआ उदाहरण/.test(await page.textContent('.example h3')) && /उत्तर/.test(await page.textContent('.ex-a summary')), 'Hindi topic: example headings are Hindi');
+    await go('#/study/XI.1.intro');
     ok(
-      (await page.isVisible('[data-english-only]')) && (await page.$eval('main', e => e.getAttribute('lang'))) === 'en',
-      'Hindi mode: study pages show the English-only notice and are marked lang="en"',
+      (await page.isVisible('.study-english')) && (await page.$$eval('.study-list li[lang="en"], .study-list li > [lang="en"]', e => e.length)) >= 3,
+      'Hindi topic without notes: notice shown and the English lines are marked lang="en"',
     );
+    await go('#/study/XII.4.preparation');
+    ok(/2,00,000/.test(await page.textContent('.ex-a')) && /रोकड़/.test(await page.textContent('.ex-a')), 'Hindi cash-flow example keeps ₹2,00,000');
+    await axe('study topic (HI)');
+    await go('#/study/XI.1.intro');
+    await axe('study topic, English notes (HI)');
+    await go('#/study/XI');
+    await axe('study index (HI)');
     await page.click('[data-lang-toggle]');
     await page.waitForSelector('html[data-lang="en"]');
+    await go('#/study/XII.1.admission');
+    ok(/sacrificing ratio/i.test(await page.textContent('article.study')) && (await page.$('.study-english')) === null, 'back in English: the original notes are shown');
 
     // ── accessibility and phones
     await go('#/study/XII.1.admission');

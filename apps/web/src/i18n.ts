@@ -12,7 +12,7 @@ export const tr = (key: Key, vars?: Record<string, string | number>): string => 
 export const en = (text: string): HTMLElement | string => (state.lang === 'hi' ? h('span', { lang: 'en' }, text) : text);
 
 /** Pages whose own text is fully available in Hindi. Every other page is shown in English with a notice (see main.ts). */
-export const HINDI_PAGES: ReadonlySet<string> = new Set(['home', 'class', 'labs', 'practice', 'crisis']);
+export const HINDI_PAGES: ReadonlySet<string> = new Set(['home', 'class', 'labs', 'practice', 'crisis', 'study', 'paper']);
 
 /** The one "Hindi is a draft" notice for the whole app (decision D10: a qualified reviewer must sign the Hindi off before it goes). */
 export function hindiBanner(): HTMLElement {
