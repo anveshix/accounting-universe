@@ -89,8 +89,12 @@ function replaceAll<T>(store: string, next: (current: T[]) => T[]): Promise<void
 }
 
 export const recordAttempt = async (a: Attempt) => {
-  const before = { attempts: await all<Attempt>('attempts'), seen: await all<Seen>('seen') };
-  await add('attempts', a);
+  pending(1);                                     // the reads below come first, so the "saving" flag must already be up
+  let before;
+  try {
+    before = { attempts: await all<Attempt>('attempts'), seen: await all<Seen>('seen') };
+    await add('attempts', a);
+  } finally { pending(-1); }
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('au:attempt', { detail: { before, a } }));   // the rewards UI listens; the store stays ignorant of it
 };
 export const recordSeen = (s: Seen) => add('seen', s);
