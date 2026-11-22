@@ -9,5 +9,6 @@ export * from './machines';
 export * from './outcomes';
 export * from './outcome-report';
 export * from './crisis';
+export * from './study';
 export * from './notes';
 export * from './rewards';
