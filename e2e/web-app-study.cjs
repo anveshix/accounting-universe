@@ -163,16 +163,30 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     ok(/त्याग अनुपात/.test(adm) && /12 : 8 : 5/.test(adm) && /3 : 2/.test(adm), 'Hindi topic with notes: Hindi text and the same figures (12 : 8 : 5)');
     ok((await page.$('.study-english')) === null, 'Hindi topic with notes: no "English notes" notice');
     ok(/हल किया हुआ उदाहरण/.test(await page.textContent('.example h3')) && /उत्तर/.test(await page.textContent('.ex-a summary')), 'Hindi topic: example headings are Hindi');
-    await go('#/study/XI.1.intro');
-    ok(
-      (await page.isVisible('.study-english')) && (await page.$$eval('.study-list li[lang="en"], .study-list li > [lang="en"]', e => e.length)) >= 3,
-      'Hindi topic without notes: notice shown and the English lines are marked lang="en"',
-    );
+    // every one of the 54 topics now has full Hindi notes: no English-notes notice, and every point is Devanagari
+    for (const id of [...ids.XI, ...ids.XII]) {
+      await go('#/study/' + id);
+      const bad = await page.evaluate(() => {
+        const dev = /[\u0900-\u097F]/;
+        const lis = [...document.querySelectorAll('.study-list li, .study-mistakes li, .study-steps li')];
+        return {
+          notice: !!document.querySelector('.study-english'),
+          english: lis.filter(li => !dev.test(li.textContent)).length,
+          n: lis.length,
+          lead: dev.test(document.querySelector('.lead')?.textContent || ''),
+          ex: dev.test(document.querySelector('.ex-a p')?.textContent || ''),
+        };
+      });
+      if (bad.notice || bad.english || bad.n < 4 || !bad.lead || !bad.ex) ok(false, id + ': Hindi notes incomplete ' + JSON.stringify(bad));
+    }
+    ok(true, 'all 54 Hindi topic pages checked: full Hindi notes, no English-notes notice');
+    await go('#/class/XI');
+    ok(await page.$$eval('a.study-link', e => e.length > 20 && e.every(a => /[\u0900-\u097F]/.test(a.textContent))), 'Hindi class map: all topic titles are in Hindi');
     await go('#/study/XII.4.preparation');
     ok(/2,00,000/.test(await page.textContent('.ex-a')) && /रोकड़/.test(await page.textContent('.ex-a')), 'Hindi cash-flow example keeps ₹2,00,000');
     await axe('study topic (HI)');
     await go('#/study/XI.1.intro');
-    await axe('study topic, English notes (HI)');
+    await axe('study topic, XI.1.intro (HI)');
     await go('#/study/XI');
     await axe('study index (HI)');
     await page.click('[data-lang-toggle]');

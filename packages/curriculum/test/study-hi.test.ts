@@ -22,10 +22,14 @@ describe('Hindi study guide (draft, unreviewed)', () => {
     for (const c of CLAUSES) expect(nums(TITLE_HI[c.id]), c.id).toEqual(nums(c.title));
   });
   it('each Hindi guide belongs to a real topic and has Devanagari text', () => {
-    expect(Object.keys(STUDY_HI).length).toBeGreaterThanOrEqual(12);
+    expect(Object.keys(STUDY_HI).sort(), 'every topic has full Hindi notes').toEqual(CLAUSES.map(c => c.id).sort());
     for (const [id, g] of Object.entries(STUDY_HI)) {
       expect(studyOf(id), id).toBeDefined();
-      for (const t of [g.summary, ...g.mustKnow, ...(g.formats ?? []), ...(g.steps ?? []), ...g.mistakes, g.asked, g.example.q, g.example.a]) expect(t, id).toMatch(DEVANAGARI);
+      for (const t of [g.summary, ...g.mustKnow, ...(g.steps ?? []), ...g.mistakes, g.asked, g.example.q, g.example.a]) expect(t, id).toMatch(DEVANAGARI);
+      // a format line may be a pure formula (A = L + C); then it must equal the English line exactly
+      (g.formats ?? []).forEach((t, i) => {
+        if (!DEVANAGARI.test(t)) expect(t, `${id} formats[${i}]`).toBe(STUDY[id]!.formats![i]);
+      });
     }
   });
   it('the lists line up with the English ones (same number of points, formats, steps and mistakes)', () => {
@@ -47,6 +51,12 @@ describe('Hindi study guide (draft, unreviewed)', () => {
   });
   it('the Hindi never teaches a topic the syllabus excludes, except to say it is excluded', () => {
     const banned = /टुकड़ों में वितरण|पेशकश|ब्याज.{0,12}याचना बकाया|मोचन प्रविष्टि|(?<!अ)प्रत्यक्ष पद्धति/;
-    for (const [id, g] of Object.entries(STUDY_HI)) expect([g.summary, ...g.mustKnow, ...g.mistakes, g.example.q, g.example.a].join(' '), id).not.toMatch(banned);
+    // sentences that say a topic is outside the syllabus ("… पाठ्यक्रम से बाहर हैं") are allowed to name it
+    const taught = (text: string) =>
+      text
+        .split('।')
+        .filter(sentence => !/बाहर/.test(sentence))
+        .join('।');
+    for (const [id, g] of Object.entries(STUDY_HI)) expect(taught([g.summary, ...g.mustKnow, ...g.mistakes, g.example.q, g.example.a].join('।')), id).not.toMatch(banned);
   });
 });

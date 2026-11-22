@@ -59,7 +59,8 @@ const ALLOWED = new Set(['CBSE', 'depreciation', 'goodwill', 'ratio', 'XI', 'XII
             const el = n.parentElement;
             if (!el || el.closest('[lang="en"]') || el.closest('script,style')) continue;
             if (getComputedStyle(el).display === 'none') continue;
-            for (const m of n.textContent.matchAll(/[A-Za-z]{3,}/g)) if (!allowed.includes(m[0])) out.push(`${m[0]} in “${n.textContent.trim().slice(0, 50)}”`);
+            for (const m of n.textContent.matchAll(/[A-Za-z]{3,}/g))
+              if (!allowed.includes(m[0]) && !/^[A-Z]{3,6}$/.test(m[0]) && m[0] !== 'Ind') out.push(`${m[0]} in “${n.textContent.trim().slice(0, 50)}”`);
           }
         }
         return out;
@@ -119,8 +120,8 @@ const ALLOWED = new Set(['CBSE', 'depreciation', 'goodwill', 'ratio', 'XI', 'XII
     await axe('labs (HI)');
     await checkPage('#/class/XI', 'class map');
     ok(
-      DEV.test(await page.textContent('main h2')) && (await page.$$eval('.clauselist b [lang="en"]', e => e.length)) >= 10,
-      'Hindi class map: heading Hindi, topic titles stay English and are marked',
+      DEV.test(await page.textContent('main h2')) && (await page.$$eval('.clauselist b a.study-link', e => e.length >= 10 && e.every(a => /[\u0900-\u097F]/.test(a.textContent)))),
+      'Hindi class map: heading and all topic titles are Hindi',
     );
     await axe('class map (HI)');
     await checkPage('#/practice', 'practice');

@@ -9,6 +9,9 @@
  * example appears unchanged in the Hindi one, so a translation can never change a figure.
  */
 import type { StudyExample } from './study';
+import { HI_B1 } from './study-hi-b1';
+import { HI_B2 } from './study-hi-b2';
+import { HI_B3 } from './study-hi-b3';
 
 export interface StudyHi {
   readonly summary: string;
@@ -77,7 +80,7 @@ export const TITLE_HI: Readonly<Record<string, string>> = {
   'XII.P.project': 'किसी कंपनी के विश्लेषण पर परियोजना (कोई दो पहलू) / प्रायोगिक फ़ाइल और मौखिक परीक्षा (विकल्प II)',
 };
 
-export const STUDY_HI: Readonly<Record<string, StudyHi>> = {
+const CORE_HI: Readonly<Record<string, StudyHi>> = {
   'XI.2.rules': {
     summary: 'नाम (Dr.) और जमा (Cr.) करने के नियम तय करते हैं कि किस खाते को नाम और किसे जमा करना है। इन्हें लेन-देन से नहीं, खाते के प्रकार से सीखिए।',
     mustKnow: [
@@ -284,6 +287,9 @@ export const STUDY_HI: Readonly<Record<string, StudyHi>> = {
     },
   },
 };
+
+/** All Hindi notes: the first twelve topics plus each later batch (see study-hi-b*.ts). */
+export const STUDY_HI: Readonly<Record<string, StudyHi>> = { ...CORE_HI, ...HI_B1, ...HI_B2, ...HI_B3 };
 
 export const studyHiOf = (clause: string): StudyHi | undefined => STUDY_HI[clause];
 export const titleHiOf = (clause: string): string | undefined => TITLE_HI[clause];
