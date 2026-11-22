@@ -22,7 +22,6 @@ apps/web/src/notes-bodies.ts
 apps/web/src/pages/assignment.ts
 apps/web/src/pages/cards.ts
 apps/web/src/pages/cas.ts
-apps/web/src/pages/classpage.ts
 apps/web/src/pages/home.ts
 apps/web/src/pages/lab.ts
 apps/web/src/pages/ledger.ts

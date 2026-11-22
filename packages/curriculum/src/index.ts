@@ -11,5 +11,6 @@ export * from './outcome-report';
 export * from './crisis';
 export * from './study';
 export * from './paper';
+export * from './study-hi';
 export * from './notes';
 export * from './rewards';

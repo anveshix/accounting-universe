@@ -102,6 +102,38 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     ok(!(await page.isVisible('header.top')) && !(await page.isVisible('.actions')) && (await page.isVisible('.paper-sheet')), 'print: navigation and buttons are hidden, the sheet is shown');
     await page.emulateMedia({ media: 'screen' });
 
+    // ── Hindi mode (draft): the page chrome, headings, marks and scheme are Hindi; question text without Hindi stays English, marked, with a notice
+    await go('#/paper');
+    await page.click('[data-lang-toggle]');
+    await page.waitForSelector('html[data-lang="hi"]');
+    ok((await page.$('[data-english-only]')) === null, 'Hindi paper set-up: not English-only any more');
+    ok(/बोर्ड के प्रारूप/.test(await page.textContent('h2')) && /प्रामाणिक/.test(await page.textContent('main')), 'Hindi paper set-up: heading and honesty section are Hindi');
+    await axe('paper set-up (HI)');
+    await go('#/paper/XII/I/77');
+    ok((await page.$$('.pq')).length === 34, 'Hindi paper: still 34 questions');
+    const hiSheet = await page.textContent('.paper-sheet');
+    ok(/भाग अ/.test(hiSheet) && /भाग ब/.test(hiSheet) && /\[6 अंक\]/.test(hiSheet) && /अथवा/.test(hiSheet) && /पूर्णांक: 80/.test(hiSheet), 'Hindi paper: parts, marks, OR and maximum marks are Hindi');
+    ok(
+      (await page.isVisible('.paper-english')) && (await page.$$eval('.pstem [lang="en"], .pstem[lang="en"]', e => e.length)) > 0,
+      'Hindi paper: a notice says some questions are English, and they are marked lang="en"',
+    );
+    await page.click('[data-scheme-toggle] > summary');
+    await page.waitForSelector('[data-scheme]', { state: 'visible' });
+    ok(/अंकन योजना/.test(await page.textContent('[data-scheme] h3')) && (await page.$$('.ps-q')).length === 34, 'Hindi paper: marking scheme heading is Hindi and all 34 answers are there');
+    const answers = await page.$$eval('.ps-q', qs => qs.map(q => [...q.querySelectorAll(':scope > table tbody tr')].reduce((t, tr) => t + Number(tr.lastElementChild.textContent), 0)));
+    ok(
+      answers.every((a, i) => a === marks[i]),
+      'Hindi paper: scheme marks still equal the question marks',
+    );
+    ok(/प्रश्न-पत्र रिपोर्ट/.test(await page.textContent('.prep')), 'Hindi paper: report heading is Hindi');
+    await axe('paper sheet (HI)');
+    await go('#/paper/XI/5');
+    ok(/आधिकारिक ब्लूप्रिंट नहीं/.test(await page.textContent('.paper-title')), 'Hindi Class XI paper: says it is not an official blueprint');
+    await page.click('[data-lang-toggle]');
+    await page.waitForSelector('html[data-lang="en"]');
+    await go('#/paper/XII/I/77');
+    ok(/Maximum marks: 80/.test(await page.textContent('.paper-title')) && (await sig()) === first, 'back in English: same paper, English wording');
+
     // ── bad addresses are not found
     for (const bad of ['#/paper/XIII/1', '#/paper/XII/III/1', '#/paper/XII/I/abc', '#/paper/XI']) {
       await go(bad);

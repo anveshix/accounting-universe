@@ -1,5 +1,6 @@
 import { buildPaper, markingScheme, type Paper, type PaperClass, type PaperItem, type PaperRoute, type PaperQuestion } from '../../../../packages/curriculum/src';
 import { h } from '../dom';
+import { en, tr } from '../i18n';
 import { state } from '../state';
 
 const ROUTE_CODE: Record<string, PaperRoute> = { I: 'OPTION_I_ANALYSIS', II: 'OPTION_II_COMPUTERISED' };
@@ -38,11 +39,11 @@ function setupPage(): HTMLElement {
           draw();
         },
       }),
-      ` Class ${c}`,
+      tr('paper.classN', { cls: c }),
     ),
   );
   routeBox.append(
-    h('legend', {}, 'Part B option'),
+    h('legend', {}, tr('paper.partB')),
     ...(['OPTION_I_ANALYSIS', 'OPTION_II_COMPUTERISED'] as const).map(r =>
       h(
         'label',
@@ -56,7 +57,7 @@ function setupPage(): HTMLElement {
             route = r;
           },
         }),
-        r === 'OPTION_I_ANALYSIS' ? ' Option I: Analysis of Financial Statements' : ' Option II: Computerised Accounting',
+        tr(r === 'OPTION_I_ANALYSIS' ? 'paper.opt1' : 'paper.opt2'),
       ),
     ),
   );
@@ -68,13 +69,7 @@ function setupPage(): HTMLElement {
   return h(
     'div',
     { class: 'paperpage' },
-    h(
-      'header',
-      { class: 'labhead' },
-      h('p', { class: 'eyebrow' }, 'Practice paper'),
-      h('h2', {}, 'A full paper, in the board pattern'),
-      h('p', { class: 'lead' }, '34 questions, 80 marks, 3 hours, with a marking scheme and a print view. Every answer is computed by the accounting engine.'),
-    ),
+    h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, tr('paper.eyebrow')), h('h2', {}, tr('paper.setup.h2')), h('p', { class: 'lead' }, tr('paper.setup.lead'))),
     h(
       'section',
       { class: 'panel' },
@@ -87,60 +82,53 @@ function setupPage(): HTMLElement {
             go();
           },
         },
-        h('fieldset', {}, h('legend', {}, 'Class'), ...clsRadios),
+        h('fieldset', {}, h('legend', {}, tr('paper.class')), ...clsRadios),
         routeBox,
-        h('label', { for: 'paper-seed' }, 'Paper number'),
+        h('label', { for: 'paper-seed' }, tr('paper.number')),
         seed,
-        h('p', { id: 'paper-seed-help', class: 'muted-line' }, 'The number decides the paper. The same number always gives the same paper, so you can share the link with a friend or a teacher.'),
-        h('button', { class: 'primary', type: 'submit' }, 'Make the paper'),
+        h('p', { id: 'paper-seed-help', class: 'muted-line' }, tr('paper.numberHelp')),
+        h('button', { class: 'primary', type: 'submit' }, tr('paper.make')),
       ),
     ),
     h(
       'section',
       { class: 'panel' },
-      h('h3', {}, 'How honest is this paper?'),
+      h('h3', {}, tr('paper.honest.h')),
       h(
         'ul',
         {},
-        h(
-          'li',
-          {},
-          'Class XII follows the pattern of the official CBSE Sample Question Paper 2026-27: 20 questions of 1 mark, 6 of 3, 3 of 4 and 5 of 6, with the unit marks of the blueprint and internal choice in six questions.',
-        ),
-        h(
-          'li',
-          {},
-          'Class XI: CBSE has not published a Class XI sample paper, so this paper uses the official unit marks (12 / 44 / 24) with the Class XII pattern. It is a practice paper, not an official blueprint.',
-        ),
-        h(
-          'li',
-          {},
-          'The questions are generated here (original wording). Each 6-mark question is one multi-step problem, marked step by step. Some 3- and 4-mark questions are sets of linked smaller questions on one topic, and the paper says so. Real board questions are longer, so use past papers and your textbook too.',
-        ),
-        h('li', {}, 'No subject teacher has reviewed these papers or the marking scheme yet.'),
-        h('li', {}, 'More on what is official and what is not: ', h('a', { href: '#/about' }, 'About and trust'), '.'),
+        h('li', {}, tr('paper.honest.1')),
+        h('li', {}, tr('paper.honest.2')),
+        h('li', {}, tr('paper.honest.3')),
+        h('li', {}, tr('paper.honest.4')),
+        h('li', {}, tr('paper.honest.5'), h('a', { href: '#/about' }, tr('paper.about')), '.'),
       ),
     ),
   );
 }
 
 // ───────────────────────── the paper ─────────────────────────
+/** Hindi text for a question when the generator has it (draft); otherwise the English, marked lang="en" in a Hindi page. */
+const mark = (n: number) => tr(n > 1 ? 'paper.marks.many' : 'paper.marks.one', { n });
 function itemView(it: PaperItem): HTMLElement {
-  const q = it.question;
+  const q = it.question,
+    hiq = state.lang === 'hi' ? q.hi : undefined;
   return h(
     'div',
     { class: 'pitem' },
-    h('p', { class: 'pstem' }, it.label ? h('b', {}, it.label + ' ') : null, q.stem),
+    h('p', { class: 'pstem' }, it.label ? h('b', {}, it.label + ' ') : null, hiq ? hiq.stem : en(q.stem)),
     h(
       'ol',
       { class: 'pparts' },
-      ...q.parts.map(p =>
+      ...q.parts.map((p, pi) =>
         h(
           'li',
           {},
-          p.label,
+          hiq?.parts[pi] ?? en(p.label),
           p.marks > 1 || q.parts.length > 1 ? h('span', { class: 'pmarks' }, ` [${p.marks}]`) : null,
-          p.kind === 'CHOICE' && p.options ? h('ul', { class: 'popts' }, ...p.options.map((o, i) => h('li', {}, `(${String.fromCharCode(97 + i)}) ${o}`))) : null,
+          p.kind === 'CHOICE' && p.options
+            ? h('ul', { class: 'popts' }, ...(hiq?.options?.[pi] ?? p.options).map((o, i) => h('li', {}, `(${String.fromCharCode(97 + i)}) `, hiq?.options?.[pi] ? o : en(o))))
+            : null,
         ),
       ),
     ),
@@ -153,12 +141,12 @@ function questionView(q: PaperQuestion): HTMLElement {
     h(
       'div',
       { class: 'pq-head' },
-      h('b', { class: 'pq-no' }, `Q${q.no}`),
-      h('span', { class: 'pq-marks' }, `[${q.marks} mark${q.marks > 1 ? 's' : ''}]`),
-      q.composite ? h('span', { class: 'chip' }, 'linked parts') : null,
+      h('b', { class: 'pq-no' }, tr('paper.q', { n: q.no })),
+      h('span', { class: 'pq-marks' }, mark(q.marks)),
+      q.composite ? h('span', { class: 'chip' }, tr('paper.linked')) : null,
     ),
     ...q.items.map(itemView),
-    q.alt ? h('p', { class: 'por' }, h('b', {}, 'OR')) : null,
+    q.alt ? h('p', { class: 'por' }, h('b', {}, tr('paper.or'))) : null,
     ...(q.alt ?? []).map(itemView),
   );
 }
@@ -171,10 +159,14 @@ function sheetPage(p: Paper): HTMLElement {
     return h(
       'section',
       { class: 'ppart', 'data-part': part },
-      h('h3', {}, `Part ${part}`, ' ', h('span', { class: 'muted-line' }, `Questions ${qs[0]!.no}-${qs[qs.length - 1]!.no}, ${qs.reduce((s, q) => s + q.marks, 0)} marks`)),
-      ...(part === 'B' && p.cls === 'XII'
-        ? [h('p', { class: 'muted-line' }, p.route === 'OPTION_I_ANALYSIS' ? 'Option I: Analysis of Financial Statements' : 'Option II: Computerised Accounting')]
-        : []),
+      h(
+        'h3',
+        {},
+        tr('paper.part', { p: state.lang === 'hi' ? (part === 'A' ? 'अ' : 'ब') : part }),
+        ' ',
+        h('span', { class: 'muted-line' }, tr('paper.partRange', { a: qs[0]!.no, b: qs[qs.length - 1]!.no, m: qs.reduce((s, q) => s + q.marks, 0) })),
+      ),
+      ...(part === 'B' && p.cls === 'XII' ? [h('p', { class: 'muted-line' }, tr(p.route === 'OPTION_I_ANALYSIS' ? 'paper.opt1' : 'paper.opt2').trim())] : []),
       ...qs.map(questionView),
     );
   });
@@ -184,39 +176,33 @@ function sheetPage(p: Paper): HTMLElement {
     h(
       'header',
       { class: 'paper-title' },
-      h('p', { class: 'eyebrow' }, 'Practice paper ' + p.seed),
-      h('h2', {}, p.title),
-      h('p', { class: 'muted-line' }, `Time: ${p.minutes / 60} hours · Maximum marks: ${p.maxMarks}`),
-      r.official ? null : h('p', { class: 'note warn' }, 'Not an official blueprint: the Class XI question pattern here is borrowed from Class XII.'),
+      h('p', { class: 'eyebrow' }, tr('paper.eyebrow') + ' ' + p.seed),
+      h('h2', {}, tr(r.official ? 'paper.title.xii' : 'paper.title.xi')),
+      h('p', { class: 'muted-line' }, tr('paper.time', { h: p.minutes / 60, m: p.maxMarks })),
+      r.official ? null : h('p', { class: 'note warn' }, tr('paper.notOfficial')),
     ),
-    h(
-      'ol',
-      { class: 'pinstr' },
-      h('li', {}, `This paper has ${r.questions} questions. All are compulsory; where an OR is shown, answer one of the two.`),
-      h('li', {}, 'The marks of each question are shown in brackets. Show your working: marks are given for the steps.'),
-      h('li', {}, 'Give amounts in rupees. Use the formats you learnt for journals, ledgers and statements.'),
-    ),
+    h('ol', { class: 'pinstr' }, h('li', {}, tr('paper.instr.1', { n: r.questions })), h('li', {}, tr('paper.instr.2')), h('li', {}, tr('paper.instr.3'))),
     ...parts,
   );
   const schemeEl = h(
     'section',
     { class: 'panel pscheme', 'data-scheme': '' },
-    h('h3', {}, 'Marking scheme and answers'),
-    h('p', { class: 'muted-line' }, 'The answers come from the accounting engine. Give marks for correct steps even when the final figure is wrong (follow-through).'),
+    h('h3', {}, tr('paper.scheme.h')),
+    h('p', { class: 'muted-line' }, tr('paper.scheme.note')),
     ...scheme.map(e =>
       h(
         'div',
         { class: 'ps-q', 'data-q': String(e.no) },
-        h('h4', {}, `Q${e.no} `, h('span', { class: 'muted-line' }, `[${e.marks}]`)),
-        h('table', { class: 'ps-table' }, h('tbody', {}, ...e.lines.map(l => h('tr', {}, h('td', {}, l.label), h('td', {}, l.answer), h('td', {}, `${l.marks}`))))),
-        h('details', {}, h('summary', {}, 'Working'), h('ol', {}, ...e.working.map(w => h('li', {}, w)))),
+        h('h4', {}, tr('paper.q', { n: e.no }) + ' ', h('span', { class: 'muted-line' }, `[${e.marks}]`)),
+        h('table', { class: 'ps-table' }, h('tbody', {}, ...e.lines.map(l => h('tr', {}, h('td', {}, en(l.label)), h('td', {}, l.answer), h('td', {}, `${l.marks}`))))),
+        h('details', {}, h('summary', {}, tr('paper.working')), h('ol', {}, ...e.working.map(w => h('li', {}, en(w))))),
         e.alt
           ? h(
               'div',
               {},
-              h('p', {}, h('b', {}, 'OR')),
-              h('table', { class: 'ps-table' }, h('tbody', {}, ...e.alt.lines.map(l => h('tr', {}, h('td', {}, l.label), h('td', {}, l.answer), h('td', {}, `${l.marks}`))))),
-              h('details', {}, h('summary', {}, 'Working (OR)'), h('ol', {}, ...e.alt.working.map(w => h('li', {}, w)))),
+              h('p', {}, h('b', {}, tr('paper.or'))),
+              h('table', { class: 'ps-table' }, h('tbody', {}, ...e.alt.lines.map(l => h('tr', {}, h('td', {}, en(l.label)), h('td', {}, l.answer), h('td', {}, `${l.marks}`))))),
+              h('details', {}, h('summary', {}, tr('paper.workingOr')), h('ol', {}, ...e.alt.working.map(w => h('li', {}, en(w))))),
             )
           : null,
       ),
@@ -231,30 +217,33 @@ function sheetPage(p: Paper): HTMLElement {
     h(
       'nav',
       { class: 'breadcrumb no-print', 'aria-label': 'Breadcrumb' },
-      h('a', { href: '#/' }, 'Home'),
+      h('a', { href: '#/' }, tr('study.home')),
       h('span', { 'aria-hidden': 'true' }, ' › '),
-      h('a', { href: '#/paper' }, 'Practice paper'),
+      h('a', { href: '#/paper' }, tr('paper.crumb')),
       h('span', { 'aria-hidden': 'true' }, ' › '),
-      h('span', { 'aria-current': 'page' }, `No. ${p.seed}`),
+      h('span', { 'aria-current': 'page' }, tr('paper.no', { n: p.seed })),
     ),
     h(
       'div',
       { class: 'actions no-print' },
-      h('button', { type: 'button', class: 'primary', 'data-print': '', onclick: () => window.print() }, 'Print or save as PDF'),
-      h('button', { type: 'button', onclick: () => make(1) }, 'Another paper'),
-      h('a', { class: 'button', href: '#/paper' }, 'Change class'),
+      h('button', { type: 'button', class: 'primary', 'data-print': '', onclick: () => window.print() }, tr('paper.printBtn')),
+      h('button', { type: 'button', onclick: () => make(1) }, tr('paper.another')),
+      h('a', { class: 'button', href: '#/paper' }, tr('paper.change')),
     ),
     h(
       'p',
       { class: 'note info paper-status no-print' },
-      `${r.pattern} ${r.composite} of the ${r.questions} questions are sets of linked smaller questions; ${r.singles} are single generated questions. Not reviewed by a subject teacher.`,
+      `${tr(r.official ? 'paper.pattern.official' : 'paper.pattern.xi')} ${tr('paper.status', { n: r.composite, total: r.questions, m: r.singles })}`,
     ),
+    state.lang === 'hi' && p.questions.some(q => [...q.items, ...(q.alt ?? [])].some(i => !i.question.hi))
+      ? h('p', { class: 'note warn no-print paper-english', lang: 'hi' }, tr('paper.questionEnglish'))
+      : null,
     sheet,
-    h('details', { class: 'no-print pscheme-wrap', 'data-scheme-toggle': '' }, h('summary', {}, 'Show the marking scheme and answers'), schemeEl),
+    h('details', { class: 'no-print pscheme-wrap', 'data-scheme-toggle': '' }, h('summary', {}, tr('paper.scheme.show')), schemeEl),
     h(
       'section',
       { class: 'panel prep no-print' },
-      h('h3', {}, 'Paper report'),
+      h('h3', {}, tr('paper.report')),
       h(
         'table',
         { class: 'ps-table' },
@@ -264,7 +253,7 @@ function sheetPage(p: Paper): HTMLElement {
           h(
             'tr',
             {},
-            h('th', {}, 'Questions by marks'),
+            h('th', {}, tr('paper.report.byMarks')),
             h(
               'td',
               {},
@@ -276,7 +265,7 @@ function sheetPage(p: Paper): HTMLElement {
           h(
             'tr',
             {},
-            h('th', {}, 'Marks by unit'),
+            h('th', {}, tr('paper.report.byUnit')),
             h(
               'td',
               {},
@@ -288,20 +277,15 @@ function sheetPage(p: Paper): HTMLElement {
           h(
             'tr',
             {},
-            h('th', {}, 'Typology marks (what is in this paper)'),
+            h('th', {}, tr('paper.report.typ')),
             h(
               'td',
               {},
-              `Recall/understand ${r.typologyMarks.RU}, apply ${r.typologyMarks.AP}, analyse/evaluate ${r.typologyMarks.AEC}. The board asks for about ${r.typologyTarget.RU} / ${r.typologyTarget.AP} / ${r.typologyTarget.AEC}; this app has few higher-order questions, so the mix differs.`,
+              tr('paper.report.typBody', { ru: r.typologyMarks.RU, ap: r.typologyMarks.AP, aec: r.typologyMarks.AEC, tru: r.typologyTarget.RU, tap: r.typologyTarget.AP, taec: r.typologyTarget.AEC }),
             ),
           ),
-          h(
-            'tr',
-            {},
-            h('th', {}, 'Repeated question types'),
-            h('td', {}, r.repeatedTypes === 0 ? 'None' : `${r.repeatedTypes} questions are the same type as an earlier one, with different numbers.`),
-          ),
-          h('tr', {}, h('th', {}, 'Internal choice'), h('td', {}, `${r.choices} questions`)),
+          h('tr', {}, h('th', {}, tr('paper.report.rep')), h('td', {}, r.repeatedTypes === 0 ? tr('paper.report.none') : tr('paper.report.repBody', { n: r.repeatedTypes }))),
+          h('tr', {}, h('th', {}, tr('paper.report.choice')), h('td', {}, tr('paper.report.choiceBody', { n: r.choices }))),
         ),
       ),
     ),
