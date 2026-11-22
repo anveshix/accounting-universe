@@ -89,7 +89,7 @@ describe('Bloom Hindi (draft, Remember level)', () => {
     for (const [clause, items] of Object.entries(BLOOM_BANK)) {
       items.forEach((it, i) => {
         const h = bloomHindi(clause, i);
-        if (it[0] !== 'R') return expect(h, `${clause}#${i} is not Remember`).toBeUndefined();
+        if (!'RUAN'.includes(it[0])) return;
         expect(h, `${clause}#${i}`).toBeDefined();
         const [q, correct, wrong, why] = h!;
         for (const t of [q, correct, why, ...wrong]) expect(t.trim().length, `${clause}#${i}`).toBeGreaterThan(0);
@@ -101,10 +101,10 @@ describe('Bloom Hindi (draft, Remember level)', () => {
     }
   });
   it('served questions carry Hindi whose options are in the same order as the English ones', () => {
-    for (const g of BLOOM_GENERATORS.filter(x => x.typology === 'RU')) {
+    for (const g of BLOOM_GENERATORS) {
       for (let s = 1; s <= 8; s++) {
         const q = makeQuestion(g.skill, s);
-        if (q.bloom !== 'REMEMBER') continue;
+        if (!['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYSE'].includes(q.bloom!)) continue;
         const hi = q.hi!;
         expect(hi, q.id).toBeDefined();
         const en = q.parts[0]!.options!,
