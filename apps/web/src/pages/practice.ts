@@ -126,7 +126,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
         h('button', { type: 'button', onclick: () => { void recommend(); } }, icon('target', 16), tr('prac.recommend'))),
       h('p', { class: 'hint' }, tr(`prac.b.${mode}` as Key)),
       qArticle = h('article', { class: 'question' },
-        h('p', { class: 'eyebrow' }, h('span', { lang: 'en' }, q.clause), ` · ${tr('ui.marks', { n: q.marks })} · ${t(L, `typology.${q.typology}`)}`), hi ? null : state.lang === 'hi' ? h('p', { class: 'note warn', lang: 'hi' }, t('hi', 'practice.noHindi')) : null, h('p', { class: 'stem', ...(hi ? { lang: 'hi' } : qlang) }, stem),
+        h('p', { class: 'eyebrow' }, h('span', { lang: 'en' }, q.clause), ` · ${tr('ui.marks', { n: q.marks })} · ${t(L, `typology.${q.typology}`)}`, q.bloom ? h('span', { class: 'bloom-level', 'data-bloom': q.bloom }, ` · ${t(L, `bloom.${q.bloom}`)}`) : null), hi ? null : state.lang === 'hi' ? h('p', { class: 'note warn', lang: 'hi' }, t('hi', 'practice.noHindi')) : null, h('p', { class: 'stem', ...(hi ? { lang: 'hi' } : qlang) }, stem),
         h('form', { onsubmit: (e: Event) => { e.preventDefault(); check(); } }, ...partsUi,
           h('div', { class: 'actions' }, submitBtn,
             mode !== 'BOARD' ? hintBtn : null, mode === 'BEGINNER' ? stepBtn : null, nextBtn)),

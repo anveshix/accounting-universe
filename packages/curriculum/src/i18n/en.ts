@@ -18,6 +18,12 @@ export const EN = {
   'typology.RU': 'Remembering & understanding',
   'typology.AP': 'Applying',
   'typology.AEC': 'Analysing & evaluating',
+  'bloom.REMEMBER': 'Remember',
+  'bloom.UNDERSTAND': 'Understand',
+  'bloom.APPLY': 'Apply',
+  'bloom.ANALYSE': 'Analyse',
+  'bloom.EVALUATE': 'Evaluate',
+  'bloom.CREATE': 'Create (choose the best design)',
   'learn.outcomes': 'Official learning outcomes',
   'learn.outcomesNote': 'The outcomes are quoted in the official English wording of the CBSE curriculum.',
   // Trial Balance Crisis (what-if challenge)

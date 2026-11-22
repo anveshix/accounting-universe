@@ -24,6 +24,7 @@ echo "== browser: one language switch (English / Hindi draft)"; node e2e/web-app
 echo "== browser: study guide (all 54 topics)"; node e2e/web-app-study.cjs
 echo "== browser: practice paper"; node e2e/web-app-paper.cjs
 echo "== browser: progress backup and restore"; node e2e/web-app-restore.cjs
+echo "== browser: Bloom practice"; node e2e/web-app-bloom.cjs
 echo "== browser: published site layout (/ and /legacy/)"; node e2e/web-app-site.cjs
 echo "== browser: legacy";    node e2e/legacy-smoke.cjs && node e2e/legacy-simulator-regression.cjs
 echo "ALL CHECKS PASSED"

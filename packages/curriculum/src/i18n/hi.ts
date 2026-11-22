@@ -18,6 +18,12 @@ export const HI: Record<Key, string> = {
   'typology.RU': 'स्मरण एवं बोध',
   'typology.AP': 'अनुप्रयोग',
   'typology.AEC': 'विश्लेषण एवं मूल्यांकन',
+  'bloom.REMEMBER': 'स्मरण',
+  'bloom.UNDERSTAND': 'समझ',
+  'bloom.APPLY': 'अनुप्रयोग',
+  'bloom.ANALYSE': 'विश्लेषण',
+  'bloom.EVALUATE': 'मूल्यांकन',
+  'bloom.CREATE': 'सृजन (सबसे उचित रचना चुनें)',
   'learn.outcomes': 'आधिकारिक अधिगम परिणाम',
   'learn.outcomesNote': 'अधिगम परिणाम CBSE पाठ्यक्रम के आधिकारिक अंग्रेज़ी पाठ में उद्धृत हैं।',
   // Trial Balance Crisis (what-if challenge)
