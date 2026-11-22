@@ -59,6 +59,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-study.cjs
       - name: Browser - practice paper
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-paper.cjs
+      - name: Browser - progress backup and restore
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-restore.cjs
       - name: Browser - published site layout (/ and /legacy/)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-site.cjs
       - name: Browser - legacy app

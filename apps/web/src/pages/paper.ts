@@ -233,7 +233,7 @@ function sheetPage(p: Paper): HTMLElement {
     h(
       'p',
       { class: 'note info paper-status no-print' },
-      `${tr(r.official ? 'paper.pattern.official' : 'paper.pattern.xi')} ${tr('paper.status', { n: r.composite, total: r.questions, m: r.singles })}`,
+      `${tr(r.official ? 'paper.pattern.official' : 'paper.pattern.xi')} ${tr('paper.status', { n: r.composite, total: r.questions, m: r.singles })}${r.compositeMixedTopic ? tr('paper.status.mixed', { n: r.compositeMixedTopic }) : ''}${r.repeatedQuestions ? tr('paper.status.repeats', { n: r.repeatedQuestions }) : ''}`,
     ),
     state.lang === 'hi' && p.questions.some(q => [...q.items, ...(q.alt ?? [])].some(i => !i.question.hi))
       ? h('p', { class: 'note warn no-print paper-english', lang: 'hi' }, tr('paper.questionEnglish'))

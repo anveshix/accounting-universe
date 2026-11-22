@@ -4,7 +4,7 @@
  * Nothing here ever leaves the device.
  */
 import { Machine } from '../../../packages/engine/src';
-import { STORAGE, type Attempt, type Export, type Profile, type Seen } from '../../../packages/curriculum/src';
+import { STORAGE, mergeAttempts, mergeProfile, mergeSeen, restoreSummary, type Attempt, type Export, type Profile, type RestoreSummary, type Seen } from '../../../packages/curriculum/src';
 import { register } from './machine-dom';
 export type { Attempt, Export, Profile, Seen };
 
@@ -112,3 +112,14 @@ export const setProject = (key: string, data: Record<string, unknown>) => replac
 export const ready = async () => { await open(); return storageMode; };
 
 export async function exportAll(): Promise<Export> { return { app: 'accounting-universe', version: 1, exportedAt: Date.now(), profile: await getProfile(), attempts: await attempts(), seen: await seen() }; }
+
+/** Restore progress from an exported file (new phone, cleared browser data). It is MERGED with what is already on this device and never replaces it;
+ *  importing the same file twice adds nothing. Rewards and levels are worked out from the attempts, so they come back with them. */
+export async function importProgress(file: Export): Promise<RestoreSummary> {
+  const summary = restoreSummary({ attempts: await attempts(), seen: await seen(), profile: await getProfile() }, file);
+  await replaceAll<Attempt>('attempts', cur => mergeAttempts(cur, file.attempts));
+  await replaceAll<Seen>('seen', cur => mergeSeen(cur, file.seen));
+  const keep = mergeProfile(await getProfile(), file.profile);
+  if (summary.profileTaken && keep) await setProfile(keep);
+  return summary;
+}

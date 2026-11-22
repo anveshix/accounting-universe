@@ -87,6 +87,75 @@ export function parseExport(raw: unknown): { ok: true; value: Export } | { ok: f
   return { ok: true, value: raw as Export };
 }
 
+// ───────────── restoring progress from an exported file (new phone, cleared browser data) ─────────────
+
+const attemptKey = (a: Attempt) => [a.t, a.skill, a.seed, a.mode, a.marks, a.outOf].join('|');
+const seenKey = (x: Seen) => [x.lab, x.tab, x.t].join('|');
+const validSeen = (x: unknown): x is Seen => {
+  const o = x as Record<string, unknown>;
+  return !!o && typeof o.lab === 'string' && typeof o.t === 'number' && (o.tab === 'learn' || o.tab === 'example' || o.tab === 'try');
+};
+const validProfile = (p: unknown): p is Profile => {
+  const o = p as Record<string, unknown>;
+  return !!o && (o.cls === 'XI' || o.cls === 'XII') && (o.route === 'OPTION_I_ANALYSIS' || o.route === 'OPTION_II_COMPUTERISED') && typeof o.name === 'string';
+};
+
+/** Union of what is on this device and what the file holds. An attempt is the same one if its time, skill, seed, mode and marks are equal, so importing twice adds nothing.
+ *  Oldest first, because "recent accuracy" reads the end of the list. */
+export function mergeAttempts(current: readonly Attempt[], incoming: readonly Attempt[]): Attempt[] {
+  const seen = new Set(current.map(attemptKey)),
+    out = [...current];
+  for (const a of incoming) {
+    const k = attemptKey(a);
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push(a);
+    }
+  }
+  return out
+    .map((a, i) => ({ a, i }))
+    .sort((x, y) => x.a.t - y.a.t || x.i - y.i)
+    .map(x => x.a);
+}
+export function mergeSeen(current: readonly Seen[], incoming: readonly unknown[]): Seen[] {
+  const seen = new Set(current.map(seenKey)),
+    out = [...current];
+  for (const x of incoming)
+    if (validSeen(x)) {
+      const k = seenKey(x);
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push(x);
+      }
+    }
+  return out
+    .map((a, i) => ({ a, i }))
+    .sort((x, y) => x.a.t - y.a.t || x.i - y.i)
+    .map(x => x.a);
+}
+/** The profile to keep: the one on this device unless it is empty (no profile yet, or no name), in which case the file's profile is taken. */
+export function mergeProfile(current: Profile | null, incoming: unknown): Profile | null {
+  if (current && current.name.trim() !== '') return current;
+  return validProfile(incoming) ? incoming : current;
+}
+export interface RestoreSummary {
+  readonly attemptsAdded: number;
+  readonly attemptsAlreadyHere: number;
+  readonly seenAdded: number;
+  readonly profileTaken: boolean;
+}
+export function restoreSummary(cur: { attempts: readonly Attempt[]; seen: readonly Seen[]; profile: Profile | null }, file: Export): RestoreSummary {
+  const a = mergeAttempts(cur.attempts, file.attempts),
+    s = mergeSeen(cur.seen, file.seen),
+    p = mergeProfile(cur.profile, file.profile);
+  return {
+    attemptsAdded: a.length - cur.attempts.length,
+    attemptsAlreadyHere: file.attempts.length - (a.length - cur.attempts.length),
+    seenAdded: s.length - cur.seen.length,
+    profileTaken: p !== cur.profile,
+  };
+}
+
 export function classReport(files: readonly { file: string; data: unknown }[], labsOfClause: (c: string) => readonly string[] = () => []): ClassReport {
   const good: { name: string; e: Export }[] = [], skipped: string[] = [];
   for (const f of files) {

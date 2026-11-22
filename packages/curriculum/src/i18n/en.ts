@@ -263,7 +263,7 @@ export const EN = {
   'paper.honest.2':
     'Class XI: CBSE has not published a Class XI sample paper, so this paper uses the official unit marks (12 / 44 / 24) with the Class XII pattern. It is a practice paper, not an official blueprint.',
   'paper.honest.3':
-    'The questions are generated here (original wording). Each 6-mark question is one multi-step problem, marked step by step. Some 3- and 4-mark questions are sets of linked smaller questions on one topic, and the paper says so. Real board questions are longer, so use past papers and your textbook too.',
+    'The questions are generated here (original wording), and no question appears twice in a paper. Each 6-mark question is one multi-step problem, marked step by step. Some 3- and 4-mark questions are sets of linked smaller questions on one topic, and the paper says so. Real board questions are longer, so use past papers and your textbook too.',
   'paper.honest.4': 'No subject teacher has reviewed these papers or the marking scheme yet.',
   'paper.honest.5': 'More on what is official and what is not: ',
   'paper.about': 'About and trust',
@@ -305,5 +305,7 @@ export const EN = {
   'paper.questionEnglish': 'This question is not yet available in Hindi; it is shown in English.',
   'paper.pattern.official': 'Official Class XII blueprint (Sample Question Paper 2026-27): 34 questions, 80 marks, 3 hours.',
   'paper.pattern.xi': 'Official Class XI unit marks (12 / 44 / 24) with the Class XII question pattern; no Class XI sample paper is published yet.',
+  'paper.status.mixed': ' {n} of the linked questions combine different topics of the same unit.',
+  'paper.status.repeats': ' {n} question(s) repeat one already in this paper, because this unit has too few different questions.',
 } as const;
 export type Key = keyof typeof EN;
