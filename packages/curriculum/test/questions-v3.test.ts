@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SKILLS, makeQuestion } from '../src';
 
 // Independent oracles: figures worked by hand from the stem, never read from the generator's own answer.
-const nums = (stem: string) => [...stem.replace(/₹(\d)/g, '$1').matchAll(/(\d{1,3}(?:,\d{2,3})*(?:,\d{3})?|\d+)/g)].map(m => Number(m[1]!.replace(/,/g, '')));
+const _nums = (stem: string) => [...stem.replace(/₹(\d)/g, '$1').matchAll(/(\d{1,3}(?:,\d{2,3})*(?:,\d{3})?|\d+)/g)].map(m => Number(m[1]!.replace(/,/g, '')));
 const ans = (skill: string, seed: number) => makeQuestion(skill, seed).parts.map(p => p.answer);
 
 describe('step-wise questions: each step follows from the previous one', () => {

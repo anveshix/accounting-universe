@@ -21,6 +21,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
   page.on('pageerror', e => errors.push('pageerror: ' + e.message)); page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   const go = async hash => { await page.goto(BASE + hash); await page.waitForSelector('html[data-app="ready"]'); await page.waitForSelector('main[data-route]'); };
   const axe = async (label) => {
+    await page.waitForFunction(() => !document.querySelector('.toast') && document.getAnimations().every(a => a.playState !== 'running'), null, { timeout: 12000 }).catch(() => {});
     await page.evaluate(AXE);
     const r = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ['violations'] })).violations.filter(v => v.impact === 'serious' || v.impact === 'critical').map(v => `${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(' ')}`));
     ok(r.length === 0, `axe ${label}: no serious/critical violations — ${r.join('; ')}`);
@@ -67,7 +68,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     ok(/अंक/.test(await page.textContent('.question [role=status]')), 'hindi: result line in Hindi');
     await axe('practice (HI)');
     await page.click('[data-lang-toggle]'); await page.waitForSelector('html[data-lang="en"]');
-    ok(await page.$('[data-hindi-draft]') === null, 'hindi: switching back to English removes Hindi');
+    ok(await page.isHidden('[data-hindi-draft]') && (await page.$eval('html', e => e.getAttribute('lang'))) === 'en', 'hindi: switching back to English hides the draft notice and sets the page language back to en');
 
     // header controls are really on the page (the projector button used to be created but never inserted)
     await go('#/'); ok(await page.isVisible('header .display-btn') && await page.isVisible('header [data-lang-toggle]'), 'header: display and language buttons are visible'); await page.click('header .display-btn');
@@ -76,7 +77,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
     await go('#/cards'); await page.click('a.card'); await page.waitForSelector('[role=radiogroup]');
     await page.click('button[role=radio]:has-text("Hinglish")');
     await go('#/practice/ledger-side/5/board'); await page.waitForSelector('.question');
-    ok(await page.$('[data-hindi-draft]') === null && await page.$('html[data-lang="hi"]') === null, 'hinglish card toggle does not change the app language');
+    ok(await page.isHidden('[data-hindi-draft]') && await page.$('html[data-lang="hi"]') === null, 'hinglish card toggle does not change the app language');
     // Trainer: rounds are 15 questions drawn from hand-written + migrated scenes
     await go('#/trainer'); await page.waitForSelector('[data-machine="trainer-round"]');
     ok(/Question 1 of 15/.test(await page.textContent('main')), 'trainer: a round is 15 questions');

@@ -767,3 +767,55 @@ button, .button { border-color: var(--line-ctl); }
 .modes { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
 .modes::-webkit-scrollbar { display: none; }
 .modes button { white-space: nowrap; flex: none; }
+
+/* The global button:hover rule paints buttons light; the header buttons sit on the dark bar and must keep light text (found after merging the design-system rewrite:
+   the language button turned into a white box with invisible text while hovered) */
+header.top .lang:hover, header.top .display-btn:hover, header.top .menu:hover, header.top .lang:focus-visible, header.top .display-btn:focus-visible, header.top .menu:focus-visible { background: rgba(255,255,255,.22) !important; color: var(--brand-ink) !important; border-color: rgba(255,255,255,.65) !important; }
+
+/* ---------- Study guide (chapter-wise, topic-wise notes) ---------- */
+.unit-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .7rem; margin-bottom: .4rem; } .unit-head h3 { margin: 0; flex: 1 1 14rem; }
+.topic-list { list-style: none; margin: 0; padding: 0; }
+.topic-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem .8rem; padding: .55rem 0; border-top: 1px solid var(--line); }
+.topic-list li:first-child { border-top: 0; }
+.topic-link { display: flex; gap: .7rem; align-items: baseline; flex: 1 1 22rem; color: var(--ink); text-decoration: none; font-weight: 600; }
+.topic-link:hover .topic-title { text-decoration: underline; }
+.topic-no { width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--info-bg); color: var(--brand); display: inline-grid; place-items: center; font-size: .8rem; flex: none; }
+.topic-meta { display: flex; flex-wrap: wrap; gap: .3rem; }
+.study-link { color: inherit; text-decoration: none; } .study-link:hover { text-decoration: underline; }
+.study-sec h3 { margin-top: 0; }
+.study-list, .study-steps, .study-mistakes, .tool-links { margin: .2rem 0 0; padding-left: 1.2rem; line-height: 1.6; } .study-list li, .study-steps li, .study-mistakes li { margin-bottom: .4rem; }
+.study-formats { margin: 0; padding: 0; list-style: none; } .study-formats li { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92rem; background: var(--info-bg); border-radius: 8px; padding: .45rem .7rem; margin-bottom: .4rem; overflow-wrap: anywhere; }
+.study-sec.mistakes { border-left: 4px solid var(--bad); }
+.study-sec.example { border-left: 4px solid var(--good); } .ex-a summary { cursor: pointer; font-weight: 650; min-height: 44px; display: flex; align-items: center; }
+.study-pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem; margin: 1rem 0; }
+.study-status { font-size: .85rem; }
+@media print {
+  header.top, nav#nav, .banner, .draft-banner, .no-print, .skip, .hud-wrap, .english-only-note, button { display: none !important; }
+  body, main { background: #fff !important; color: #000 !important; box-shadow: none !important; }
+  .panel, .study-sec { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
+  a { color: #000 !important; text-decoration: none !important; }
+  details.ex-a { display: block; } details.ex-a > * { display: block; }
+}
+
+/* ── practice paper ── */
+.paper-form { display: grid; gap: .75rem; max-width: 34rem; }
+.paper-form fieldset { border: 1px solid var(--line, #cbd5e1); border-radius: .5rem; padding: .5rem .75rem; }
+.paper-form .choice { display: block; padding: .25rem 0; }
+.paper-sheet { background: #fff; color: #111; border: 1px solid var(--line, #cbd5e1); border-radius: .5rem; padding: 1.25rem 1.5rem; margin: 1rem 0; }
+.paper-sheet h2, .paper-sheet h3 { color: #111; }
+.paper-title { text-align: center; border-bottom: 2px solid #111; margin-bottom: .75rem; padding-bottom: .5rem; }
+.pinstr { font-size: .9rem; margin: 0 0 1rem 1.2rem; }
+.pq { padding: .6rem 0; border-bottom: 1px dashed #bbb; break-inside: avoid; }
+.pq-head { display: flex; gap: .6rem; align-items: baseline; }
+.pq-marks { margin-left: auto; font-weight: 600; }
+.pstem { white-space: pre-line; margin: .35rem 0; }
+.pparts, .popts { margin: .2rem 0 .2rem 1.4rem; }
+.popts { list-style: none; margin-left: .6rem; }
+.por { text-align: center; margin: .4rem 0; }
+.ps-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.ps-table td, .ps-table th { border: 1px solid var(--line, #cbd5e1); padding: .25rem .5rem; text-align: left; }
+@media print {
+  .pscheme-wrap[open] { page-break-before: always; }
+  .paper-sheet { border: 0; padding: 0; margin: 0; font-size: 11pt; }
+  .pq { border-bottom: 0; }
+}

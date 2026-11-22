@@ -75,11 +75,11 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     ok(await page.$eval('button[type=submit]', e => e.disabled), 'practice: Check is disabled once submitted');
     ok(await page.$eval('text=Next hint', e => e.disabled), 'practice: hints stop after submission');
     ok(await page.$eval('text=Next question', e => !e.hidden), 'practice: Next appears from state');
-    await page.goto(BASE + '#/progress'); await page.waitForSelector('.lead');
+    await page.waitForSelector('html[data-saving="0"]'); await page.goto(BASE + '#/progress'); await page.waitForSelector('.lead');
     const n1 = Number((await page.$eval('.lead', e => e.textContent)).match(/(\d+) practice attempts/)[1]);
     await page.goto(BASE + '#/practice/dep-wdv/4242/practice'); await page.waitForSelector('.question');
     await page.click('button[type=submit]'); await page.waitForSelector('[data-state="SUBMITTED"]'); await page.evaluate(() => document.querySelector('form').requestSubmit()); await page.evaluate(() => document.querySelector('form').requestSubmit());
-    await page.goto(BASE + '#/progress'); await page.waitForSelector('.lead');
+    await page.waitForSelector('html[data-saving="0"]'); await page.goto(BASE + '#/progress'); await page.waitForSelector('.lead');
     const n2 = Number((await page.$eval('.lead', e => e.textContent)).match(/(\d+) practice attempts/)[1]);
     ok(n2 === n1 + 1, `practice: three submits record ONE attempt (${n1} → ${n2})`);
     // beginner: wrong answers can be retried; help is limited and says why

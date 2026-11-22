@@ -27,6 +27,24 @@ describe('route table', () => {
     for (const n of NAV) expect(resolve(n.hash.replace(/^#\/?/, '').split('/').filter(Boolean)).nav, n.key).toBe(n.key);
   });
   it('pages added after the refactor resolve too', () => { expect(resolve(['crisis'])).toEqual({ id: 'crisis', nav: 'Visual labs', rest: [] }); expect(resolve(['crisis', '42']).rest).toEqual(['42']); });
+  it('the about page resolves under Help and takes no extra segments', () => {
+    expect(resolve(['about'])).toEqual({ id: 'about', nav: 'Help', rest: [] });
+    expect(resolve(['about', 'x']).id).toBe('notfound');
+  });
+  it('the practice paper resolves under Practice and rejects malformed addresses', () => {
+    expect(resolve(['paper'])).toEqual({ id: 'paper', nav: 'Practice', rest: [] });
+    expect(resolve(['paper', 'XII', 'I', '5']).id).toBe('paper');
+    expect(resolve(['paper', 'XI', '5']).id).toBe('paper');
+    for (const bad of [['XIII', '1'], ['XII', 'III', '1'], ['XII', 'I', 'x'], ['XI']]) expect(resolve(['paper', ...bad]).id).toBe('notfound');
+  });
+  it('the study guide resolves for a class and for a topic, highlights its own class, and rejects malformed addresses', () => {
+    expect(resolve(['study'])).toEqual({ id: 'study', nav: 'Class XI', rest: [] });
+    expect(resolve(['study', 'XI'])).toEqual({ id: 'study', nav: 'Class XI', rest: ['XI'] });
+    expect(resolve(['study', 'XII'])).toEqual({ id: 'study', nav: 'Class XII', rest: ['XII'] });
+    expect(resolve(['study', 'XII.1.admission'])).toEqual({ id: 'study', nav: 'Class XII', rest: ['XII.1.admission'] });
+    expect(resolve(['study', 'XI.2.journal']).nav).toBe('Class XI');
+    for (const bad of [['study', 'foo'], ['study', 'XI', 'x'], ['study', 'XIII.1'], ['study', 'XI.2.a.b.c']]) expect(resolve(bad).id, JSON.stringify(bad)).toBe('notfound');
+  });
   it('passes the rest of the path to the page', () => { expect(resolve(['practice', 'dep-wdv', '7', 'board']).rest).toEqual(['dep-wdv', '7', 'board']); });
   it('hashFor encodes segments', () => { expect(hashFor('rescue', 'XI.2.brs')).toBe('#/rescue/XI.2.brs'); expect(hashFor('lab', 'a b')).toBe('#/lab/a%20b'); });
 });

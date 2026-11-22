@@ -13,6 +13,7 @@ import { Rng } from './rng';
 import { V1_GENERATORS } from './questions-v1';
 import { V2_GENERATORS } from './questions-v2';
 import { V3_GENERATORS } from './questions-v3';
+import { V4_GENERATORS } from './questions-v4';
 
 export type PartKind = 'MONEY' | 'FRACTION' | 'TEXT' | 'CHOICE';
 export interface Part { readonly label: string; readonly kind: PartKind; readonly answer: string; readonly marks: number; readonly unit?: string; /** CHOICE only: the options shown (the answer is one of them). */ readonly options?: readonly string[]; }
@@ -521,7 +522,7 @@ export const GENERATORS: readonly Gen[] = [
   },
 ];
 
-export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS, ...V2_GENERATORS, ...V3_GENERATORS];
+export const ALL_GENERATORS: readonly Gen[] = [...GENERATORS, ...V1_GENERATORS, ...V2_GENERATORS, ...V3_GENERATORS, ...V4_GENERATORS];
 export const SKILLS = ALL_GENERATORS.map(g => ({ skill: g.skill, clause: g.clause, title: g.title, typology: g.typology }));
 
 /** The generator's output exactly as written (no safety filtering) — used by tests to keep the generators themselves honest. */
@@ -543,7 +544,14 @@ export function checkAnswer(p: Part, input: string): boolean {
   const t = input.trim();
   if (!t) return false;
   if (p.kind === 'CHOICE') { const norm = (x: string) => x.trim().replace(/\s+/g, ' ').toLowerCase(); return (p.options ?? []).some(o => norm(o) === norm(t)) && norm(t) === norm(p.answer); }
-  if (p.kind === 'TEXT') return t.replace(/[,\s₹]/g, '').toLowerCase() === p.answer.replace(/[,\s₹]/g, '').toLowerCase();
+  if (p.kind === 'TEXT') {
+    const a = t.replace(/[,\s₹]/g, '').toLowerCase(), b = p.answer.replace(/[,\s₹]/g, '').toLowerCase();
+    if (a === b) return true;
+    // plain numbers ("2", "2.0", "2.00" are the same ratio): compare as decimal text, never as floats
+    const num = (x: string) => (/^-?\d+(\.\d+)?$/.test(x) ? x.replace(/^(-?)0+(?=\d)/, '$1').replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') : null);
+    const na = num(a), nb = num(b);
+    return na !== null && nb !== null && na === nb;
+  }
   if (p.kind === 'FRACTION') {
     const m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t) ?? /^(-?\d+)$/.exec(t);
     if (!m) return false;

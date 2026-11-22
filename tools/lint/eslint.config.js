@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/dist/**', 'index.html', '*.html', '**/legacy-v1.ts', '*.js', '!tools/lint/eslint.config.js', '**/coverage/**'] },
+  { ignores: ['.claude/**', '**/node_modules/**', '**/dist/**', 'index.html', '*.html', '**/legacy-v1.ts', '*.js', '!tools/lint/eslint.config.js', '**/coverage/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
