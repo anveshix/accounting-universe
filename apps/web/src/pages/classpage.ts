@@ -27,7 +27,7 @@ export function classPage(cls: ClassLevel): HTMLElement {
           ? h('div', { class: 'labs', style: 'margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.3rem' }, ...labs.map(id => h('a', { class: 'pill' + (isCard(id) ? ' card-pill' : ''), href: hrefOf(id) }, en(titleOf(id)))))
           : h('span', { class: 'pill none' }, tr('cls.notBuilt'));
         return h('li', {},
-          h('div', {}, h('b', { style: 'font-weight:650' }, en(c.title)), ' ', h('span', { class: 'cid', lang: 'en', title: tr('cls.code') }, c.id), c.limit ? h('em', { class: 'limit' }, tr('cls.limit'), en(c.limit)) : null),
+          h('div', {}, h('b', { style: 'font-weight:650' }, h('a', { class: 'study-link', href: `#/study/${c.id}` }, en(c.title))), ' ', h('span', { class: 'cid', lang: 'en', title: tr('cls.code') }, c.id), c.limit ? h('em', { class: 'limit' }, tr('cls.limit'), en(c.limit)) : null),
           labsNode);
       })));
   });
@@ -42,6 +42,7 @@ export function classPage(cls: ClassLevel): HTMLElement {
     h('div', { style: 'display:flex;gap:.6rem;flex-wrap:wrap;margin:0 0 1.2rem' },
       h('a', { class: 'button primary', href: '#/labs' }, tr('cls.openLabs')),
       h('a', { class: 'button', href: '#/practice' }, tr('cls.practise')),
+      h('a', { class: 'button', href: `#/study/${cls}` }, tr('cls.study')),
       h('a', { class: 'button', href: '#/cards' }, tr('home.cards'))),
     ...unitSections);
 }

@@ -39,9 +39,12 @@ function open(): Promise<IDBDatabase | null> {
 const wrap = <T>(r: IDBRequest<T>) => new Promise<T>((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 
 async function add(store: string, v: unknown): Promise<void> {
-  const db = await open();
-  if (!db) { mem[store]!.push(v); return; }
-  try { await wrap(db.transaction(store, 'readwrite').objectStore(store).add(v)); } catch { storage.send('WRITE_FAILED'); mem[store]!.push(v); }
+  pending(1);                                     // <html data-saving="1"> while any write is still in flight (see replaceAll below)
+  try {
+    const db = await open();
+    if (!db) { mem[store]!.push(v); return; }
+    try { await wrap(db.transaction(store, 'readwrite').objectStore(store).add(v)); } catch { storage.send('WRITE_FAILED'); mem[store]!.push(v); }
+  } finally { pending(-1); }
 }
 async function all<T>(store: string): Promise<T[]> {
   const db = await open();
@@ -58,8 +61,9 @@ async function clearStore(store: string) {
 // These used to be "read everything, clear the store, add the records back" as separate steps. Two quick saves could interleave and leave the OLDER
 // state on disk, and a reload between "clear" and "add" lost the data. Now each save is ONE IndexedDB transaction (all or nothing) and saves to the
 // same store run strictly one after another. <html data-saving="0|1"> tells tests (and anyone curious) when nothing is waiting to be written.
-let writing = 0;
+let writing = 0;                                 // writes in flight (appends and replacing saves)
 const queues: Record<string, Promise<unknown>> = {};
+function pending(delta: number) { writing += delta; showSaving(); }
 const showSaving = () => { if (typeof document !== 'undefined') document.documentElement.setAttribute('data-saving', writing > 0 ? '1' : '0'); };
 showSaving();
 function serial<T>(store: string, job: () => Promise<T>): Promise<T> {

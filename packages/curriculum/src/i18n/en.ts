@@ -88,6 +88,7 @@ export const EN = {
   'crisis.scaleOff': 'The totals differ by {amount}.',
   'crisis.scaleOn': 'The totals agree.',
   // Phase 2: whole-app chrome
+  'cls.study': 'Study guide',
   'nav.Home': 'Home',
   'nav.Class XI': 'Class XI',
   'nav.Class XII': 'Class XII',

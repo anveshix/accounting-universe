@@ -118,7 +118,7 @@ const ALLOWED = new Set(['CBSE', 'depreciation', 'goodwill', 'ratio', 'XI', 'XII
     await axe('labs (HI)');
     await checkPage('#/class/XI', 'class map');
     ok(
-      DEV.test(await page.textContent('main h2')) && (await page.$$eval('.clauselist b > [lang="en"]', e => e.length)) >= 10,
+      DEV.test(await page.textContent('main h2')) && (await page.$$eval('.clauselist b [lang="en"]', e => e.length)) >= 10,
       'Hindi class map: heading Hindi, topic titles stay English and are marked',
     );
     await axe('class map (HI)');

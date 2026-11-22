@@ -88,6 +88,7 @@ export const HI: Record<Key, string> = {
   'crisis.scaleOff': 'योगों में {amount} का अंतर है।',
   'crisis.scaleOn': 'योग मिल गए।',
   // Phase 2: whole-app chrome
+  'cls.study': 'अध्ययन मार्गदर्शिका',
   'nav.Home': 'मुखपृष्ठ',
   'nav.Class XI': 'कक्षा XI',
   'nav.Class XII': 'कक्षा XII',

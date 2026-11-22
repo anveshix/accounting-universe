@@ -55,6 +55,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-polish.cjs
       - name: Browser - one language switch (English / Hindi draft)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-lang.cjs
+      - name: Browser - study guide (all 54 topics)
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-study.cjs
       - name: Browser - published site layout (/ and /legacy/)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-site.cjs
       - name: Browser - legacy app
