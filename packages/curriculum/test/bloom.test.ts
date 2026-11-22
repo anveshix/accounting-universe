@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { BAND_OF, BLOOM_BANK, BLOOM_GENERATORS, BLOOM_LEVELS, bloomItems } from '../src/bloom';
+import { BAND_OF, BLOOM_BANK, BLOOM_GENERATORS, BLOOM_LEVELS, bloomHindi, bloomItems } from '../src/bloom';
 import { CLAUSES } from '../src/syllabus';
 import { ALL_GENERATORS, checkAnswer, makeQuestion } from '../src/questions';
 
 // Minimums per topic, set so that every topic can be practised at every level without seeing the same question straight away.
-const MIN: Record<string, number> = { REMEMBER: 2, UNDERSTAND: 2, APPLY: 3, ANALYSE: 1, EVALUATE: 1, CREATE: 1 };
+const MIN: Record<string, number> = { REMEMBER: 2, UNDERSTAND: 2, APPLY: 3, ANALYSE: 2, EVALUATE: 2, CREATE: 1 };
 
 describe('Bloom practice bank', () => {
   it('covers every one of the 54 syllabus topics', () => {
@@ -13,10 +13,10 @@ describe('Bloom practice bank', () => {
     expect(Object.keys(BLOOM_BANK).filter(k => !CLAUSES.some(c => c.id === k))).toEqual([]);
   });
 
-  it('gives every topic the minimum number of items at every Bloom level and at least 8 in all', () => {
+  it('gives every topic the minimum number of items at every Bloom level and at least 12 in all', () => {
     for (const c of CLAUSES) {
       for (const lv of BLOOM_LEVELS) expect(bloomItems(c.id, lv).length, `${c.id} ${lv}`).toBeGreaterThanOrEqual(MIN[lv]!);
-      expect(BLOOM_BANK[c.id]!.length, c.id).toBeGreaterThanOrEqual(8);
+      expect(BLOOM_BANK[c.id]!.length, c.id).toBeGreaterThanOrEqual(12);
     }
   });
 
@@ -37,7 +37,7 @@ describe('Bloom practice bank', () => {
     }
   });
 
-  it('length giveaway is bounded (known limitation, ratchet: the older concept banks sit near 45 %, this bank near 71 %)', () => {
+  it('the correct option is the strictly longest in about a quarter of the items, not most of them', () => {
     let longest = 0,
       total = 0;
     for (const items of Object.values(BLOOM_BANK))
@@ -45,7 +45,7 @@ describe('Bloom practice bank', () => {
         total++;
         if (correct.length > Math.max(...wrong.map(w => w.length))) longest++;
       }
-    expect(longest / total).toBeLessThan(0.75);
+    expect(longest / total).toBeLessThan(0.3);
   });
 
   it('keeps to the official limits: no excluded topics appear', () => {
@@ -74,6 +74,46 @@ describe('Bloom practice bank', () => {
       const stems = new Set<string>();
       for (let s = 1; s <= n * 40; s++) stems.add(makeQuestion(g.skill, s).stem);
       expect(stems.size, g.skill).toBe(n);
+    }
+  });
+});
+
+describe('Bloom Hindi (draft, Remember level)', () => {
+  const DEV = /[ऀ-ॿ]/;
+  const nums = (t: string) =>
+    (t.match(/[₹\d][\d,.]*/g) ?? [])
+      .map(x => x.replace(/[,.]+$/, ''))
+      .sort()
+      .join('|');
+  it('every Remember item has an aligned Hindi version with the same figures', () => {
+    for (const [clause, items] of Object.entries(BLOOM_BANK)) {
+      items.forEach((it, i) => {
+        const h = bloomHindi(clause, i);
+        if (it[0] !== 'R') return expect(h, `${clause}#${i} is not Remember`).toBeUndefined();
+        expect(h, `${clause}#${i}`).toBeDefined();
+        const [q, correct, wrong, why] = h!;
+        for (const t of [q, correct, why, ...wrong]) expect(t.trim().length, `${clause}#${i}`).toBeGreaterThan(0);
+        expect(DEV.test(q), `${clause}#${i}`).toBe(true);
+        expect(nums(correct), `${clause}#${i} correct figures`).toBe(nums(it[2]));
+        expect(new Set([correct, ...wrong]).size, `${clause}#${i}`).toBe(4);
+        expect(/[一-鿿]/.test([q, correct, why, ...wrong].join('')), `${clause}#${i} stray CJK`).toBe(false);
+      });
+    }
+  });
+  it('served questions carry Hindi whose options are in the same order as the English ones', () => {
+    for (const g of BLOOM_GENERATORS.filter(x => x.typology === 'RU')) {
+      for (let s = 1; s <= 8; s++) {
+        const q = makeQuestion(g.skill, s);
+        if (q.bloom !== 'REMEMBER') continue;
+        const hi = q.hi!;
+        expect(hi, q.id).toBeDefined();
+        const en = q.parts[0]!.options!,
+          correctAt = en.indexOf(q.parts[0]!.answer);
+        expect(hi.options![0]!.length).toBe(4);
+        expect(nums(hi.options![0]![correctAt]!), q.id).toBe(nums(q.parts[0]!.answer));
+        expect(hi.parts.length).toBe(1);
+        expect(hi.hints.length).toBe(q.hints.length);
+      }
     }
   });
 });

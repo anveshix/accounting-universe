@@ -31,6 +31,19 @@ const ok = (c, m) => {
     ok((await page.locator('main select:not(#skillsel) option').count()) >= 4, `${s} shows its options`);
     ok(!(await page.textContent('main')).match(/undefined|NaN|\[object/), `${s} has no broken text`);
   }
+  // Hindi: a Remember-level skill is shown in Devanagari, options and all, with no draft-English notice for the question
+  await page.click('[data-lang-toggle]');
+  await page.waitForSelector('html[data-lang="hi"]');
+  let hindiOk = 0;
+  for (const s of ['bl-xi-1-intro-ru', 'bl-xii-2-debentures-ru', 'bl-xii-4-preparation-ru']) {
+    await page.goto(U + '#/practice/' + s);
+    await page.waitForSelector('.bloom-level');
+    const txt = await page.textContent('main .question, main');
+    const opts = await page.$$eval('main select:not(#skillsel) option', os => os.map(o => o.textContent));
+    if (/[ऀ-ॿ]/.test(txt) && opts.length >= 4) hindiOk++;
+  }
+  ok(hindiOk === 3, `Hindi shows Devanagari text and options for Remember-level skills (${hindiOk}/3)`);
+  await page.click('[data-lang-toggle]');
   ok(['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYSE', 'EVALUATE', 'CREATE'].every(l => seen.has(l)) || seen.size >= 4, `several Bloom levels appear (${[...seen].join(',')})`);
   await b.close();
   srv.kill();
