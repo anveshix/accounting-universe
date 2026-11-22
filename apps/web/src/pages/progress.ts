@@ -1,6 +1,6 @@
 import { LEVELS, assignmentProgress, clauseById, mistakeTally, nextSkill, parseAssignment, SKILLS, summariseClauses, type Assignment } from '../../../../packages/curriculum/src';
 import { h, mount } from '../dom';
-import { type Attempt, type Seen, assignmentsAll, attempts, exportAll, resetAll, saveAssignment, seen, setProfile, storageMode } from '../store';
+import { type Attempt, type Seen, assignmentsAll, exportAll, resetAll, saveAssignment, setProfile, storageMode } from '../store';
 import { state } from '../state';
 import { labsOfClause } from '../labs';
 import { parseExport } from '../../../../packages/curriculum/src';

@@ -71,7 +71,7 @@ const ALLOWED = new Set(['CBSE', 'depreciation', 'goodwill', 'ratio', 'XI', 'XII
     ok((await page.$eval('html', e => e.getAttribute('lang'))) === 'en', 'English: html lang is en');
     const navEn = await page.$$eval('nav a', as => as.map(a => a.textContent));
     ok(
-      JSON.stringify(navEn) === JSON.stringify(['HOME', 'CLASS XI', 'CLASS XII', 'VISUAL LABS', 'PRACTICE', 'HELP', 'MY PROGRESS', 'TEACHER DASHBOARD']),
+      JSON.stringify(navEn) === JSON.stringify(['Home', 'Class XI', 'Class XII', 'Visual labs', 'Practice', 'Notes', 'Help', 'My progress', 'Teacher dashboard']),
       'English: navigation wording unchanged: ' + navEn.join(','),
     );
     const h2En = await page.$eval('main h2', e => e.textContent);
@@ -84,7 +84,7 @@ const ALLOWED = new Set(['CBSE', 'depreciation', 'goodwill', 'ratio', 'XI', 'XII
     ok((await page.$eval('html', e => e.getAttribute('lang'))) === 'hi', 'Hindi: html lang is hi');
     ok((await page.$$eval('[data-hindi-draft]', e => e.length)) === 1 && (await page.isVisible('[data-hindi-draft="draft"]')), 'Hindi: exactly one draft notice, visible');
     const navHi = await page.$$eval('nav a', as => as.map(a => a.textContent));
-    ok(navHi.length === 8 && navHi.every(t => DEV.test(t)), 'Hindi: all 8 navigation labels are Devanagari: ' + navHi.join(' | '));
+    ok(navHi.length === 9 && navHi.every(t => DEV.test(t)), 'Hindi: all 9 navigation labels are Devanagari: ' + navHi.join(' | '));
     ok(
       DEV.test(await page.textContent('header .menu')) && DEV.test(await page.textContent('.skip')) && DEV.test(await page.textContent('.net')),
       'Hindi: menu, skip link and online status are Devanagari',

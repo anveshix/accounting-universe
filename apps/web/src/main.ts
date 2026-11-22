@@ -156,8 +156,9 @@ async function boot() {
   const tagline = h('span', {});
   relabel.push(() => { menu.textContent = tr('ui.menu'); skip.textContent = tr('ui.skip'); tagline.textContent = tr('ui.tagline'); });
   app.append(
-    h('a', { class: 'skip', href: '#main', onclick: (e: Event) => { e.preventDefault(); main.focus(); } }, 'Skip to content'),
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', {}, 'Accounting Universe'), h('span', {}, 'Learn Accounting by Doing Accounting.')), net, hudElement(), displayMenu, langBtn, menu),
+    skip,
+    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline), net, h('span', { class: 'hud-wrap', lang: 'en' }, hudElement()), displayMenu, langBtn, menu),
+    draftBanner,
     banner, nav, main);
   for (const f of relabel) f();                              // header words in the saved language before the first paint of the page
   await ready();
