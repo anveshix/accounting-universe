@@ -21,6 +21,7 @@ const SKILLS = ['eq-impact', 'eq-balance', 'drcr-choose', 'journal-entry', 'jour
   page.on('pageerror', e => errors.push('pageerror: ' + e.message)); page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   const go = async hash => { await page.goto(BASE + hash); await page.waitForSelector('html[data-app="ready"]'); await page.waitForSelector('main[data-route]'); };
   const axe = async (label) => {
+    await page.waitForFunction(() => !document.querySelector('.toast') && document.getAnimations().every(a => a.playState !== 'running'), null, { timeout: 12000 }).catch(() => {});
     await page.evaluate(AXE);
     const r = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ['violations'] })).violations.filter(v => v.impact === 'serious' || v.impact === 'critical').map(v => `${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(' ')}`));
     ok(r.length === 0, `axe ${label}: no serious/critical violations — ${r.join('; ')}`);
