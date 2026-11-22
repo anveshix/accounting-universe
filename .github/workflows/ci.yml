@@ -57,6 +57,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-lang.cjs
       - name: Browser - study guide (all 54 topics)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-study.cjs
+      - name: Browser - practice paper
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-paper.cjs
       - name: Browser - published site layout (/ and /legacy/)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-site.cjs
       - name: Browser - legacy app

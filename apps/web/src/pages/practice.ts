@@ -119,6 +119,7 @@ export function practicePage(skillArg?: string, seedArg?: string, modeArg?: stri
     qm.subscribe(() => refresh());
     mount(root,
       h('header', { class: 'labhead' }, h('p', { class: 'eyebrow' }, tr('ui.class', { cls: state.profile.cls })), h('h2', {}, tr('prac.h2')), h('p', { class: 'lead' }, tr('prac.lead'))),
+      h('p', { class: 'note info paper-link', lang: 'en' }, 'Ready for exam practice? ', h('a', { href: '#/paper' }, 'Make a full practice paper (34 questions, 80 marks)'), ' with a marking scheme and a print view.'),
       h('div', { class: 'practice-top' },
         h('label', {}, tr('prac.topic'), (() => { const s = h('select', { id: 'skillsel', onchange: (e: Event) => { skill = (e.target as HTMLSelectElement).value; seed = Math.floor(Math.random() * 1_000_000); draw(); } }, ...UNITS.filter(u => u.cls === state.profile.cls).map(u => { const here = SKILLS.filter(x => x.clause.startsWith(u.id + '.')); return here.length ? h('optgroup', { label: u.title }, ...here.map(x => h('option', { value: x.skill, lang: 'en' }, x.title))) : null; })); s.value = skill; return s; })()),
         h('div', { class: 'modes', role: 'radiogroup', 'aria-label': tr('prac.mode') }, ...MODES.map(m => h('button', { type: 'button', role: 'radio', 'aria-checked': String(m === mode), class: m === mode ? 'on' : '', onclick: () => { mode = m; draw(); } }, tr(`prac.m.${m}` as Key)))),

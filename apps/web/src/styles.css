@@ -796,3 +796,26 @@ header.top .lang:hover, header.top .display-btn:hover, header.top .menu:hover, h
   a { color: #000 !important; text-decoration: none !important; }
   details.ex-a { display: block; } details.ex-a > * { display: block; }
 }
+
+/* ── practice paper ── */
+.paper-form { display: grid; gap: .75rem; max-width: 34rem; }
+.paper-form fieldset { border: 1px solid var(--line, #cbd5e1); border-radius: .5rem; padding: .5rem .75rem; }
+.paper-form .choice { display: block; padding: .25rem 0; }
+.paper-sheet { background: #fff; color: #111; border: 1px solid var(--line, #cbd5e1); border-radius: .5rem; padding: 1.25rem 1.5rem; margin: 1rem 0; }
+.paper-sheet h2, .paper-sheet h3 { color: #111; }
+.paper-title { text-align: center; border-bottom: 2px solid #111; margin-bottom: .75rem; padding-bottom: .5rem; }
+.pinstr { font-size: .9rem; margin: 0 0 1rem 1.2rem; }
+.pq { padding: .6rem 0; border-bottom: 1px dashed #bbb; break-inside: avoid; }
+.pq-head { display: flex; gap: .6rem; align-items: baseline; }
+.pq-marks { margin-left: auto; font-weight: 600; }
+.pstem { white-space: pre-line; margin: .35rem 0; }
+.pparts, .popts { margin: .2rem 0 .2rem 1.4rem; }
+.popts { list-style: none; margin-left: .6rem; }
+.por { text-align: center; margin: .4rem 0; }
+.ps-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.ps-table td, .ps-table th { border: 1px solid var(--line, #cbd5e1); padding: .25rem .5rem; text-align: left; }
+@media print {
+  .pscheme-wrap[open] { page-break-before: always; }
+  .paper-sheet { border: 0; padding: 0; margin: 0; font-size: 11pt; }
+  .pq { border-bottom: 0; }
+}

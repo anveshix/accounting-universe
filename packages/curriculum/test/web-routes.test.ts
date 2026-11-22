@@ -27,6 +27,12 @@ describe('route table', () => {
     for (const n of NAV) expect(resolve(n.hash.replace(/^#\/?/, '').split('/').filter(Boolean)).nav, n.key).toBe(n.key);
   });
   it('pages added after the refactor resolve too', () => { expect(resolve(['crisis'])).toEqual({ id: 'crisis', nav: 'Visual labs', rest: [] }); expect(resolve(['crisis', '42']).rest).toEqual(['42']); });
+  it('the practice paper resolves under Practice and rejects malformed addresses', () => {
+    expect(resolve(['paper'])).toEqual({ id: 'paper', nav: 'Practice', rest: [] });
+    expect(resolve(['paper', 'XII', 'I', '5']).id).toBe('paper');
+    expect(resolve(['paper', 'XI', '5']).id).toBe('paper');
+    for (const bad of [['XIII', '1'], ['XII', 'III', '1'], ['XII', 'I', 'x'], ['XI']]) expect(resolve(['paper', ...bad]).id).toBe('notfound');
+  });
   it('the study guide resolves for a class and for a topic, highlights its own class, and rejects malformed addresses', () => {
     expect(resolve(['study'])).toEqual({ id: 'study', nav: 'Class XI', rest: [] });
     expect(resolve(['study', 'XI'])).toEqual({ id: 'study', nav: 'Class XI', rest: ['XI'] });

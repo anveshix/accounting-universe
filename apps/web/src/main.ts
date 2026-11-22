@@ -26,6 +26,7 @@ import { cardPage, cardsIndex } from './pages/cards';
 import { trainerPage } from './pages/trainer';
 import { crisisPage } from './pages/crisis';
 import { studyPage } from './pages/study';
+import { paperPage } from './pages/paper';
 import { casPage } from './pages/cas';
 import { projectPage } from './pages/project';
 import { rescuePage } from './pages/rescue';
@@ -126,6 +127,7 @@ function render() {
       case 'trainer': page = trainerPage(); break;
       case 'crisis': page = crisisPage(a); break;
       case 'study': page = studyPage(a); break;
+      case 'paper': page = paperPage(r.rest); break;
       case 'cas': page = casPage(); break;
       case 'project': page = projectPage(a === 'XII' ? 'XII' : 'XI', state.profile.route); break;
       case 'rescue': page = rescuePage(a); break;
