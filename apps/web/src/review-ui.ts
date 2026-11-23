@@ -9,6 +9,7 @@
 import { clauseById, dueReviews, relativeDay, reviewSummary, skillTitle, upcomingReviews, type Attempt, type ClassLevel, type Rewards } from '../../../packages/curriculum/src';
 import { h } from './dom';
 import { icon } from './icons';
+import { state } from './state';
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
@@ -19,7 +20,9 @@ export function todayPanel(a: readonly Attempt[], r: Rewards, now: number, cls: 
   const cta = h('a', { class: 'button primary', href: nextSkillId ? `#/practice/${encodeURIComponent(nextSkillId)}` : '#/practice' }, nextSkillId ? `Review “${lead}” →` : 'Start practising →');
   return h(
     'section',
-    { class: 'panel today', 'aria-labelledby': 'today-h', 'data-today': '' },
+    // The panel's copy is not in the Hindi catalogue yet. On a translated page any English text must carry lang="en"
+    // so screen readers switch voice (the same rule the lab names follow); the app-wide draft banner covers the rest.
+    { class: 'panel today', 'aria-labelledby': 'today-h', 'data-today': '', ...(state.lang === 'hi' ? { lang: 'en' } : {}) },
     h(
       'div',
       { class: 'today-head' },
