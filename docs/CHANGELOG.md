@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Accessibility and phone-width fixes — the V1 slice is green
+
+- **Brand link** (`header .brand`) carried `aria-label="Accounting Universe — home"` while its visible text is the name *plus the tagline*, so axe flagged `label-content-name-mismatch` (serious, WCAG 2.5.3) on every page — the four failing axe checks in `e2e/web-app-v1.cjs`. The `aria-label` is gone; the link's accessible name is now its visible text, which is what the rule asks for.
+- **Footer credit** (`.foot-credit`) was `white-space: nowrap` at every width: at 320px with 0.12em letter-spacing it made the page 6px wider than the screen. It now wraps below 720px (`overflow-wrap: anywhere`), which is the phone rule the header already followed.
+- Result: `e2e/web-app-v1.cjs` — **68 passed, 0 failed** (was 63/5). Verified locally with Chromium 153 + Playwright; every other browser suite was re-run and passes (see release notes for the counts). CI's own Chromium build re-verifies on the next run.
+
 ### Learning by doing, part 1: spaced review + Journal Builder
 
 - **Spaced review** (`packages/curriculum/src/review.ts`): every stored attempt is replayed through SM-2 to schedule the next revision. Nothing extra is stored, so the schedule cannot drift from real work and works offline. Public API: `reviewCards`, `dueReviews`, `upcomingReviews`, `reviewSummary`, `relativeDay`.

@@ -184,7 +184,7 @@ async function boot() {
   relabel.push(() => { menu.textContent = tr('ui.menu'); skip.textContent = tr('ui.skip'); tagline.textContent = tr('ui.tagline'); });
   app.append(
     skip,
-    h('header', { class: 'top' }, h('a', { class: 'brand', href: '#/', 'aria-label': 'Accounting Universe — home' }, brandMark(), h('div', { class: 'brand-text' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline)), net, h('span', { class: 'hud-wrap', lang: 'en' }, hudElement()), displayMenu, langBtn, menu),
+    h('header', { class: 'top' }, h('a', { class: 'brand', href: '#/' }, brandMark(), h('div', { class: 'brand-text' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline)), net, h('span', { class: 'hud-wrap', lang: 'en' }, hudElement()), displayMenu, langBtn, menu),
     draftBanner,
     banner, nav, main, siteFooter());
   for (const f of relabel) f();                              // header words in the saved language before the first paint of the page
