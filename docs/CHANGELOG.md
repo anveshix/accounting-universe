@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Learning by doing, part 1: spaced review + Journal Builder
+
+- **Spaced review** (`packages/curriculum/src/review.ts`): every stored attempt is replayed through SM-2 to schedule the next revision. Nothing extra is stored, so the schedule cannot drift from real work and works offline. Public API: `reviewCards`, `dueReviews`, `upcomingReviews`, `reviewSummary`, `relativeDay`.
+- **Home → “Today”**: due count, streak, daily goal and one obvious action (start the most overdue skill, or practise something new when nothing is due). Filled asynchronously; a storage failure leaves the rest of the page untouched.
+- **My Progress → “What to review”**: overdue skills oldest-first with last score and lapse count, plus a seven-day forecast strip. Sits under the existing quest board.
+- **Journal Builder** (`#/build`, `apps/web/src/pages/build.ts`): post the entry yourself — tap accounts, choose Dr/Cr, type amounts; live Dr/Cr totals must balance; marking compares the exact (account, side, amount) set, then explains every line with that account's rule. Eight curated Class XI cases, five compound.
+- Case bank and marking are pure and tested (`packages/curriculum/src/journal.ts`): 24 tests prove every case balances, uses only real chart accounts, never repeats an account on one side, and that parsing/marking reject wrong amounts, wrong sides, missing and extra lines. 14 review tests use a hand-worked interval oracle (1 → 6 → 17 → 49 → 147 days).
+- The builder is listed on the home page and the labs index (under Visual labs) and counts as interactive coverage for `XI.2.journal`.
+- Research and next steps: `docs/REPOSITORY_RESEARCH.md` (Phase 1). Limits recorded honestly in `docs/RELEASE_READINESS.md`: SM-2 not FSRS; 8 cases only; the builder records a *seen* event, not an attempt (no XP yet); browser verification of the new panels pending.
+
 ### Phase 1 of the professional-site plan: look and message
 - **Home** speaks to learners (no "bigint paise"), names one first step per class and Class XII option ("Start here: …"), shows a three-step "how a session works" row, has a door for teachers, and no longer puts decorative 3D shapes behind the text.
 - **Labs index**: grouped by syllabus unit, searchable, with a "Class XI / Both classes" filter and a spoken result count; on a phone it is about half the old height (5,300 px, was 10,170).

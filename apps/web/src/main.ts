@@ -25,6 +25,7 @@ import { teacherPage } from './pages/teacher';
 import { tutorPage } from './pages/tutor';
 import { cardPage, cardsIndex } from './pages/cards';
 import { trainerPage } from './pages/trainer';
+import { buildPage } from './pages/build';
 import { crisisPage } from './pages/crisis';
 import { studyPage } from './pages/study';
 import { paperPage } from './pages/paper';
@@ -127,6 +128,7 @@ function render() {
       case 'practice': page = practicePage(a, b, c); break;
       case 'cards': { const card = a ? CARDS.find(x => x.id === a) : undefined; page = card ? cardPage(card) : cardsIndex(); break; }
       case 'trainer': page = trainerPage(); break;
+      case 'build': page = buildPage(); break;
       case 'crisis': page = crisisPage(a); break;
       case 'study': page = studyPage(a); break;
       case 'about': page = aboutPage(); break;
