@@ -10,7 +10,8 @@ import type { Key } from '../../../packages/curriculum/src/i18n';
 import { register, runDisposers } from './machine-dom';
 import { state } from './state';
 import { t } from '../../../packages/curriculum/src/i18n';
-import { getProfile, ready, setProfile, storage } from './store';
+import { getProfile, ready, setProfile, storage, storageMode } from './store';
+import { SOURCE, UNITS, CLAUSES } from '../../../packages/curriculum/src';
 import { labById } from './labs';
 import { homePage } from './pages/home';
 import { classPage, labsIndex } from './pages/classpage';
@@ -154,6 +155,24 @@ function render() {
 }
 const notFound = () => h('div', { class: 'panel' }, h('h2', {}, 'Page not found'), h('p', {}, 'That address does not exist. '), h('a', { href: '#/' }, 'Go home'));
 
+function brandMark(): HTMLElement {
+  const m = h('span', { class: 'brand-mark', 'aria-hidden': 'true' });
+  m.innerHTML = '<svg viewBox="0 0 64 64" width="22" height="22"><path d="M14 46h36M20 46V26m12 20V16m12 30V32" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/></svg>';
+  return m;
+}
+function siteFooter(): HTMLElement {
+  const syl = h('span', {}), counts = h('span', {}), saved = h('span', {});
+  const link = h('a', { href: SOURCE.url, rel: 'noopener', target: '_blank', lang: 'en' }, SOURCE.document);
+  relabel.push(() => {
+    syl.textContent = tr('home.foot.syllabus'); counts.textContent = tr('home.foot.counts', { units: UNITS.length, topics: CLAUSES.length });
+    saved.textContent = tr(storageMode === 'indexeddb' ? 'home.foot.saved' : 'home.foot.limited');
+  });
+  return h('footer', { class: 'app-footer' },
+    h('div', { class: 'foot-inner' },
+      h('p', { class: 'foot-note' }, syl, link, counts, ' ', saved),
+      h('p', { class: 'foot-credit', lang: 'en' }, '© ', String(new Date().getFullYear()), ' ', h('b', {}, 'PP creations'), ' - Paras Pranav')));
+}
+
 async function boot() {
   const app = document.getElementById('app')!;
   const menu = h('button', { type: 'button', class: 'menu', 'aria-expanded': 'false', 'aria-controls': 'nav', onclick: () => { const open = nav.classList.toggle('open'); menu.setAttribute('aria-expanded', String(open)); } });
@@ -163,9 +182,9 @@ async function boot() {
   relabel.push(() => { menu.textContent = tr('ui.menu'); skip.textContent = tr('ui.skip'); tagline.textContent = tr('ui.tagline'); });
   app.append(
     skip,
-    h('header', { class: 'top' }, h('div', { class: 'brand' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline), net, h('span', { class: 'hud-wrap', lang: 'en' }, hudElement()), displayMenu, langBtn, menu),
+    h('header', { class: 'top' }, h('a', { class: 'brand', href: '#/', 'aria-label': 'Accounting Universe — home' }, brandMark(), h('div', { class: 'brand-text' }, h('b', { lang: 'en' }, 'Accounting Universe'), tagline)), net, h('span', { class: 'hud-wrap', lang: 'en' }, hudElement()), displayMenu, langBtn, menu),
     draftBanner,
-    banner, nav, main);
+    banner, nav, main, siteFooter());
   for (const f of relabel) f();                              // header words in the saved language before the first paint of the page
   await ready();
   drawBanner(); storage.subscribe(drawBanner);

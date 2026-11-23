@@ -1,9 +1,9 @@
-import { SOURCE, UNITS, CLAUSES, type ClassLevel } from '../../../../packages/curriculum/src';
+import type { ClassLevel } from '../../../../packages/curriculum/src';
 import { h } from '../dom';
 import { icon, iconForLab } from '../icons';
 import { ALL_LABS, PAGES, coverage } from '../labs';
 import { state } from '../state';
-import { storageMode, setProfile } from '../store';
+import { setProfile } from '../store';
 import { navigate } from '../router';
 import { en, tr } from '../i18n';
 
@@ -158,11 +158,5 @@ export function homePage(rerender: () => void): HTMLElement {
       h('div', { class: 'actions' }, h('a', { class: 'button', href: '#/cards' }, tr('home.cards')), h('a', { class: 'button', href: '#/rescue' }, tr('home.rescue'))),
     ),
 
-    h(
-      'footer',
-      { class: 'app-footer' },
-      h('p', {}, tr('home.foot.syllabus'), h('a', { href: SOURCE.url, rel: 'noopener', target: '_blank', lang: 'en' }, SOURCE.document), tr('home.foot.counts', { units: UNITS.length, topics: CLAUSES.length })),
-      h('p', {}, tr(storageMode === 'indexeddb' ? 'home.foot.saved' : 'home.foot.limited')),
-    ),
   );
 }
