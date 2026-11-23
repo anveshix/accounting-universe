@@ -827,3 +827,65 @@ header.top .lang:hover, header.top .display-btn:hover, header.top .menu:hover, h
   .paper-sheet { border: 0; padding: 0; margin: 0; font-size: 11pt; }
   .pq { border-bottom: 0; }
 }
+
+/* ── Today (home) and the review queue (progress): spaced review, built from the attempts already stored ── */
+.today-slot { margin-top: 1rem; }
+.today-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.today-head h3 { margin: 0; }
+.today-streak { display: inline-flex; align-items: center; gap: .35rem; }
+.today-streak.on { background: var(--accent-bg); color: var(--warn); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.today-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .75rem; margin: 1rem 0 .75rem; }
+.today-stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: .6rem .8rem; display: flex; flex-direction: column; gap: .1rem; }
+.today-stat b { font-size: 1.35rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.today-stat span { color: var(--muted); font-size: .82rem; }
+.today-stat.hot { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); }
+.today-stat.hot b { color: var(--accent-2); }
+.today .lead { margin: .25rem 0 .5rem; }
+.today .actions { margin: .75rem 0 .25rem; }
+
+.review .reviewlist { list-style: none; margin: .5rem 0 1rem; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.review .reviewlist li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: .75rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.review .reviewlist li:hover { border-color: var(--line-strong); }
+.review-what { display: flex; flex-direction: column; min-width: 0; }
+.review-what b { font-weight: 600; }
+.review-when { color: var(--muted); font-size: .82rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.review-when.late { color: var(--bad); }
+.review .upcoming { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; align-items: end; margin: .5rem 0 .25rem; max-width: 34rem; }
+.up-day { display: flex; flex-direction: column; align-items: center; gap: .3rem; min-height: 5rem; justify-content: flex-end; }
+.up-day i { display: block; width: 100%; border-radius: 5px 5px 2px 2px; background: var(--info-bg); height: var(--h); min-height: 3px; }
+.up-day i.l1 { background: color-mix(in srgb, var(--c1) 30%, var(--surface)); }
+.up-day i.l2 { background: color-mix(in srgb, var(--c1) 55%, var(--surface)); }
+.up-day i.l3 { background: var(--c1); }
+.up-day i.l4 { background: var(--c1); filter: saturate(1.4) brightness(.85); }
+.up-day span { font-size: .72rem; color: var(--muted); text-transform: capitalize; }
+@media (max-width: 560px) {
+  .review .reviewlist li { grid-template-columns: 1fr auto; }
+  .review .reviewlist li .review-when { grid-column: 1 / -1; }
+  .review .upcoming { max-width: none; }
+}
+
+/* ── Journal Builder (learning by doing): two sides, live totals, tap-to-add accounts ── */
+.builder .case .stem { font-size: 1.05rem; font-weight: 600; margin-bottom: .25rem; }
+.builder .jboard { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.builder .jside { border: 1px solid var(--line); border-radius: var(--r-sm); padding: .75rem; background: var(--surface-2); }
+.builder .jside.jcr { border-color: color-mix(in srgb, var(--c1) 30%, var(--line)); }
+.builder .jside-head { display: flex; flex-direction: column; gap: .1rem; border-bottom: 1px dashed var(--line); padding-bottom: .4rem; margin-bottom: .5rem; }
+.builder .jlines { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.builder .jlines li { display: grid; grid-template-columns: 1fr 5.5rem auto; gap: .35rem; align-items: center; }
+.builder .jacc { font-weight: 600; font-size: .92rem; overflow-wrap: anywhere; }
+.builder .jlines input { min-width: 0; }
+.builder .jadd { width: 100%; }
+.builder .jstatus { min-height: 2.2rem; margin: .25rem 0; }
+.builder .jstatus > span { display: inline-flex; align-items: center; gap: .35rem; }
+.builder .jchips { display: flex; flex-direction: column; gap: .6rem; }
+.builder .jgroup { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.builder .jgroup-t { width: 5.5rem; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.builder .jchip { cursor: pointer; }
+.builder .jwhy { margin: .25rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: .9rem; }
+.builder .jwhy li { margin-bottom: .2rem; }
+.builder .jside-switch { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; }
+@media (max-width: 640px) {
+  .builder .jboard { grid-template-columns: 1fr; }
+  .builder .jgroup-t { width: 100%; }
+}
+.builder .jacc.placeholder { color: var(--muted); font-weight: 400; font-style: italic; }

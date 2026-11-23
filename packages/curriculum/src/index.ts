@@ -14,3 +14,5 @@ export * from './paper';
 export * from './study-hi';
 export * from './notes';
 export * from './rewards';
+export * from './review';
+export * from './journal';

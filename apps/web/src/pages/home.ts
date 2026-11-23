@@ -1,11 +1,13 @@
 import type { ClassLevel } from '../../../../packages/curriculum/src';
-import { h } from '../dom';
+import { h, mount } from '../dom';
 import { icon, iconForLab } from '../icons';
 import { ALL_LABS, PAGES, coverage } from '../labs';
 import { state } from '../state';
-import { setProfile } from '../store';
+import { attempts, setProfile } from '../store';
 import { navigate } from '../router';
 import { en, tr } from '../i18n';
+import { currentRewards } from '../rewards-ui';
+import { todayPanel } from '../review-ui';
 
 export function homePage(rerender: () => void): HTMLElement {
   const cls = state.profile.cls;
@@ -17,6 +19,18 @@ export function homePage(rerender: () => void): HTMLElement {
   const cov = coverage(cls);
   const route = state.profile.route;
   const pct = Math.round((cov.interactive / cov.total) * 100);
+
+  // TODAY: what is due for revision right now. Filled asynchronously so the hero paints immediately, and silent if
+  // storage is unavailable (the rest of the page must still work in private mode).
+  const todayBox = h('div', { class: 'today-slot' });
+  void (async () => {
+    try {
+      const [a, { r }] = await Promise.all([attempts(), currentRewards()]);
+      mount(todayBox, todayPanel(a, r, Date.now(), cls));
+    } catch {
+      /* no stored attempts: the hero already offers a first step */
+    }
+  })();
 
   // The one thing a new visitor should do first, per class (and per Class XII option).
   const first =
@@ -98,6 +112,8 @@ export function homePage(rerender: () => void): HTMLElement {
         h('button', { type: 'button', class: 'ghost', onclick: () => navigate(`#/class/${cls}`) }, tr('home.map', { cls })),
       ),
     ),
+
+    todayBox,
 
     // HOW IT WORKS: what a session looks like, in the learner's words.
     h(

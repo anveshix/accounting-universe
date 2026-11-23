@@ -71,3 +71,67 @@ entry → GL). GPL v3: ideas only. Caution: ERPNext's perpetual-inventory/GST ma
 * Three are GPL → cannot be linked or copied into a non-GPL product.
 * Reference repos' accounting scope (perpetual inventory, multi-currency, GST/VAT, IFRS) exceeds
   CBSE; importing their treatments would violate "prescribed topics only".
+
+---
+
+# Phase 1 (2026-11-23): learning science and hands-on UX
+
+Question this round: *the content and the engine are unusually strong — what do the best learning products do that this
+app still does not?* Method: GitHub search API (queries such as "double entry accounting game", "spaced repetition
+scheduler", "virtual business simulation education") plus repo metadata (`stars`, `licence`, `archived`) read from the API
+on 2026-11-23. **No third-party code was copied, vendored or executed.** Copyleft repositories are read as ideas only.
+
+## What the search says about this niche
+
+The accounting-learning-game category is thin: the highest-starred dedicated results are starter projects
+(`accounting-tycoon-game`, `ACCOQUEST`, `accounting-battle`, all 0★). There is no credible open-source competitor doing
+CBSE-scoped, marking-scheme-accurate practice. **The differentiator is not graphics; it is exact marking and a memory
+model.** That is where effort should go. By contrast, the adjacent categories (spaced repetition, plain-text accounting,
+local-first finance) are mature and worth learning from.
+
+| Repository | ★ | Licence (API) | What it is good at | Taken this round | Code reuse |
+|---|---:|---|---|---|---|
+| `open-spaced-repetition/ts-fsrs` | 889 | MIT | A typed scheduler: reviews are scheduled from history, not from a static list | The **shape** of the model: per-skill card, due date, ease, lapses — re-derived as SM-2 and tested | No (independent implementation) |
+| `open-spaced-repetition/fsrs4anki` | 4,144 | MIT | DSR memory model, retention targets, benchmarking | Reference for the next upgrade (see roadmap) | No |
+| `actualbudget/actual` | 30,421 | MIT | Local-first data, undo, fast transaction entry | Local-first confirmation that "no server" is viable | No |
+| `firefly-iii/firefly-iii` | 25,322 | AGPL-3.0 | Fast entry forms, split transactions, reconciliation | Split-entry ergonomics (compound entries) informed the builder | **No — AGPL** |
+| `beancount/beancount`, `beancount/fava` | 6,200 / 2,610 | GPL-2.0 | Parse → validate → report; balance assertions with precise errors | "Balance assertion" as a future exercise type | **No — GPL** |
+| `hledgerorg/hledger` | 4,834 | GPL-3.0 | Fast CLI queries over journals | Query ideas for the teacher report | **No — GPL** |
+| `oppia/oppia` | 7,002 | Apache-2.0 | State-based lessons, answer groups, exploration before explanation | Validates the repo's existing `Machine` approach | No (Python/Angular) |
+| `phetsims/joist` (PhET framework) | 10 | MIT | Simulation UI: one variable at a time, immediate visual consequence | "Show the consequence while typing" — the live Dr/Cr totals | No |
+| `excalidraw/excalidraw` | 136,178 | MIT | Freeform canvas that feels instant | Inspiration for a future T-account scratchpad | No |
+| `d3/d3`, `chartjs/Chart.js` | 113,996 / 67,819 | ISC / MIT | Charts | Not adopted: the app's inline SVG is enough and dependency-free | No |
+| `Khan/khan-exercises` | 1,674 | none (archived) | Hint ladders, step hints | Confirms hints/worked steps already shipped here | No |
+
+## What was built from this (this branch)
+
+1. **Spaced review** — `packages/curriculum/src/review.ts`. Replays stored attempts through SuperMemo-2; returns due
+   cards, a seven-day forecast and a summary. **Nothing new is stored**, so it cannot drift from real work and it works
+   offline. 14 tests with a hand-worked interval oracle (1 → 6 → 17 → 49 → 147 days) and lapse/reset behaviour.
+2. **“Today” panel on the home page** — due count, streak, daily goal, and one obvious action. A student who returns
+   after two days now sees *what to do next*, instead of the same marketing hero.
+3. **Review queue on My Progress** — the overdue list (oldest first, with last score and lapse count) and a seven-day
+   forecast strip.
+4. **Journal Builder** — `apps/web/src/pages/build.ts` at `#/build`, with its case bank in
+   `packages/curriculum/src/journal.ts`. Students pick accounts, choose the side and type amounts; live Dr/Cr totals must
+   balance; marking compares the exact multiset of (account, side, amount) and then explains every line with the
+   account's rule. Eight curated Class XI entries, five of them compound. 24 tests prove every case balances, uses only
+   real chart accounts, never repeats a line on one side, and that parsing/marking reject wrong amounts, wrong sides,
+   missing and extra lines.
+
+**Licence position:** all of the above is original code. AGPL/GPL projects were read for behaviour only; MIT/Apache
+projects could have been vendored but were not needed.
+
+## Ranked next steps (impact ÷ effort)
+
+| # | Step | Why | Effort |
+|---|---|---|---|
+| 1 | Replace SM-2 with **FSRS** (`ts-fsrs`, MIT) behind the same `ReviewCard` interface | Better intervals once there is attempt volume; keeps the UI unchanged | S/M |
+| 2 | **Business-simulation campaign** (Phase-0 decision 5): one company, 30 days, document → journal → ledger → TB → statements | The single biggest “learn by doing” gap; the engine already computes every step | L |
+| 3 | **Balance-assertion exercises** (“state Cash after these entries”) | Cheap to build on the engine, hard to guess, excellent diagnostic | S/M |
+| 4 | **Undo** for posting, plus clearer offline/storage cues (Actual Budget pattern) | Trust: students experiment more when mistakes are reversible | M |
+| 5 | **T-account scratchpad** (hand-rolled SVG, Excalidraw-inspired feel) | Lets students draw before formal entries | M |
+| 6 | Teacher-authored assignments from the existing skill bank (Oppia-style states) | Turns a dashboard into a workflow | L |
+
+**Non-goals, deliberately:** AI-generated journal entries (the engine computes; the tutor only explains), perpetual
+inventory/GST/multi-currency (outside CBSE 2026-27), cloud accounts (progress stays on the device).

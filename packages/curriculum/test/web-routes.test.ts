@@ -27,6 +27,10 @@ describe('route table', () => {
     for (const n of NAV) expect(resolve(n.hash.replace(/^#\/?/, '').split('/').filter(Boolean)).nav, n.key).toBe(n.key);
   });
   it('pages added after the refactor resolve too', () => { expect(resolve(['crisis'])).toEqual({ id: 'crisis', nav: 'Visual labs', rest: [] }); expect(resolve(['crisis', '42']).rest).toEqual(['42']); });
+  it('the Journal Builder resolves under Visual labs and takes no extra segments', () => {
+    expect(resolve(['build'])).toEqual({ id: 'build', nav: 'Visual labs', rest: [] });
+    expect(resolve(['build', 'x']).id).toBe('notfound');
+  });
   it('the about page resolves under Help and takes no extra segments', () => {
     expect(resolve(['about'])).toEqual({ id: 'about', nav: 'Help', rest: [] });
     expect(resolve(['about', 'x']).id).toBe('notfound');
