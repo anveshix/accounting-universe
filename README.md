@@ -11,8 +11,8 @@
 - **Exact money** — all amounts are `bigint` paise; no floating-point in money paths (enforced by a guard test).
 - **Journal, ledger, trial balance** with reversal support and a balance check after every posting.
 - **Calculators and labs** for syllabus topics such as depreciation, bank reconciliation, cash flow and the income statement.
-- **Practice generators** — seeded, reproducible question sets with worked answers.
-- **Mastery tracking and a teacher report** that stay on the learner's device.
+- **Practice generators** — seeded, reproducible question sets; each crisis shows its full solution.
+- **Mastery tracking and a teacher report.**
 - **English and Hindi UI.**
 - **Optional AI tutor** via a separate proxy that keeps the API key on the server. If it is not configured, the tutor is hidden and the app works unchanged.
 
