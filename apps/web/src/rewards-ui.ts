@@ -35,6 +35,9 @@ function toast(lines: (Node | string)[], cls: string) {
   if (!toastBox) { toastBox = h('div', { class: 'toasts', role: 'status', 'aria-live': 'polite' }); document.body.appendChild(toastBox); }
   const t = h('div', { class: 'toast ' + cls }, ...lines); toastBox.appendChild(t); setTimeout(() => t.remove(), 4200);
 }
+/** A one-off celebration outside the attempt flow (e.g. a simulator badge). */
+export const notify = (text: string) => toast([text], 'badge');
+
 export function initRewards() {
   void drawHud();
   window.addEventListener('au:attempt', e => {

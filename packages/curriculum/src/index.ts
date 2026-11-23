@@ -16,3 +16,4 @@ export * from './notes';
 export * from './rewards';
 export * from './review';
 export * from './journal';
+export * from './simulators';

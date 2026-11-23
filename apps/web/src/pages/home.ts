@@ -150,6 +150,14 @@ export function homePage(rerender: () => void): HTMLElement {
         ),
     ),
 
+    // VISUAL ACCOUNTING: the chapter-wise simulators — a need, a picture, one challenge, XP.
+    h(
+      'section',
+      { class: 'panel sims-band', 'aria-labelledby': 'sims-band-title' },
+      h('div', {}, h('h3', { id: 'sims-band-title', class: 'flush-top' }, tr('home.sims.t')), h('p', {}, tr('home.sims.body'))),
+      h('a', { class: 'button primary', href: '#/sims' }, tr('home.sims.btn')),
+    ),
+
     // FOR TEACHERS: a clear door for the other main audience.
     h(
       'section',

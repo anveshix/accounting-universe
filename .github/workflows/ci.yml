@@ -65,5 +65,7 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-bloom.cjs
       - name: Browser - published site layout (/ and /legacy/)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-site.cjs
+      - name: Browser - visual simulators (chapter-wise)
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-sims.cjs
       - name: Browser - legacy app
         run: NODE_PATH="$(npm root -g)" node e2e/legacy-smoke.cjs && NODE_PATH="$(npm root -g)" node e2e/legacy-simulator-regression.cjs

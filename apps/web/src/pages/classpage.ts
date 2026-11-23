@@ -206,6 +206,7 @@ export function labsIndex(): HTMLElement {
       h('h2', {}, tr('labs.h2')),
       h('p', { class: 'lead' }, tr('labs.lead')),
     ),
+    h('p', { class: 'sims-link' }, h('a', { class: 'button', href: '#/sims' }, tr('labs.sims.link'))),
     h(
       'div',
       { class: 'lab-tools' },

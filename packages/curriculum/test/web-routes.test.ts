@@ -31,6 +31,11 @@ describe('route table', () => {
     expect(resolve(['build'])).toEqual({ id: 'build', nav: 'Visual labs', rest: [] });
     expect(resolve(['build', 'x']).id).toBe('notfound');
   });
+  it('the chapter-wise simulators resolve under Visual labs: a gallery and one page per simulator', () => {
+    expect(resolve(['sims'])).toEqual({ id: 'sims', nav: 'Visual labs', rest: [] });
+    expect(resolve(['sim', 'sim-brs'])).toEqual({ id: 'sim', nav: 'Visual labs', rest: ['sim-brs'] });
+    for (const bad of [['sims', 'x'], ['sim']]) expect(resolve(bad).id, JSON.stringify(bad)).toBe('notfound');
+  });
   it('the about page resolves under Help and takes no extra segments', () => {
     expect(resolve(['about'])).toEqual({ id: 'about', nav: 'Help', rest: [] });
     expect(resolve(['about', 'x']).id).toBe('notfound');
