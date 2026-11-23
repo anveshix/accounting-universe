@@ -13,7 +13,7 @@
  * Money is exact: every rupee figure goes through `Money`/`mulRatio` with an explicit rounding mode. Bar `value`s are
  * geometry only (the same convention as `Block` in spec.ts); the exact figure is always a formatted string.
  */
-import { Money, type RoundingMode } from '../../engine/src';
+import { Ledger, Money, starterChartClassXI, type RoundingMode, type Side } from '../../engine/src';
 import { CLAUSES, UNITS } from './syllabus';
 
 const HALF_UP: RoundingMode = 'HALF_UP';
@@ -32,6 +32,13 @@ export interface SimStat {
   readonly label: string;
   readonly value: string;
 }
+/** An extra working table under the picture (the picture stays the headline). */
+export interface SimTable {
+  readonly title: string;
+  readonly head: readonly string[];
+  readonly rows: readonly (readonly string[])[];
+  readonly foot?: readonly string[];
+}
 export interface SimVisual {
   readonly headline: string;
   readonly headlineNote: string;
@@ -41,6 +48,8 @@ export interface SimVisual {
   /** "What to notice" — two or three sentences, always about the picture above. */
   readonly notes: readonly string[];
   readonly table?: { readonly head: readonly string[]; readonly rows: readonly (readonly string[])[] };
+  /** Additional tables, each in its own collapsible block (journal, ledger, trial balance…). */
+  readonly tables?: readonly SimTable[];
   readonly caption: string;
 }
 
@@ -75,6 +84,8 @@ export interface Simulator {
   readonly defaults: Readonly<Record<string, number | string>>;
   readonly compute: (input: Readonly<Record<string, number | string>>) => SimVisual;
   readonly challenge: SimChallenge;
+  /** A control this page can animate: the page shows ▶ Play and steps the control by its own `step`. */
+  readonly play?: { readonly control: string; readonly everyMs?: number };
   /** Option name for Class XII analysis-only simulators. */
   readonly route?: 'OPTION_I_ANALYSIS' | 'OPTION_II_COMPUTERISED';
 }
@@ -597,7 +608,179 @@ const ratios: Simulator = {
   },
 };
 
-export const SIMULATORS: readonly Simulator[] = [depreciation, brs, trading, admission, shares, cashflow, ratios];
+/* ───────────────────────── 8. The accounting cycle: entry → journal → ledger → trial balance (XI · Accounting Process) ───────────────────────── */
+
+export interface CycleEntry {
+  readonly narration: string;
+  /** Why THIS account is debited and THAT one credited — the rule, in the words a student can reuse. */
+  readonly rule: string;
+  readonly lines: readonly { readonly accountId: string; readonly side: Side; readonly rupees: number }[];
+}
+
+/** Ravi's first week: seven ordinary entries, the same ones the guided ledger tour posts. */
+export const CYCLE_STEPS: readonly CycleEntry[] = [
+  {
+    narration: 'Ravi starts the business with ₹1,00,000 cash',
+    rule: 'Cash — an asset — comes IN, so it is debited; the owner’s claim (capital) goes UP, so it is credited.',
+    lines: [
+      { accountId: 'cash', side: 'DR', rupees: 100000 },
+      { accountId: 'capital', side: 'CR', rupees: 100000 },
+    ],
+  },
+  {
+    narration: 'Bought machinery for cash ₹30,000',
+    rule: 'One asset goes up (machinery → debit) and another goes down (cash → credit).',
+    lines: [
+      { accountId: 'machinery', side: 'DR', rupees: 30000 },
+      { accountId: 'cash', side: 'CR', rupees: 30000 },
+    ],
+  },
+  {
+    narration: 'Bought goods on credit ₹20,000',
+    rule: 'Purchases is an expense → debit; the obligation to pay (creditors, a liability) → credit.',
+    lines: [
+      { accountId: 'purchases', side: 'DR', rupees: 20000 },
+      { accountId: 'creditors', side: 'CR', rupees: 20000 },
+    ],
+  },
+  {
+    narration: 'Sold goods for cash ₹35,000',
+    rule: 'Cash comes in → debit; sales (revenue) goes up → credit.',
+    lines: [
+      { accountId: 'cash', side: 'DR', rupees: 35000 },
+      { accountId: 'sales', side: 'CR', rupees: 35000 },
+    ],
+  },
+  {
+    narration: 'Paid rent ₹5,000',
+    rule: 'Rent is an expense → debit; cash leaves → credit.',
+    lines: [
+      { accountId: 'rent', side: 'DR', rupees: 5000 },
+      { accountId: 'cash', side: 'CR', rupees: 5000 },
+    ],
+  },
+  {
+    narration: 'Ravi withdrew ₹3,000 for personal use',
+    rule: 'Drawings reduce the owner’s capital → debit; cash paid out → credit.',
+    lines: [
+      { accountId: 'drawings', side: 'DR', rupees: 3000 },
+      { accountId: 'cash', side: 'CR', rupees: 3000 },
+    ],
+  },
+  {
+    narration: 'Paid creditors ₹10,000',
+    rule: 'A liability is reduced → debit; cash is reduced → credit.',
+    lines: [
+      { accountId: 'creditors', side: 'DR', rupees: 10000 },
+      { accountId: 'cash', side: 'CR', rupees: 10000 },
+    ],
+  },
+];
+
+/**
+ * Post the first `steps` entries of the cycle into the real ledger engine.
+ * Pure: the same number always gives the same books, so the page, the tests and the exam answer agree.
+ */
+export function cycleBooks(steps: number) {
+  const chart = starterChartClassXI();
+  const ledger = new Ledger(chart);
+  const posted = Math.max(0, Math.min(CYCLE_STEPS.length, Math.floor(steps) || 0));
+  for (let i = 0; i < posted; i++) {
+    const s = CYCLE_STEPS[i]!;
+    ledger.post({
+      date: `2026-04-${String(i + 1).padStart(2, '0')}`,
+      narration: s.narration,
+      lines: s.lines.map(l => ({ accountId: l.accountId, side: l.side, amount: rupees(l.rupees) })),
+    });
+  }
+  return { chart, ledger, posted };
+}
+
+const cycle: Simulator = {
+  id: 'sim-cycle',
+  cls: 'XI',
+  clause: 'XI.2.journal',
+  title: 'The accounting cycle: entry → journal → ledger → trial balance',
+  need: 'The journal, the ledger and the trial balance are taught in three chapters, so students never see that they are one motion — press Play and watch the same seven entries arrive in all three books.',
+  intro:
+    'Ravi’s first week, one entry at a time. Each press posts a complete double entry: it appears in the journal, moves into the ledger account by account, and lands in the trial balance. The totals agree at every single step — and that is the whole point.',
+  controls: [{ id: 'steps', label: 'Entries posted', kind: 'range', min: 0, max: CYCLE_STEPS.length, step: 1 }],
+  defaults: { steps: 0 },
+  play: { control: 'steps', everyMs: 1500 },
+  compute: input => {
+    const { ledger, chart, posted } = cycleBooks(n(input, 'steps', 0));
+    const tb = ledger.trialBalance();
+    const entries = ledger.entries();
+    const last = posted > 0 ? CYCLE_STEPS[posted - 1]! : null;
+    const tone = (t: string): SimTone => (t === 'ASSET' ? 'pos' : t === 'LIABILITY' || t === 'REVENUE' ? 'alt' : t === 'CAPITAL' ? 'base' : 'neg');
+    const bars = tb.rows.map(r => {
+      const amount = r.debit.isZero() ? r.credit : r.debit;
+      return { label: r.account.name, value: Number(amount.paise / 100n), text: `${amount.format()} ${r.debit.isZero() ? 'Cr' : 'Dr'}`, tone: tone(r.account.type) };
+    });
+    const journalRows = entries.flatMap(e => [
+      ...[...e.lines.filter(l => l.side === 'DR'), ...e.lines.filter(l => l.side === 'CR')].map((l, i) => [
+        i === 0 ? e.id : '',
+        i === 0 ? e.date : '',
+        `${l.side === 'CR' ? 'To ' : 'Dr '}${chart.get(l.accountId).name}`,
+        l.side === 'DR' ? l.amount.format() : '',
+        l.side === 'CR' ? l.amount.format() : '',
+      ]),
+      ['', '', `(${e.narration})`, '', ''],
+    ]);
+    const ledgerRows = tb.rows.map(r => {
+      let dr = Money.ZERO,
+        cr = Money.ZERO;
+      for (const row of ledger.tAccount(r.account.id)) {
+        if (row.side === 'DR') dr = dr.add(row.amount);
+        else cr = cr.add(row.amount);
+      }
+      const net = ledger.balance(r.account.id);
+      return [r.account.name, dr.isZero() ? '' : dr.format(), cr.isZero() ? '' : cr.format(), `${net.format()} ${net.isZero() ? '' : r.debit.isZero() ? 'Cr' : 'Dr'}`];
+    });
+    return {
+      headline: posted === 0 ? 'The books are empty' : `${inr(tb.totalDebit)} Dr = ${inr(tb.totalCredit)} Cr`,
+      headlineNote: posted === 0 ? 'press ▶ Play to post the first entry' : `trial balance after ${posted} of ${CYCLE_STEPS.length} entries — it agrees`,
+      barUnit: 'balance',
+      bars,
+      stats: [
+        { label: 'Entries posted', value: `${posted} of ${CYCLE_STEPS.length}` },
+        { label: 'Accounts touched', value: String(tb.rows.length) },
+        { label: 'Total debit', value: inr(tb.totalDebit) },
+        { label: 'Total credit', value: inr(tb.totalCredit) },
+        { label: 'Difference', value: inr(tb.totalDebit.sub(tb.totalCredit)) },
+      ],
+      notes: [
+        'Every entry here has two sides of the same amount, which is why the two trial balance totals can never drift apart — the trial balance is not a check you pass, it is a consequence of double entry.',
+        last ? `Last posted: “${last.narration}” — ${last.rule}` : 'Nothing has reached the books yet. Each Play step posts ONE complete entry, never half of one.',
+        'The ledger is not a second set of books: it is the same entries regrouped account by account. The trial balance then lists each account’s closing balance once, on its own side.',
+      ],
+      tables: [
+        {
+          title: 'Journal — the entries as they were posted',
+          head: ['No.', 'Date', 'Particulars', 'Dr (₹)', 'Cr (₹)'],
+          rows: journalRows,
+          foot: ['', '', 'Total', tb.totalDebit.format(), tb.totalCredit.format()],
+        },
+        { title: 'Ledger — the same entries, account by account', head: ['Account', 'Debit side', 'Credit side', 'Closing balance'], rows: ledgerRows },
+        {
+          title: 'Trial balance — closing balances in two columns',
+          head: ['Account', 'Debit (₹)', 'Credit (₹)'],
+          rows: tb.rows.map(r => [r.account.name, r.debit.isZero() ? '' : r.debit.format(), r.credit.isZero() ? '' : r.credit.format()]),
+          foot: ['Total', tb.totalDebit.format(), tb.totalCredit.format()],
+        },
+      ],
+      caption: 'Ravi’s first week · every figure comes from the real ledger engine · posted in journal order, never edited afterwards',
+    };
+  },
+  challenge: {
+    prompt: 'After all seven entries, which account has the LARGEST debit balance?',
+    options: ['Cash', 'Machinery', 'Purchases'],
+    correct: 0,
+    why: 'Cash takes in ₹1,00,000 and ₹35,000, and pays out ₹30,000 + ₹5,000 + ₹3,000 + ₹10,000, leaving ₹87,000 — more than machinery’s ₹30,000 and purchases’ ₹20,000. Cash moves in every other line of the week, which is exactly why it is the account students must be able to rebuild from the journal.',
+  },
+};
+
+export const SIMULATORS: readonly Simulator[] = [depreciation, brs, cycle, trading, admission, shares, cashflow, ratios];
 
 export const simulatorById = (id: string): Simulator | undefined => SIMULATORS.find(x => x.id === id);
 /** Which chapter (unit) a simulator belongs to, for the gallery headings. */

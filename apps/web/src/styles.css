@@ -947,3 +947,18 @@ nav.simnav a { border-bottom: 0; }
   .simrow { grid-template-columns: 1fr auto; }
   .simtrack { grid-column: 1 / -1; order: 3; }
 }
+
+/* ▶ Play: the button only moves the control, so picture, journal, ledger and trial balance stay one story */
+.simplay { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 0 0 .9rem; }
+.simplay .primary { min-height: var(--tap); }
+.simplay-status { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.simcanvas .simtable { margin: .4rem 0 .5rem; }
+.simcanvas .simtable + .simtable { margin-top: .3rem; }
+/* the simulator's books are real tables: scroll them sideways on a phone rather than break figures mid-number */
+.simtable .data th { white-space: nowrap; }
+.simtable .data td { white-space: nowrap; }
+/* column 3 is the particulars in the journal and a figure in the ledger/trial balance: wrapping there is always safe */
+.simtable .data td:nth-child(3) { white-space: normal; }
+/* the prev/next links are long simulator titles: wrap them instead of pushing the page sideways */
+nav.simnav a.button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 720px) { nav.simnav { justify-content: flex-start; } nav.simnav a.button { text-align: left; } }

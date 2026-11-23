@@ -8,7 +8,8 @@
  * (no <canvas>, no library): it scales on a phone, prints, and a screen reader gets the exact figure as text.
  */
 import { clauseById, simLabId, simulatorById, simulatorsByChapter, SIMULATORS, SIM_BADGE_AT, type SimControl, type Simulator, type SimVisual } from '../../../../packages/curriculum/src';
-import { h, mount } from '../dom';
+import { h, mount, reducedMotion } from '../dom';
+import { onDispose } from '../machine-dom';
 import { announce } from '../ui';
 import { icon } from '../icons';
 import { recordSeen, seen, type Seen } from '../store';
@@ -21,6 +22,26 @@ const solvedSet = (s: readonly Seen[]) => new Set(s.filter(x => x.tab === 'examp
 const chapterOf = (sim: Simulator) => clauseById(sim.clause)?.title ?? sim.clause;
 
 /* ───────────────────────── the picture ───────────────────────── */
+
+/** One collapsible working table. The picture stays the headline; the books are one click away. */
+function tableBlock(title: string, head: readonly string[], rows: readonly (readonly string[])[], foot?: readonly string[]): HTMLElement {
+  return h(
+    'details',
+    { class: 'simtable' },
+    h('summary', {}, title),
+    h(
+      'div',
+      { class: 'tablewrap' },
+      h(
+        'table',
+        { class: 'data' },
+        h('thead', {}, h('tr', {}, ...head.map(c => h('th', { scope: 'col' }, c)))),
+        h('tbody', {}, ...rows.map(r => h('tr', {}, ...r.map(c => h('td', {}, c))))),
+        foot ? h('tfoot', {}, h('tr', {}, ...foot.map(c => h('td', {}, c)))) : null,
+      ),
+    ),
+  );
+}
 
 function visual(v: SimVisual): HTMLElement {
   const max = Math.max(1, ...v.bars.map(b => Math.abs(b.value)));
@@ -44,23 +65,8 @@ function visual(v: SimVisual): HTMLElement {
     h('div', { class: 'simstats' }, ...v.stats.map(x => h('div', { class: 'simstat' }, h('b', {}, x.value), h('span', {}, x.label)))),
     h('h4', {}, 'What to notice'),
     h('ul', { class: 'simnotes' }, ...v.notes.map(x => h('li', {}, x))),
-    v.table
-      ? h(
-          'details',
-          { class: 'simtable' },
-          h('summary', {}, 'Show the working, row by row'),
-          h(
-            'div',
-            { class: 'tablewrap' },
-            h(
-              'table',
-              { class: 'data' },
-              h('thead', {}, h('tr', {}, ...v.table.head.map(c => h('th', { scope: 'col' }, c)))),
-              h('tbody', {}, ...v.table.rows.map(r => h('tr', {}, ...r.map(c => h('td', {}, c))))),
-            ),
-          ),
-        )
-      : null,
+    ...(v.tables ?? []).map(t => tableBlock(t.title, t.head, t.rows, t.foot)),
+    v.table ? tableBlock('Show the working, row by row', v.table.head, v.table.rows) : null,
     h('p', { class: 'hint simcap' }, v.caption),
   );
 }
@@ -161,6 +167,58 @@ function challengePanel(sim: Simulator, solved: boolean, onSolve: () => void): H
   return box;
 }
 
+/**
+ * ▶ Play for a simulator whose picture is a sequence (`play.control` names a range control).
+ * The button only moves that control and fires its own `input` event, so the picture is redrawn by exactly the same code
+ * as a student dragging the slider — one source of truth, and Pause can never leave the books half-posted.
+ */
+function playControl(sim: Simulator, rows: readonly HTMLElement[]): HTMLElement | null {
+  if (!sim.play) return null;
+  const input = rows.map(r => r.querySelector<HTMLInputElement>(`#ctl-${sim.play!.control}`)).find(Boolean);
+  if (!input) return null;
+  const min = Number(input.min),
+    max = Number(input.max),
+    stepBy = Math.max(1, Number(input.step) || 1);
+  const status = h('span', { class: 'simplay-status', 'aria-live': 'polite' });
+  const btn = h('button', { type: 'button', class: 'primary', 'aria-pressed': 'false' }, '▶ Play');
+  let timer: number | undefined;
+  const say = () => {
+    const v = Number(input.value);
+    status.textContent = v >= max ? `All ${max} posted` : v === min ? 'Nothing posted yet' : `Entry ${v} of ${max}`;
+  };
+  const stop = () => {
+    if (timer !== undefined) window.clearInterval(timer);
+    timer = undefined;
+    btn.textContent = Number(input.value) >= max ? '↺ Play again' : '▶ Play';
+    btn.setAttribute('aria-pressed', 'false');
+  };
+  const tick = () => {
+    const next = Math.min(max, Number(input.value) + stepBy);
+    input.value = String(next);
+    input.dispatchEvent(new Event('input', { bubbles: true })); // the slider's own handler redraws the picture
+    say();
+    if (next >= max) stop();
+  };
+  const start = () => {
+    if (Number(input.value) >= max) {
+      input.value = String(min);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    say();
+    btn.textContent = '⏸ Pause';
+    btn.setAttribute('aria-pressed', 'true');
+    timer = window.setInterval(tick, (sim.play!.everyMs ?? 1400) * (reducedMotion() ? 1.8 : 1));
+  };
+  btn.addEventListener('click', () => {
+    if (timer !== undefined) stop();
+    else start();
+  });
+  input.addEventListener('input', say);
+  onDispose(stop);
+  say();
+  return h('div', { class: 'simplay' }, btn, status);
+}
+
 function simNotFound(): HTMLElement {
   return h(
     'div',
@@ -189,6 +247,8 @@ export function simPage(id: string): HTMLElement {
       const pic = h('div', { class: 'simpic' });
       const redraw = () => mount(pic, visual(sim.compute(values)));
       redraw();
+      const fields = sim.controls.map(c => controlRow(c, values, redraw));
+      const play = playControl(sim, fields);
       mount(
         root,
         h('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' }, h('a', { href: '#/sims' }, 'Visual simulators'), h('span', { 'aria-hidden': 'true' }, ' / '), h('span', {}, chapterOf(sim))),
@@ -203,12 +263,7 @@ export function simPage(id: string): HTMLElement {
         h(
           'div',
           { class: 'simgrid' },
-          h(
-            'section',
-            { class: 'panel simcont', 'aria-labelledby': 'sim-try' },
-            h('h3', { id: 'sim-try', class: 'flush-top' }, 'Change the numbers'),
-            ...sim.controls.map(c => controlRow(c, values, redraw)),
-          ),
+          h('section', { class: 'panel simcont', 'aria-labelledby': 'sim-try' }, h('h3', { id: 'sim-try', class: 'flush-top' }, 'Change the numbers'), play, ...fields),
           h('section', { class: 'panel simcanvas', 'aria-labelledby': 'sim-pic' }, h('h3', { id: 'sim-pic', class: 'flush-top' }, 'The picture'), pic),
         ),
         challengePanel(sim, solvedSet(s).has(sim.id), () => {
@@ -283,7 +338,7 @@ export function simsIndex(): HTMLElement {
                         h('div', { class: 'card-icon' }, icon('flask', 22)),
                         h('h3', {}, sim.title),
                         h('p', {}, sim.need),
-                        h('span', { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') }, solved.has(sim.id) ? '✓ Solved' : 'Challenge inside · +10 XP'),
+                        h('span', { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') }, solved.has(sim.id) ? '✓ Solved' : sim.play ? '▶ Play it · challenge inside' : 'Challenge inside · +10 XP'),
                       ),
                     ),
                   ),
