@@ -1,7 +1,7 @@
 # Academic review records (handoff T0.8, decision D11)
 
 A clause may be called **Done** only when its file here is **signed by a qualified reviewer** (a Commerce teacher or a
-Chartered/Cost Accountant) — see Appendix B of `ACCOUNTING_UNIVERS_2_0_HANDOFF.md`. Software tests prove the figures
+Chartered/Cost Accountant) — see Appendix B of `docs/ACCOUNTING_UNIVERS_2_0_HANDOFF.md`. Software tests prove the figures
 agree with independent oracles; they do **not** prove the wording, conventions and pedagogy are right for CBSE Class XI.
 
 **Status of every file in this folder: UNSIGNED — no reviewer has been named yet (D11 pending). Hindi text is an unreviewed DRAFT (D10 pending).**
