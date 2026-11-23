@@ -4,7 +4,29 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['.claude/**', '**/node_modules/**', '**/dist/**', 'index.html', '*.html', '**/legacy-v1.ts', '*.js', '!tools/lint/eslint.config.js', '**/coverage/**'] },
+  {
+    // NOTE: in a flat config an ignore pattern without a leading `**/` matches only at the config's
+    // base directory — unlike .gitignore. `*.js` therefore stopped matching once the legacy
+    // single-file app's scripts were filed under archive/legacy-tests/, and ESLint began linting
+    // them (326 errors: browser globals, legacy `var`s, redundant redeclarations). Keep these globs
+    // depth-independent so moving a file never silently changes whether it is linted.
+    ignores: [
+      '.claude/**',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      // HTML is not linted; the legacy single-file app (index.html) ships separately.
+      '**/*.html',
+      // Generated bank of legacy questions (data, not hand-written code).
+      '**/legacy-v1.ts',
+      // Legacy scripts: the shipped single-file app, generated banks and the old test harnesses.
+      // AGENTS.md: do not refactor them, so they are excluded instead of restyled.
+      '**/*.js',
+      '!tools/lint/eslint.config.js',
+      // Everything archived from the legacy app (HTML snapshots, extract scripts, old tests).
+      'archive/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
