@@ -52,8 +52,8 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     ok((await page.textContent('nav a[aria-current="page"]')) === 'Visual labs', 'the gallery lives under the Visual labs navigation item');
     ok((await page.$$eval('.labhead h2', h => h.map(x => x.textContent))).join() === 'Visual simulators', 'gallery heading');
     ok((await page.$$eval('.simchapter > .section-head h3', h => h.map(x => x.textContent))).length === 2, 'Class XI gallery is grouped into 2 chapters');
-    ok((await page.$$eval('.simcard', c => c.length)) === 3, 'Class XI has 3 chapter simulators');
-    ok(/0 of 3 solved/.test(await page.textContent('.simportop b')), 'progress starts at 0 of 3');
+    ok((await page.$$eval('.simcard', c => c.length)) === 4, 'Class XI has 4 chapter simulators');
+    ok(/0 of 4 solved/.test(await page.textContent('.simportop b')), 'progress starts at 0 of 4');
     ok(
       (await page.$$eval('.simcard p', p => p.map(x => x.textContent.trim()))).every(t => t.length > 30),
       'each card says why the chapter needs a picture',
@@ -107,8 +107,50 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
       );
     await page.goto(BASE + '#/sims');
     await page.waitForSelector('.simcard');
-    ok((await page.textContent('.simportop b')).includes('1 of 3 solved'), 'gallery counts the solved challenge');
+    ok((await page.textContent('.simportop b')).includes('1 of 4 solved'), 'gallery counts the solved challenge');
     ok((await page.getAttribute('[data-sim="sim-brs"]', 'data-solved')) === 'true', 'the solved card is marked');
+
+    // ── ▶ Play: entry → journal → ledger → trial balance, one entry at a time
+    await page.goto(BASE + '#/sims');
+    await page.waitForSelector('[data-sim="sim-cycle"]');
+    await page.click('[data-sim="sim-cycle"]');
+    await page.waitForSelector('.simplay');
+    ok(/Play/.test(await page.textContent('.simplay button')), 'cycle: the page has a Play button');
+    ok((await page.textContent('.simhead b')).trim() === 'The books are empty', 'cycle: an empty book says so instead of drawing nothing');
+    ok(
+      (await page.$$eval('.simtable summary', s => s.map(x => x.textContent))).join('|') ===
+        'Journal — the entries as they were posted|Ledger — the same entries, account by account|Trial balance — closing balances in two columns',
+      'cycle: journal, ledger and trial balance are all on the page',
+    );
+    await page.click('.simplay button');
+    await page
+      .waitForFunction(() => /Entry 1 of 7/.test(document.querySelector('.simplay-status')?.textContent ?? ''), null, { timeout: 8000 })
+      .then(
+        () => ok(true, ''),
+        () => ok(false, 'cycle: Play posts the first entry on its own'),
+      );
+    ok((await page.$$eval('.simtable summary', s => s.length)) === 3 && /Dr /.test(await page.textContent('.simtable tbody')), 'cycle: the first entry reaches the journal');
+    await page.click('.simplay button'); // pause
+    const frozen = await page.textContent('.simplay-status');
+    await page.waitForTimeout(2200);
+    ok((await page.textContent('.simplay-status')) === frozen, 'cycle: Pause really stops the sequence');
+    ok(/Play/.test(await page.textContent('.simplay button')), 'cycle: after Pause the button offers Play again');
+    await page.click('.simplay button'); // resume and finish
+    await page
+      .waitForFunction(() => /All 7 posted/.test(document.querySelector('.simplay-status')?.textContent ?? ''), null, { timeout: 25000 })
+      .then(
+        () => ok(true, ''),
+        () => ok(false, 'cycle: Play runs all seven entries'),
+      );
+    ok((await page.$eval('#ctl-steps', el => el.value)) === '7', 'cycle: Play drives the same slider a student would drag');
+    ok((await page.textContent('.simhead b')).trim() === '₹1,45,000.00 Dr = ₹1,45,000.00 Cr', 'cycle: after seven entries the trial balance agrees');
+    ok((await page.$$eval('.simstat', s => s.find(x => /Difference/.test(x.textContent))?.querySelector('b')?.textContent)) === '₹0.00', 'cycle: the difference is exactly zero');
+    await page.click('.simtable:nth-of-type(3) summary').catch(() => {});
+    const tbs = await page.$$eval('.simtable', d => d.map(x => x.textContent));
+    ok(
+      tbs.some(t => /Total₹1,45,000\.00₹1,45,000\.00/.test(t.replace(/\s+/g, ''))),
+      'cycle: the trial balance table totals ₹1,45,000 on both sides',
+    );
 
     // ── Class XII is grouped by its own chapters, and Option II hides the Option I chapters
     await go('#/');
@@ -143,6 +185,16 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
       const over = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       ok(over <= 1, `simulator at ${w}px does not scroll sideways (over by ${over}px)`);
       ok((await phone.$$eval('.simrow', r => r.length)) === 4, `ratios simulator draws its 4 bars at ${w}px`);
+      await phone.goto(BASE + '#/sim/sim-cycle');
+      await phone.waitForSelector('.simplay');
+      await phone.$eval('#ctl-steps', el => {
+        el.value = '7';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await phone.waitForTimeout(150);
+      const overCycle = await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      ok(overCycle <= 1, `the seven-entry cycle fits the page at ${w}px (over by ${overCycle}px)`);
+      ok((await phone.$$eval('.simtable', t => t.length)) === 3, `cycle keeps its three books at ${w}px`);
     }
     await phone.close();
   } catch (e) {

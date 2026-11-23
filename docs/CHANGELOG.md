@@ -2,13 +2,33 @@
 
 ## Unreleased
 
+### The Play button is back: entry → journal → ledger → trial balance, in one picture
+
+- **A new simulator, `#/sim/sim-cycle`** (Class XI · Accounting Process): Ravi's first week, seven ordinary entries.
+  Each press of **▶ Play** posts ONE complete double entry into the real ledger engine and the same entry appears in
+  three places at once — the **journal** (Dr/To lines with the narration), the **ledger** (debit side, credit side,
+  closing balance) and the **trial balance** (two columns, totals at the foot). At every step the two totals agree, which
+  is the lesson: the trial balance is a consequence of double entry, not a riddle you solve at the end.
+- **Play is part of the engine, not a special page**: `Simulator.play = { control, everyMs }` tells the renderer which
+  control to animate, and the button only moves that slider and fires its own `input` event — the picture, journal,
+  ledger and trial balance are redrawn by exactly the same code as a student dragging it, so Pause can never leave the
+  books half-posted. ▶ Play / ⏸ Pause / ↺ Play again, with a live "Entry 3 of 7" status, and the timer is cleared when
+  the student leaves the page (`onDispose`).
+- **`SimVisual.tables`** — a visual can now carry several collapsible working tables (journal, ledger, trial balance)
+  instead of one; existing simulators are unchanged.
+- Also fixed on the way: the simulator footer links (long chapter titles) pushed the page sideways at 320–390 px.
+- Class XI's gallery now has **4 simulators**; the class map, home band and labs index link to the gallery as before.
+- Tests: 5 new unit tests (the trial balance agrees at **every** step 0–7, the seven-entry totals ₹1,45,000 = ₹1,45,000,
+  cash ₹87,000, the challenge names cash, empty book) and the sims e2e is now **53 checks** (Play runs by itself, Pause
+  really stops, the slider ends at 7, all three books are on the page, zero difference, 320–390 px).
+
 ### Visual accounting, chapter by chapter — interactive simulators that pay for thinking
 
 - **A gallery, not 32 new pages** (`#/sims`): simulators are data plus one pure `compute()` in
   `packages/curriculum/src/simulators.ts`; `apps/web/src/pages/simulators.ts` knows only how to draw a picture. A new
   chapter costs one entry and one test.
-- **Seven simulators, each in its own syllabus chapter** — Class XI: depreciation (SLM vs WDV), bank reconciliation
-  (walking one balance to the other), trading-to-P&L ladder; Class XII: admission of a partner, issue of shares
+- **Eight simulators, each in its own syllabus chapter** — Class XI: depreciation (SLM vs WDV), bank reconciliation
+  (walking one balance to the other), the accounting cycle (below), trading-to-P&L ladder; Class XII: admission of a partner, issue of shares
   (applications, pro-rata, refunds), cash flow (profit is not cash), current and quick ratios. The gallery groups them by
   syllabus unit, in syllabus order, and Class XII shows only the chapters of the chosen option — cash flow and ratio
   analysis disappear under Option II because they are not examined there.

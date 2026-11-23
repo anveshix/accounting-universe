@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { Money } from '../../engine/src';
-import { BRS_STEPS, SIMULATORS, admissionSplit, brsBalance, computeRewards, depreciationSchedule, simChapter, simLabId, simulatorById, simulatorsByChapter, XP_SIM_SOLVED, SIM_BADGE_AT } from '../src';
+import {
+  BRS_STEPS,
+  CYCLE_STEPS,
+  SIMULATORS,
+  admissionSplit,
+  cycleBooks,
+  brsBalance,
+  computeRewards,
+  depreciationSchedule,
+  simChapter,
+  simLabId,
+  simulatorById,
+  simulatorsByChapter,
+  XP_SIM_SOLVED,
+  SIM_BADGE_AT,
+} from '../src';
 
 describe('simulator catalogue', () => {
   it('every simulator is well formed and answerable', () => {
@@ -16,9 +31,11 @@ describe('simulator catalogue', () => {
     }
   });
 
-  it('defaults drive a picture with bars, stats and notes', () => {
+  it('every simulator draws a full picture at its most informative setting', () => {
     for (const s of SIMULATORS) {
-      const v = s.compute(s.defaults);
+      // A playable simulator starts empty on purpose (the student presses Play); it must be whole at the end of the sequence.
+      const ctl = s.play ? s.controls.find(c => c.id === s.play!.control) : undefined;
+      const v = s.compute(ctl?.max === undefined ? s.defaults : { ...s.defaults, [ctl.id]: ctl.max });
       expect(v.bars.length).toBeGreaterThan(1);
       expect(v.stats.length).toBeGreaterThan(0);
       expect(v.notes.length).toBeGreaterThan(0);
@@ -40,11 +57,22 @@ describe('simulator catalogue', () => {
   it('groups by chapter in syllabus order, and Class XII hides the other option', () => {
     const xi = simulatorsByChapter('XI');
     expect(xi.map(g => g.unit)).toEqual(['XI.2', 'XI.3']);
-    expect(xi.flatMap(g => g.sims.map(s => s.id))).toEqual(['sim-depreciation', 'sim-brs', 'sim-trading-pl']);
+    expect(xi.flatMap(g => g.sims.map(s => s.id))).toEqual(['sim-depreciation', 'sim-brs', 'sim-cycle', 'sim-trading-pl']);
     const xii = simulatorsByChapter('XII', 'OPTION_I_ANALYSIS').flatMap(g => g.sims.map(s => s.clause));
     expect(xii).toEqual(['XII.1.admission', 'XII.2.issue', 'XII.3.liquidity', 'XII.4.preparation']);
     // cash flow and ratio analysis are Option I chapters: on Option II the gallery must not pretend they are examinable
     expect(simulatorsByChapter('XII', 'OPTION_II_COMPUTERISED').flatMap(g => g.sims.map(s => s.id))).toEqual(['sim-admission', 'sim-shares']);
+  });
+
+  it('the accounting cycle is a sequence a page can play, not a slider that jumps about', () => {
+    const cycle = simulatorById('sim-cycle')!;
+    expect(cycle.clause).toBe('XI.2.journal');
+    expect(cycle.play).toEqual({ control: 'steps', everyMs: 1500 });
+    const steps = cycle.controls.find(c => c.id === cycle.play!.control)!;
+    expect(steps.kind).toBe('range');
+    expect(steps.min).toBe(0);
+    expect(steps.max).toBe(CYCLE_STEPS.length);
+    expect(steps.step).toBe(1);
   });
 
   it('a solved challenge has one stable lab id', () => {
@@ -85,6 +113,53 @@ describe('the arithmetic behind the pictures', () => {
     // A held 60% and gives up 15 points, B held 40% and gives up 10: 60 + 40 + 25 = 125 points of an unchanged firm,
     // which is exactly why the capital accounts must be re-scaled after admission.
     expect(r.a + r.b + r.c).toBe(r.total);
+  });
+});
+
+describe('the accounting cycle (entry → journal → ledger → trial balance)', () => {
+  it('posts nothing at step 0 and one complete entry per step', () => {
+    expect(cycleBooks(0).ledger.entries()).toHaveLength(0);
+    const three = cycleBooks(3);
+    expect(three.ledger.entries()).toHaveLength(3);
+    expect(three.posted).toBe(3);
+  });
+
+  it('every entry is balanced, so the trial balance agrees at EVERY step — not just at the end', () => {
+    for (let i = 0; i <= CYCLE_STEPS.length; i++) {
+      const tb = cycleBooks(i).ledger.trialBalance();
+      expect(tb.balanced, `after ${i} entries`).toBe(true);
+      expect(tb.totalDebit.format(), `after ${i} entries`).toBe(tb.totalCredit.format());
+    }
+  });
+
+  it('after Ravi’s week: ₹1,45,000 debit = credit, cash ₹87,000, and the challenge names cash', () => {
+    const { ledger } = cycleBooks(CYCLE_STEPS.length);
+    const tb = ledger.trialBalance();
+    expect(tb.totalDebit.format()).toBe('₹1,45,000.00');
+    expect(tb.totalCredit.format()).toBe('₹1,45,000.00');
+    expect(ledger.balance('cash').format()).toBe('₹87,000.00');
+    expect(ledger.balance('capital').format()).toBe('₹1,00,000.00');
+    expect(ledger.balance('creditors').format()).toBe('₹10,000.00');
+    const cycle = simulatorById('sim-cycle')!;
+    expect(cycle.challenge.options[cycle.challenge.correct]).toBe('Cash');
+  });
+
+  it('the picture shows the journal, the ledger and the trial balance together', () => {
+    const cycle = simulatorById('sim-cycle')!;
+    const v = cycle.compute({ steps: CYCLE_STEPS.length });
+    expect(v.tables?.map(t => t.title.split(' —')[0])).toEqual(['Journal', 'Ledger', 'Trial balance']);
+    const journal = v.tables![0]!;
+    expect(journal.rows.filter(r => r[2]?.startsWith('Dr '))).toHaveLength(CYCLE_STEPS.length);
+    expect(journal.foot?.slice(3)).toEqual(['₹1,45,000.00', '₹1,45,000.00']);
+    expect(v.stats.find(s => s.label === 'Difference')!.value).toBe('₹0.00');
+    expect(v.headline).toBe('₹1,45,000.00 Dr = ₹1,45,000.00 Cr');
+  });
+
+  it('an empty book says so instead of drawing a blank picture', () => {
+    const v = simulatorById('sim-cycle')!.compute({ steps: 0 });
+    expect(v.headline).toBe('The books are empty');
+    expect(v.bars).toHaveLength(0);
+    expect(v.notes[1]).toMatch(/Nothing has reached the books yet/);
   });
 });
 
