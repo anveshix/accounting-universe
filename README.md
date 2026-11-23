@@ -74,6 +74,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Report security issues privately as desc
 
 No licence has been chosen for this repository yet. Until one is added, the default applies: **all rights reserved** by the author (anveshix). Please ask before reusing or redistributing the code.
 
+Third-party code keeps its own licence. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Author
 
 **anveshix** — [github.com/anveshix](https://github.com/anveshix)
