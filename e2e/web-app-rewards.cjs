@@ -10,7 +10,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++
   await page.goto(U + '#/progress');
   await page.waitForSelector('[data-quest]');
   ok((await page.getAttribute('.hud', 'data-xp')) === '0', 'new learner starts at 0 XP');
-  ok((await page.locator('[data-badge]').count()) === 8 && (await page.locator('[data-badge][data-earned="true"]').count()) === 0, '8 badges, all locked at start');
+  ok((await page.locator('[data-badge]').count()) === 9 && (await page.locator('[data-badge][data-earned="true"]').count()) === 0, '9 badges, all locked at start');
   ok((await page.locator('.mcell').count()) > 20 && (await page.locator('.heat-c').count()) === 14, 'mastery map and 14-day strip drawn');
   await page.goto(U + '#/cards');
   await page.waitForSelector('a.card');

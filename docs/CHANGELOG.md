@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+### Visual accounting, chapter by chapter — interactive simulators that pay for thinking
+
+- **A gallery, not 32 new pages** (`#/sims`): simulators are data plus one pure `compute()` in
+  `packages/curriculum/src/simulators.ts`; `apps/web/src/pages/simulators.ts` knows only how to draw a picture. A new
+  chapter costs one entry and one test.
+- **Seven simulators, each in its own syllabus chapter** — Class XI: depreciation (SLM vs WDV), bank reconciliation
+  (walking one balance to the other), trading-to-P&L ladder; Class XII: admission of a partner, issue of shares
+  (applications, pro-rata, refunds), cash flow (profit is not cash), current and quick ratios. The gallery groups them by
+  syllabus unit, in syllabus order, and Class XII shows only the chapters of the chosen option — cash flow and ratio
+  analysis disappear under Option II because they are not examined there.
+- **Every page follows need → picture → challenge → reward**: a one-line `need` (why a student who can do the sum still
+  gets this wrong), controls that redraw immediately, three "what to notice" points tied to the picture, an expandable
+  working table, and **one** challenge whose answer is visible in the picture — never an unrelated quiz.
+- **The picture is the report**: bars are plain HTML rows (no canvas, no chart library), each with the exact figure
+  beside it, so it scales to 320 px, prints, and a screen reader hears the real numbers. Bar length is geometry only;
+  every rupee figure comes from `Money`/`mulRatio` with `HALF_UP`.
+- **Incentive, not decoration**: a solved challenge records `sim:<id>` (tab `example`) — first-seen XP, **+10 XP**
+  (`XP_SIM_SOLVED`) once per simulator, and a new **Visual Thinker** badge at five solved (`SIM_BADGE_AT`); a toast
+  confirms the badge. `Rewards` now reports `simsSolved`. The badge shelf grows 8 → 9 (`e2e/web-app-rewards.cjs`
+  updated deliberately, not loosened).
+- **Fixed on the way**: the depreciation challenge asked for the higher book value and marked *SLM* correct, but at 10%
+  WDV leaves ₹72,900 against SLM's ₹70,000. The answer and its explanation now say WDV and show why the two curves
+  cross later. A unit test pins the challenge to the picture it sits under.
+- Tests: 12 unit tests (structure, controls that actually move the picture, chapter grouping, option filtering, the
+  exact arithmetic, and the XP/badge rules) and `e2e/web-app-sims.cjs` (35 checks: gallery, live redraw, wrong answer
+  earns nothing, solve → 20 XP, reload persistence, class/option filtering, badge shelf, axe, 390/360/320 px).
+  Every other browser suite re-run: 0 failures.
+- Limits recorded honestly: seven simulators do not cover all 54 topics; the pictures are illustrative chapter models,
+  not question generators; the solved challenge is a *seen* event, so it earns XP but does not enter practice accuracy
+  or the review queue.
+
 ### Accessibility and phone-width fixes — the V1 slice is green
 
 - **Brand link** (`header .brand`) carried `aria-label="Accounting Universe — home"` while its visible text is the name *plus the tagline*, so axe flagged `label-content-name-mismatch` (serious, WCAG 2.5.3) on every page — the four failing axe checks in `e2e/web-app-v1.cjs`. The `aria-label` is gone; the link's accessible name is now its visible text, which is what the rule asks for.

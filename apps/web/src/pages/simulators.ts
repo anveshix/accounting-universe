@@ -1,0 +1,299 @@
+/**
+ * Visual simulators — two pages, one renderer.
+ *
+ *   `simsIndex`  the chapter-wise gallery: what each chapter needs, what is solved, what pays XP.
+ *   `simPage`    one simulator: live controls, a picture, "what to notice", and one challenge.
+ *
+ * All numbers come from `packages/curriculum/src/simulators.ts`; this file only draws. The picture is plain HTML bars
+ * (no <canvas>, no library): it scales on a phone, prints, and a screen reader gets the exact figure as text.
+ */
+import { clauseById, simLabId, simulatorById, simulatorsByChapter, SIMULATORS, SIM_BADGE_AT, type SimControl, type Simulator, type SimVisual } from '../../../../packages/curriculum/src';
+import { h, mount } from '../dom';
+import { announce } from '../ui';
+import { icon } from '../icons';
+import { recordSeen, seen, type Seen } from '../store';
+import { currentRewards, drawHud, notify } from '../rewards-ui';
+import { loadInto } from '../async';
+import { state } from '../state';
+
+/** Solved simulators: a challenge solved is a `sim:<id>` seen event on the `example` tab. */
+const solvedSet = (s: readonly Seen[]) => new Set(s.filter(x => x.tab === 'example' && x.lab.startsWith('sim:')).map(x => x.lab.slice(4)));
+const chapterOf = (sim: Simulator) => clauseById(sim.clause)?.title ?? sim.clause;
+
+/* ───────────────────────── the picture ───────────────────────── */
+
+function visual(v: SimVisual): HTMLElement {
+  const max = Math.max(1, ...v.bars.map(b => Math.abs(b.value)));
+  return h(
+    'figure',
+    { class: 'simfig' },
+    h('figcaption', { class: 'simhead' }, h('b', {}, v.headline), h('span', {}, v.headlineNote)),
+    h(
+      'div',
+      { class: 'simbars', role: 'img', 'aria-label': `${v.barUnit} by step: ${v.bars.map(b => `${b.label} ${b.text}`).join(', ')}` },
+      ...v.bars.map(b =>
+        h(
+          'div',
+          { class: 'simrow', 'data-tone': b.tone ?? (b.value < 0 ? 'neg' : 'pos') },
+          h('span', { class: 'simlabel' }, b.label),
+          h('span', { class: 'simtrack', 'aria-hidden': 'true' }, h('span', { class: 'simfill', style: `width:${Math.max(1.5, (100 * Math.abs(b.value)) / max)}%` })),
+          h('span', { class: 'simval' }, b.text),
+        ),
+      ),
+    ),
+    h('div', { class: 'simstats' }, ...v.stats.map(x => h('div', { class: 'simstat' }, h('b', {}, x.value), h('span', {}, x.label)))),
+    h('h4', {}, 'What to notice'),
+    h('ul', { class: 'simnotes' }, ...v.notes.map(x => h('li', {}, x))),
+    v.table
+      ? h(
+          'details',
+          { class: 'simtable' },
+          h('summary', {}, 'Show the working, row by row'),
+          h(
+            'div',
+            { class: 'tablewrap' },
+            h(
+              'table',
+              { class: 'data' },
+              h('thead', {}, h('tr', {}, ...v.table.head.map(c => h('th', { scope: 'col' }, c)))),
+              h('tbody', {}, ...v.table.rows.map(r => h('tr', {}, ...r.map(c => h('td', {}, c))))),
+            ),
+          ),
+        )
+      : null,
+    h('p', { class: 'hint simcap' }, v.caption),
+  );
+}
+
+/* ───────────────────────── one simulator ───────────────────────── */
+
+function controlRow(c: SimControl, values: Record<string, number | string>, redraw: () => void): HTMLElement {
+  if (c.kind === 'select') {
+    const sel = h(
+      'select',
+      {
+        id: `ctl-${c.id}`,
+        onchange: (e: Event) => {
+          values[c.id] = (e.target as HTMLSelectElement).value;
+          redraw();
+        },
+      },
+      ...(c.options ?? []).map(o => h('option', { value: o.value }, o.label)),
+    );
+    sel.value = String(values[c.id] ?? '');
+    return h('div', { class: 'field' }, h('label', { for: `ctl-${c.id}` }, c.label), sel, c.help ? h('small', {}, c.help) : null);
+  }
+  const out = h('output', { for: `ctl-${c.id}`, class: 'simout' });
+  const shown = () => {
+    const n = Number(values[c.id]);
+    out.textContent = c.unit === '₹' ? `₹${n.toLocaleString('en-IN')}` : c.unit ? `${n.toLocaleString('en-IN')} ${c.unit}` : String(n);
+  };
+  const input = h('input', {
+    id: `ctl-${c.id}`,
+    type: 'range',
+    min: String(c.min ?? 0),
+    max: String(c.max ?? 100),
+    step: String(c.step ?? 1),
+    value: String(values[c.id] ?? c.min ?? 0),
+    oninput: (e: Event) => {
+      values[c.id] = Number((e.target as HTMLInputElement).value);
+      shown();
+      redraw();
+    },
+  });
+  shown();
+  return h('div', { class: 'field' }, h('label', { for: `ctl-${c.id}` }, c.label, ' ', out), input, c.help ? h('small', {}, c.help) : null);
+}
+
+function challengePanel(sim: Simulator, solved: boolean, onSolve: () => void): HTMLElement {
+  const box = h('section', { class: 'panel simchallenge' });
+  let done = solved;
+  const draw = () => {
+    mount(
+      box,
+      h('p', { class: 'eyebrow' }, done ? 'Challenge solved' : 'Challenge'),
+      h('h3', { class: 'flush-top' }, sim.challenge.prompt),
+      done
+        ? h(
+            'p',
+            { class: 'note good', role: 'status' },
+            icon('check-circle', 16),
+            ' Correct. ',
+            sim.challenge.why,
+            h('br'),
+            h('span', { class: 'hint' }, `Solved: +10 XP. ${SIM_BADGE_AT} solved challenges unlock the Visual Thinker badge.`),
+          )
+        : h(
+            'div',
+            { class: 'simactions', role: 'group', 'aria-label': 'Answer options' },
+            ...sim.challenge.options.map((o, i) =>
+              h(
+                'button',
+                {
+                  type: 'button',
+                  class: 'button',
+                  onclick: async () => {
+                    if (i !== sim.challenge.correct) {
+                      announce('Not quite — look at the picture and try again');
+                      mount(feedback, h('p', { class: 'note bad', role: 'alert' }, 'Not that one. Find the figure in the picture above, then choose again.'));
+                      return;
+                    }
+                    done = true;
+                    await recordSeen({ lab: simLabId(sim.id), tab: 'example', t: Date.now() });
+                    void drawHud();
+                    void currentRewards().then(({ r }) => {
+                      if (r.simsSolved === SIM_BADGE_AT) notify(`Badge earned: Visual Thinker — ${SIM_BADGE_AT} chapter challenges solved`);
+                    });
+                    announce('Correct — challenge solved, ten XP');
+                    draw();
+                    onSolve();
+                  },
+                },
+                o,
+              ),
+            ),
+          ),
+      feedback,
+    );
+  };
+  const feedback = h('div', { 'aria-live': 'polite' });
+  draw();
+  return box;
+}
+
+function simNotFound(): HTMLElement {
+  return h(
+    'div',
+    { class: 'panel' },
+    h('h2', {}, 'Simulator not found'),
+    h('p', {}, 'That address does not name a visual simulator.'),
+    h('p', {}, h('a', { class: 'button', href: '#/sims' }, 'All chapter simulators')),
+  );
+}
+
+export function simPage(id: string): HTMLElement {
+  const sim = simulatorById(id);
+  if (!sim) return simNotFound();
+  void recordSeen({ lab: simLabId(sim.id), tab: 'try', t: Date.now() });
+  const values: Record<string, number | string> = { ...sim.defaults };
+  const list = SIMULATORS.filter(x => x.cls === sim.cls && (!x.route || x.route === state.profile.route));
+  const at = list.findIndex(x => x.id === sim.id);
+  const prev = at > 0 ? (list[at - 1] ?? null) : null,
+    next = at >= 0 && at < list.length - 1 ? (list[at + 1] ?? null) : null;
+
+  const root = h('div', { class: 'sim-page' });
+  loadInto(
+    root,
+    seen,
+    s => {
+      const pic = h('div', { class: 'simpic' });
+      const redraw = () => mount(pic, visual(sim.compute(values)));
+      redraw();
+      mount(
+        root,
+        h('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' }, h('a', { href: '#/sims' }, 'Visual simulators'), h('span', { 'aria-hidden': 'true' }, ' / '), h('span', {}, chapterOf(sim))),
+        h(
+          'header',
+          { class: 'labhead' },
+          h('p', { class: 'eyebrow' }, `${sim.cls === 'XI' ? 'Class XI' : 'Class XII'} · ${chapterOf(sim)}`),
+          h('h2', {}, sim.title),
+          h('p', { class: 'lead' }, sim.need),
+        ),
+        h('section', { class: 'panel simwhy' }, h('p', {}, sim.intro)),
+        h(
+          'div',
+          { class: 'simgrid' },
+          h(
+            'section',
+            { class: 'panel simcont', 'aria-labelledby': 'sim-try' },
+            h('h3', { id: 'sim-try', class: 'flush-top' }, 'Change the numbers'),
+            ...sim.controls.map(c => controlRow(c, values, redraw)),
+          ),
+          h('section', { class: 'panel simcanvas', 'aria-labelledby': 'sim-pic' }, h('h3', { id: 'sim-pic', class: 'flush-top' }, 'The picture'), pic),
+        ),
+        challengePanel(sim, solvedSet(s).has(sim.id), () => {
+          /* progress strip below is static per visit */
+        }),
+        h(
+          'nav',
+          { class: 'simnav', 'aria-label': 'More simulators' },
+          prev ? h('a', { class: 'button', href: `#/sim/${prev.id}` }, `← ${prev.title}`) : h('span', {}),
+          h('a', { class: 'button', href: '#/sims' }, 'All chapter simulators'),
+          next ? h('a', { class: 'button', href: `#/sim/${next.id}` }, `${next.title} →`) : h('span', {}),
+        ),
+      );
+    },
+    'this simulator',
+  );
+  return root;
+}
+
+/* ───────────────────────── the gallery ───────────────────────── */
+
+export function simsIndex(): HTMLElement {
+  const root = h('div', { class: 'sims' });
+  loadInto(
+    root,
+    seen,
+    s => {
+      const solved = solvedSet(s);
+      const groups = simulatorsByChapter(state.profile.cls, state.profile.route);
+      const all = groups.flatMap(g => g.sims);
+      const done = all.filter(x => solved.has(x.id)).length;
+      mount(
+        root,
+        h(
+          'header',
+          { class: 'labhead' },
+          h('p', { class: 'eyebrow' }, `Class ${state.profile.cls} · ${groups.length} chapters · ${all.length} pictures`),
+          h('h2', {}, 'Visual simulators'),
+          h(
+            'p',
+            { class: 'lead' },
+            'One picture per chapter: change the numbers and watch the accounting move. Each page ends with one challenge, because seeing it once is not the same as being able to do it.',
+          ),
+        ),
+        h(
+          'section',
+          { class: 'panel simprogress' },
+          h('div', { class: 'simportop' }, h('b', {}, `${done} of ${all.length} solved`), h('span', { class: 'hint' }, 'each solved challenge: +10 XP · five unlock the “Visual Thinker” badge')),
+          h(
+            'div',
+            { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': all.length || 1, 'aria-valuenow': done, 'aria-label': `${done} of ${all.length} simulators solved` },
+            h('div', { class: 'meterfill', style: `width:${all.length ? Math.round((100 * done) / all.length) : 0}%` }),
+          ),
+        ),
+        groups.length === 0
+          ? h('p', { class: 'empty' }, `No visual simulators for Class ${state.profile.cls} on this route yet.`)
+          : h(
+              'div',
+              { class: 'simchapters' },
+              ...groups.map(g =>
+                h(
+                  'section',
+                  { class: 'simchapter', 'aria-labelledby': `ch-${g.unit}` },
+                  h('div', { class: 'section-head' }, h('h3', { id: `ch-${g.unit}` }, g.title), h('span', { class: 'chip' }, `${g.sims.length} simulator${g.sims.length === 1 ? '' : 's'}`)),
+                  h(
+                    'div',
+                    { class: 'cards' },
+                    ...g.sims.map(sim =>
+                      h(
+                        'a',
+                        { class: 'card simcard', href: `#/sim/${sim.id}`, 'data-sim': sim.id, 'data-solved': String(solved.has(sim.id)) },
+                        h('div', { class: 'card-icon' }, icon('flask', 22)),
+                        h('h3', {}, sim.title),
+                        h('p', {}, sim.need),
+                        h('span', { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') }, solved.has(sim.id) ? '✓ Solved' : 'Challenge inside · +10 XP'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        h('p', { class: 'hint' }, 'Bar lengths are geometry; every rupee figure is computed by the exact money engine with an explicit rounding mode.'),
+      );
+    },
+    'the simulators',
+  );
+  return root;
+}

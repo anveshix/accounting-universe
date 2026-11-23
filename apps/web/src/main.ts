@@ -16,6 +16,7 @@ import { labById } from './labs';
 import { homePage } from './pages/home';
 import { classPage, labsIndex } from './pages/classpage';
 import { labPage } from './pages/lab';
+import { simPage, simsIndex } from './pages/simulators';
 import { ledgerPage } from './pages/ledger';
 import { practicePage } from './pages/practice';
 import { progressPage } from './pages/progress';
@@ -123,6 +124,8 @@ function render() {
       case 'home': page = homePage(render); break;
       case 'class': page = classPage(a === 'XII' ? 'XII' : 'XI'); break;
       case 'labs': page = labsIndex(); break;
+      case 'sims': page = simsIndex(); break;
+      case 'sim': page = a ? simPage(a) : notFound(); break;
       case 'lab': { const lab = a ? labById(a) : undefined; page = lab ? labPage(lab, 'learn', b) : notFound(); break; }
       case 'ledger': page = ledgerPage(); break;
       case 'practice': page = practicePage(a, b, c); break;
