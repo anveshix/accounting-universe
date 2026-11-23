@@ -10,7 +10,7 @@
 
 - **Exact money** — all amounts are `bigint` paise; no floating-point in money paths (enforced by a guard test).
 - **Journal, ledger, trial balance** with reversal support and a balance check after every posting.
-- **Calculators and labs** for syllabus topics such as depreciation, bank reconciliation, cash flow and the income statement.
+- **Calculators and labs** for syllabus topics such as depreciation and cash flow.
 - **Practice generators** — seeded, reproducible question sets; each crisis shows its full solution.
 - **Mastery tracking and a teacher report.**
 - **English and Hindi UI.**
