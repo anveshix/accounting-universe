@@ -11,42 +11,42 @@
    - JetBrains Mono: Voucher codes, account folios, Dr/Cr columns & ₹ figures */
 @font-face {
   font-family: 'Instrument Serif';
-  src: url('/fonts/InstrumentSerif-Regular.ttf') format('truetype');
+  src: url('./fonts/InstrumentSerif-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Instrument Serif';
-  src: url('/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+  src: url('./fonts/InstrumentSerif-Italic.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: 'Instrument Sans';
-  src: url('/fonts/InstrumentSans-Regular.ttf') format('truetype');
+  src: url('./fonts/InstrumentSans-Regular.ttf') format('truetype');
   font-weight: 400 550;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Instrument Sans';
-  src: url('/fonts/InstrumentSans-Bold.ttf') format('truetype');
+  src: url('./fonts/InstrumentSans-Bold.ttf') format('truetype');
   font-weight: 600 800;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('./fonts/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 400 550;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+  src: url('./fonts/JetBrainsMono-Bold.ttf') format('truetype');
   font-weight: 600 800;
   font-style: normal;
   font-display: swap;
@@ -56,15 +56,15 @@
 :root {
   --eyebrow: #7c470b;
   /* Archival cotton paper & iron-gall ink ramp */
-  --ink: #161412; --ink-2: #2e2a24; --muted: #575046; --muted-2: #726a5e;
+  --ink: #161412; --ink-2: #2e2a24; --muted: #4b453c; --muted-2: #625b50;
   --bg: #f5f1e8; --bg-2: #efe9dc; --surface: #fcfbf7; --surface-2: #f2ece0;
-  --line: #d8d0c0; --line-2: #e5dfd1; --line-strong: #aea491;
+  --line: #d8d0c0; --line-2: #e5dfd1; --line-strong: #9e9482;
   /* Chartered Pine primary + Burnished Brass double-rule accent */
   --brand: #0b3b36; --brand-2: #072824; --brand-ink: #ffffff;
-  --accent: #9a5b13; --accent-2: #7c470b; --accent-bg: #f6e7c8; --accent-soft: #faf2df;
+  --accent: #8c4f0a; --accent-2: #723f06; --accent-bg: #f6e7c8; --accent-soft: #faf2df;
   /* Audited accounting semantics (WCAG AA+ verified) */
   --good: #14532d; --good-bg: #e5f3ea; --bad: #991b1b; --bad-bg: #fce8e6;
-  --warn: #78490a; --warn-bg: #fbf0d4; --info-bg: #ebe4d5; --focus: #1d4ed8;
+  --warn: #6e4106; --warn-bg: #fbf0d4; --info-bg: #ebe4d5; --focus: #1d4ed8;
   /* Chart & visualiser series */
   --c1: #0b5d56; --c2: #9a5b13; --c3: #4c3d8a; --c4: #9e3b24; --c5: #1f6f4a;
 
@@ -310,7 +310,7 @@ html[data-lang="hi"] .hero h2 .hero-accent { font-style: normal; }
 .hero-scene canvas { width: 100% !important; height: 100% !important; display: block; }
 .hero > *:not(.hero-scene) { position: relative; z-index: 1; }
 
-.classpick { display: grid; grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr)); gap: .75rem; margin: 1.25rem 0 .6rem; }
+.classpick { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14.5rem), 1fr)); gap: .75rem; margin: 1.25rem 0 .6rem; }
 .bigchoice {
   flex-direction: column; align-items: flex-start; gap: .25rem;
   padding: .95rem 1.15rem; min-height: 82px; text-align: left;
@@ -330,7 +330,7 @@ html[data-lang="hi"] .hero h2 .hero-accent { font-style: normal; }
 .radio input { width: 1.1rem; height: 1.1rem; margin-right: .5rem; accent-color: var(--accent); vertical-align: -.1rem; }
 
 /* ---------- Architectural Folio Index Cards (Zero SaaS Pill Slop) ---------- */
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .85rem; margin-bottom: 1.6rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: .85rem; margin-bottom: 1.6rem; }
 .card {
   display: flex; flex-direction: column; gap: .5rem; position: relative;
   background: var(--surface);
@@ -363,8 +363,7 @@ html[data-lang="hi"] .hero h2 .hero-accent { font-style: normal; }
 
 .chip, .pill {
   display: inline-block;
-  font-family: var(--mono);
-  font-size: .72rem;
+  font-size: .75rem;
   padding: .2rem .55rem;
   border-radius: var(--r-sm);
   background: var(--info-bg);
@@ -373,7 +372,6 @@ html[data-lang="hi"] .hero h2 .hero-accent { font-style: normal; }
   font-weight: 500;
   border: 1px solid var(--line);
 }
-html[data-lang="hi"] .chip, html[data-lang="hi"] .pill { font-family: var(--font); font-size: .76rem; }
 .chip.alt { background: var(--accent-bg); color: var(--warn); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 .pill { margin: .125rem .375rem .125rem 0; text-decoration: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
 .pill:hover { background: var(--info-bg); border-color: var(--brand); }
@@ -787,7 +785,7 @@ td.moved, .val.moved { background: var(--accent-bg); outline: 2px solid var(--ac
 /* how a session works — Architectural 3-Column Ledger Protocol Strip */
 .steps3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: 0;
   margin: 1.5rem 0 1rem;
   border: 1px solid var(--line-strong);
@@ -1389,9 +1387,9 @@ nav#nav a:hover { background: color-mix(in srgb, var(--info-bg) 80%, transparent
   display: flex; flex-wrap: wrap; gap: .35rem; margin: 0 0 .7rem;
 }
 .hero-folio-tab {
-  min-height: 34px; padding: .25rem .65rem;
-  font-family: var(--mono); font-size: .74rem; font-weight: 600;
-  background: var(--surface-2) !important; color: var(--ink-2) !important;
+  min-height: 36px; padding: .25rem .65rem;
+  font-family: var(--mono); font-size: .75rem; font-weight: 600;
+  background: var(--surface-2) !important; color: var(--ink) !important;
   border: 1px solid var(--line-strong) !important; border-radius: var(--r-sm);
 }
 .hero-folio-tab:hover { background: var(--info-bg) !important; border-color: var(--brand) !important; }
@@ -1447,7 +1445,7 @@ nav#nav a:hover { background: color-mix(in srgb, var(--info-bg) 80%, transparent
 /* 5. Simulator Hub Architectural Ledger Strip & Signature Double-Rule Totals */
 .simlab-hub-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 0;
   border: 1px solid var(--line-strong);
   border-top: 2px solid var(--brand);
@@ -1487,6 +1485,9 @@ table.simtable tfoot th, table.simtable tfoot td, table.data tfoot th, table.dat
   border-bottom: 3px double var(--accent);
 }
 .num, .simval, .simout, .t-row, .t-foot, .je-line {
+  font-variant-numeric: tabular-nums;
+}
+.hero-ledger-table td.num, .hero-ledger-table th.num, .simlab-kpi-box b {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
 }
