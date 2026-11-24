@@ -1,4 +1,4 @@
-import { CORE_SIMULATORS, coreSimulatorsFor, summariseCoreSimProgress, unitById, type ClassLevel, type CoreSimId } from '../../../../packages/curriculum/src';
+import { CLAUSES, CORE_SIMULATORS, coreSimulatorsFor, summariseCoreSimProgress, unitById, type ClassLevel, type CoreSimId } from '../../../../packages/curriculum/src';
 import { Money } from '../../../../packages/engine/src';
 import { h, mount } from '../dom';
 import { icon, iconForLab } from '../icons';
@@ -340,6 +340,172 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
   return h('div', { class: 'hero-preview', lang: 'en' }, card);
 }
 
+interface QuickDrillItem {
+  readonly prompt: string;
+  readonly tag: string;
+  readonly options: readonly string[];
+  readonly correct: number;
+  readonly rule: string;
+}
+
+function getQuickDrills(cls: ClassLevel): readonly QuickDrillItem[] {
+  if (cls === 'XII') {
+    return [
+      {
+        tag: 'Partnership · Admission (CBSE XII)',
+        prompt: 'Incoming partner Kabir brings ₹90,000 cash as Premium for Goodwill (sacrificing ratio 2 : 1). Which entry distributes goodwill?',
+        options: [
+          'Dr Premium for Goodwill A/c ₹90,000 → Cr Old Partners’ Capital A/cs (₹60,000 & ₹30,000)',
+          'Dr Old Partners’ Capital A/cs ₹90,000 → Cr Premium for Goodwill A/c ₹90,000',
+          'Dr Revaluation A/c ₹90,000 → Cr Kabir’s Capital A/c ₹90,000',
+        ],
+        correct: 0,
+        rule: 'AS-26 / CBSE Partnership Rule: Cash goodwill brought in by a new partner is credited to sacrificing partners in their sacrificing ratio (2 : 1).',
+      },
+      {
+        tag: 'Company Accounts · Share Forfeiture (CBSE XII)',
+        prompt: '400 shares of ₹10 each (fully called) are forfeited for non-payment of final call of ₹3/share. What amount is debited to Share Capital A/c?',
+        options: ['Dr Share Capital A/c ₹2,800 (amount received)', 'Dr Share Capital A/c ₹4,000 (called-up value: 400 × ₹10)', 'Dr Share Capital A/c ₹1,200 (unpaid call)'],
+        correct: 1,
+        rule: 'On forfeiture, Share Capital A/c is always debited with the CALLED-UP face value (₹4,000); received ₹2,800 goes to Share Forfeiture A/c and unpaid ₹1,200 to Calls-in-Arrears A/c.',
+      },
+      {
+        tag: 'Financial Statements · Cash Flow (CBSE XII)',
+        prompt: 'Machinery costing ₹1,20,000 (accumulated depreciation ₹45,000) is sold for ₹85,000 cash. Where does the ₹85,000 cash inflow appear?',
+        options: ['Operating Activities (+₹85,000)', 'Investing Activities (+₹85,000 sale proceeds; ₹10,000 gain deducted in Operating)', 'Financing Activities (+₹85,000)'],
+        correct: 1,
+        rule: 'AS-3 (Revised): Cash proceeds from disposal of fixed assets (+₹85,000) belong to Investing Activities, while the non-operating gain of ₹10,000 is deducted from Net Profit in Operating Activities.',
+      },
+    ];
+  }
+  return [
+    {
+      tag: 'Modern Approach · Asset Swap (CBSE XI)',
+      prompt: 'Purchased office furniture for ₹35,000 by cheque from HDFC Bank. Which double-entry rule applies?',
+      options: [
+        'Dr Furniture A/c ₹35,000 (Asset ↑) · Cr Bank A/c ₹35,000 (Asset ↓)',
+        'Dr Purchases A/c ₹35,000 (Expense ↑) · Cr Cash A/c ₹35,000 (Asset ↓)',
+        'Dr Bank A/c ₹35,000 (Asset ↑) · Cr Furniture A/c ₹35,000 (Asset ↓)',
+      ],
+      correct: 0,
+      rule: 'Furniture is a Fixed Asset (not traded goods, so never Dr Purchases). Increase in Furniture Asset is Debited; decrease in Bank Asset is Credited.',
+    },
+    {
+      tag: 'Accrual Basis · Outstanding Expense (CBSE XI)',
+      prompt: 'Monthly showroom rent of ₹12,000 is due on 31 March but still unpaid. How is it adjusted at year-end?',
+      options: [
+        'No entry until cash is paid in April',
+        'Dr Rent Expense A/c ₹12,000 (Expense ↑) · Cr Outstanding Rent A/c ₹12,000 (Liability ↑)',
+        'Dr Outstanding Rent A/c ₹12,000 · Cr Cash A/c ₹12,000',
+      ],
+      correct: 1,
+      rule: 'Matching & Accrual Concept: Expenses incurred in the current accounting period must be debited this year, and the unpaid obligation creates a Representative Personal Liability (Cr).',
+    },
+    {
+      tag: 'GST Input Credit · Credit Purchase (CBSE XI)',
+      prompt: 'Bought traded goods list-priced ₹50,000 on credit from Mehta Sons @ 18% intra-state GST (9% CGST + 9% SGST).',
+      options: [
+        'Dr Purchases ₹50,000 + Dr Input CGST ₹4,500 + Dr Input SGST ₹4,500 → Cr Mehta Sons ₹59,000',
+        'Dr Purchases ₹59,000 → Cr Output GST ₹9,000 + Cr Mehta Sons ₹50,000',
+        'Dr Mehta Sons ₹59,000 → Cr Sales ₹50,000 + Cr Output IGST ₹9,000',
+      ],
+      correct: 0,
+      rule: 'Input GST paid on purchases is an adjustable asset/claim (Debited separately as Input CGST & Input SGST), while the supplier is Credited with the full invoice total ₹59,000.',
+    },
+  ];
+}
+
+function buildQuickDrillWidget(cls: ClassLevel): HTMLElement {
+  const drills = getQuickDrills(cls);
+  let idx = 0;
+  let picked: number | null = null;
+  let streak = 0;
+  const box = h('section', { class: 'panel home-drill-panel', 'aria-labelledby': 'home-drill-title' });
+
+  const draw = () => {
+    const item = (drills[idx] ?? drills[0])!;
+    const answered = picked !== null;
+    const isRight = picked === item.correct;
+    const feedbackNode = answered
+      ? h('div', { class: 'note ' + (isRight ? 'good' : 'warn') + ' home-drill-feedback' }, h('b', {}, isRight ? tr('home.drill.correct') : tr('home.drill.wrong')), ' ', en(item.rule))
+      : null;
+
+    mount(
+      box,
+      h(
+        'div',
+        { class: 'home-drill-head' },
+        h(
+          'div',
+          {},
+          h('span', { class: 'kicker' }, icon('target', 14), ' ', tr('home.drill.kicker')),
+          h('h3', { id: 'home-drill-title', class: 'home-drill-h3' }, tr('home.drill.h3')),
+          h('p', { class: 'muted-line flush-bottom' }, tr('home.drill.sub')),
+        ),
+        h(
+          'div',
+          { class: 'home-drill-score', lang: 'en' },
+          h('span', { class: 'simlab-code-pill' }, `${idx + 1} / ${drills.length}`),
+          streak > 0 ? h('span', { class: 'chip solved' }, icon('flame', 13), ` ${streak} streak`) : null,
+        ),
+      ),
+      h(
+        'div',
+        { class: 'home-drill-card', lang: 'en' },
+        h('span', { class: 'home-drill-tag' }, item.tag),
+        h('p', { class: 'home-drill-prompt' }, item.prompt),
+        h(
+          'div',
+          { class: 'home-drill-options', role: 'group', 'aria-label': 'Double-entry options' },
+          ...item.options.map((opt, optIdx) => {
+            const stateCls = picked === null ? '' : optIdx === item.correct ? ' opt-correct' : optIdx === picked ? ' opt-wrong' : ' opt-dim';
+            return h(
+              'button',
+              {
+                type: 'button',
+                class: 'home-drill-opt' + stateCls,
+                'data-drill-opt': String(optIdx),
+                onclick: () => {
+                  if (picked !== null) return;
+                  picked = optIdx;
+                  if (optIdx === item.correct) streak++;
+                  else streak = 0;
+                  draw();
+                },
+              },
+              h('span', { class: 'opt-letter' }, String.fromCharCode(65 + optIdx)),
+              h('span', { class: 'opt-text' }, opt),
+            );
+          }),
+        ),
+      ),
+      feedbackNode,
+      h(
+        'div',
+        { class: 'home-drill-foot' },
+        h(
+          'button',
+          {
+            type: 'button',
+            class: answered ? 'primary small' : 'small',
+            onclick: () => {
+              idx = (idx + 1) % drills.length;
+              picked = null;
+              draw();
+            },
+          },
+          tr('home.drill.next'),
+        ),
+        h('a', { class: 'home-drill-trainer-link', href: '#/trainer' }, tr('home.drill.more')),
+      ),
+    );
+    if (feedbackNode && isRight) pulseLedgerConfirmation(feedbackNode);
+  };
+
+  draw();
+  return box;
+}
+
 export function homePage(rerender: () => void): HTMLElement {
   const cls = state.profile.cls;
   const choose = (c: ClassLevel) => {
@@ -499,6 +665,27 @@ export function homePage(rerender: () => void): HTMLElement {
 
     todayBox,
 
+    // PLATFORM TELEMETRY RIBBON: Scannable Academic Architecture Metrics
+    h(
+      'section',
+      { class: 'home-metrics-ribbon', 'aria-label': tr('home.metrics.aria') },
+      ...(
+        [
+          ['scale', String(CORE_SIMULATORS.length), tr('home.metric.workbenches'), tr('home.metric.workbenches.sub'), '#/sims'],
+          ['flask', `${ALL_LABS.length + PAGES.length}+`, tr('home.metric.labs'), tr('home.metric.labs.sub'), '#/labs'],
+          ['layers', String(CLAUSES.length), tr('home.metric.topics'), tr('home.metric.topics.sub'), `#/class/${cls}`],
+          ['clipboard', '80M', tr('home.metric.paper'), tr('home.metric.paper.sub'), '#/paper'],
+        ] as const
+      ).map(([ic, val, label, sub, href]) =>
+        h(
+          'a',
+          { class: 'home-metric-tile', href },
+          h('div', { class: 'home-metric-icon' }, icon(ic, 20)),
+          h('div', { class: 'home-metric-copy' }, h('b', { lang: 'en' }, val), h('span', {}, label), h('small', {}, sub)),
+        ),
+      ),
+    ),
+
     // FLAGSHIP INTERACTIVE ACCOUNTING WORKBENCHES (A–J) — Surfaced right on Home!
     h(
       'section',
@@ -511,6 +698,9 @@ export function homePage(rerender: () => void): HTMLElement {
       ),
       workbenchGrid,
     ),
+
+    // INSTANT DOUBLE-ENTRY DRILL — Hands-on interactive verification right on Home
+    buildQuickDrillWidget(cls),
 
     // HOW IT WORKS: Architectural 3-Column Ledger Protocol Strip
     h(

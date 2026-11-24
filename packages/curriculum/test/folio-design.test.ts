@@ -75,8 +75,13 @@ describe('Chartered Ledger Folio UI/UX Pro Max invariants (Home, Labs Index, Cla
     tabs[2]!.click();
     expect(home.querySelector('.hero-ledger-table tfoot')?.textContent).toContain('₹24,000');
 
-    // Flagship Interactive Workbenches (A–F + CAS exposure) are surfaced right on Home
+    // Flagship Interactive Workbenches (A–F + CAS exposure) & Quick Double-Entry Drill are surfaced right on Home
     expect(home.querySelectorAll('[data-home-workbench]').length).toBeGreaterThanOrEqual(6);
+    expect(home.querySelectorAll('.home-metric-tile').length).toBe(4);
+    const drillOpt = home.querySelector<HTMLButtonElement>('[data-drill-opt="0"]');
+    expect(drillOpt).not.toBeNull();
+    drillOpt!.click();
+    expect(home.querySelector('.home-drill-feedback.good')).not.toBeNull();
 
     // Class XII toggle triggers rerender and updates hero vouchers
     const xiiBtn = Array.from(home.querySelectorAll<HTMLButtonElement>('.bigchoice')).find(b => b.textContent?.includes('Class XII'));
