@@ -33,7 +33,7 @@ export function renderBalanceBeamSvg(opts: { leftLabel: string; leftAmount: stri
   const maxVal = Math.max(1, Math.abs(opts.leftValue), Math.abs(opts.rightValue));
   const diffRatio = (opts.rightValue - opts.leftValue) / maxVal;
   const deg = opts.balanced ? 0 : Math.max(-11, Math.min(11, diffRatio * 18));
-  const toneColor = opts.balanced ? 'var(--ok)' : 'var(--bad)';
+  const toneColor = opts.balanced ? 'var(--good)' : 'var(--bad)';
 
   return svg(
     'svg',
@@ -54,14 +54,14 @@ export function renderBalanceBeamSvg(opts: { leftLabel: string; leftAmount: stri
       svg(
         'g',
         { transform: `rotate(${(-deg).toFixed(2)} 96 102)` },
-        svg('rect', { x: 24, y: 98, width: 144, height: 34, rx: 8, fill: 'var(--card)', stroke: 'var(--brand)', 'stroke-width': 2 }),
+        svg('rect', { x: 24, y: 98, width: 144, height: 34, rx: 8, fill: 'var(--surface)', stroke: 'var(--brand)', 'stroke-width': 2 }),
         svg('text', { x: 96, y: 113, 'text-anchor': 'middle', class: 'simlab-svg-sub' }, opts.leftLabel),
         svg('text', { x: 96, y: 127, 'text-anchor': 'middle', class: 'simlab-svg-val' }, opts.leftAmount),
       ),
       svg(
         'g',
         { transform: `rotate(${(-deg).toFixed(2)} 424 102)` },
-        svg('rect', { x: 352, y: 98, width: 144, height: 34, rx: 8, fill: 'var(--card)', stroke: 'var(--accent)', 'stroke-width': 2 }),
+        svg('rect', { x: 352, y: 98, width: 144, height: 34, rx: 8, fill: 'var(--surface)', stroke: 'var(--accent)', 'stroke-width': 2 }),
         svg('text', { x: 424, y: 113, 'text-anchor': 'middle', class: 'simlab-svg-sub' }, opts.rightLabel),
         svg('text', { x: 424, y: 127, 'text-anchor': 'middle', class: 'simlab-svg-val' }, opts.rightAmount),
       ),

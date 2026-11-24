@@ -68,7 +68,7 @@ export function renderPartnershipLab(stage: HTMLElement, ctx: SimShellContext): 
   });
 
   function renderRatioStrip(label: string, shares: Record<string, Fraction>): HTMLElement {
-    const colors: Record<string, string> = { A: 'var(--brand)', B: 'var(--accent)', C: 'var(--ok)' };
+    const colors: Record<string, string> = { A: 'var(--brand)', B: 'var(--accent)', C: 'var(--good)' };
     return h(
       'div',
       { class: 'simlab-ratio-strip' },
