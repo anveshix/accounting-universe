@@ -130,11 +130,16 @@ export function labsIndex(): HTMLElement {
     ),
   );
 
-  const card = (t: Tool) =>
+  const card = (t: Tool, idx: number) =>
     h(
       'a',
-      { class: 'card', href: t.href, 'data-tool': t.id },
-      h('div', { class: 'card-icon' }, icon(iconForLab(t.id, t.title), 22)),
+      { class: 'card folio-card', href: t.href, 'data-tool': t.id },
+      h(
+        'div',
+        { class: 'folio-card-head' },
+        h('div', { class: 'card-icon' }, icon(iconForLab(t.id, t.title), 20)),
+        h('span', { class: 'folio-index', 'aria-hidden': 'true' }, String(idx + 1).padStart(2, '0')),
+      ),
       h('h3', {}, en(t.title)),
       h('p', {}, en(t.summary)),
       h('span', { class: 'chip' }, tr('ui.class', { cls: t.cls })),

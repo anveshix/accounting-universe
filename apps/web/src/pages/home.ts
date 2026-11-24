@@ -2,6 +2,7 @@ import type { ClassLevel } from '../../../../packages/curriculum/src';
 import { h, mount } from '../dom';
 import { icon, iconForLab } from '../icons';
 import { ALL_LABS, PAGES, coverage } from '../labs';
+import { pulseLedgerConfirmation } from '../motion';
 import { state } from '../state';
 import { attempts, setProfile } from '../store';
 import { navigate } from '../router';
@@ -9,71 +10,235 @@ import { en, tr } from '../i18n';
 import { currentRewards } from '../rewards-ui';
 import { todayPanel } from '../review-ui';
 
-function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
+interface HeroVoucherSpec {
+  readonly code: string;
+  readonly tab: string;
+  readonly folio: string;
+  readonly title: string;
+  readonly narration: string;
+  readonly lines: readonly [string, string, string, string][];
+  readonly total: string;
+}
+
+function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSpec[] {
   const isXII = cls === 'XII';
   const isCas = isXII && route === 'OPTION_II_COMPUTERISED';
-  const title = isCas
-    ? 'VCH-104 · Maker–Checker Verified'
-    : isXII
-      ? 'P&L Appropriation & Partner Capital'
-      : 'Journal → Ledger → Trial Balance';
-  const lines: readonly [string, string, string][] = isCas
-    ? [
-        ['5201 · Salaries A/c (Dr)', '₹18,000', ''],
-        ['1202 · To Cash at Bank A/c', '', '₹18,000'],
-        ['1101 · Machinery A/c (Dr)', '₹60,000', ''],
-        ['1202 · To Cash at Bank A/c', '', '₹60,000'],
-      ]
-    : isXII
-      ? [
-          ['Interest on Capital · A & B (Dr)', '₹48,000', ''],
-          ['Divisible Profit · 3 : 2 (Dr)', '₹1,20,000', ''],
-          ['To P&L Net Profit b/d', '', '₹1,68,000'],
-        ]
-      : [
-          ['Cash A/c · Capital Introduced (Dr)', '₹1,00,000', ''],
-          ['Stock A/c · Credit Purchase (Dr)', '₹45,000', ''],
-          ['To Capital A/c', '', '₹1,00,000'],
-          ['To Sundry Creditors A/c', '', '₹45,000'],
-        ];
-  const total = isCas ? '₹78,000' : isXII ? '₹1,68,000' : '₹1,45,000';
+  if (isCas) {
+    return [
+      {
+        code: 'VCH-104',
+        tab: '01 Payroll',
+        folio: 'CAS · Payment Voucher',
+        title: 'Maker–Checker Verified Payroll Run',
+        narration: 'Being monthly establishment salaries & statutory TDS posted via CAS voucher pipeline.',
+        lines: [
+          ['5201', 'Salaries & Wages A/c (Dr)', '₹64,000', ''],
+          ['2108', 'To TDS Payable A/c', '', '₹6,400'],
+          ['1202', 'To HDFC Bank A/c', '', '₹57,600'],
+        ],
+        total: '₹64,000',
+      },
+      {
+        code: 'VCH-109',
+        tab: '02 Capex',
+        folio: 'CAS · Asset Acquisition',
+        title: 'Fixed Asset Master + Sub-Ledger Sync',
+        narration: 'Being CNC equipment capitalised into Asset Register with automated SLM schedule.',
+        lines: [
+          ['1104', 'Plant & Machinery A/c (Dr)', '₹1,80,000', ''],
+          ['1409', 'Input IGST A/c (Dr)', '₹32,400', ''],
+          ['1202', 'To HDFC Bank A/c', '', '₹2,12,400'],
+        ],
+        total: '₹2,12,400',
+      },
+      {
+        code: 'VCH-115',
+        tab: '03 Audit',
+        folio: 'CAS · Period Lock',
+        title: 'Closing Adjustment & Audit Hash',
+        narration: 'Being annual depreciation batch posted and period locked against back-dated edits.',
+        lines: [
+          ['5402', 'Depreciation Expense A/c (Dr)', '₹18,000', ''],
+          ['1194', 'To Accumulated Depreciation A/c', '', '₹18,000'],
+        ],
+        total: '₹18,000',
+      },
+    ];
+  }
+  if (isXII) {
+    return [
+      {
+        code: 'FOLIO XII-A',
+        tab: '01 Appropriation',
+        folio: 'Partnership · P&L Appropriation',
+        title: 'Interest on Capital & Divisible Profit (3 : 2)',
+        narration: 'Being net profit appropriated between Aarav & Meera as per Partnership Deed.',
+        lines: [
+          ['3101', 'P&L Appropriation A/c (Dr)', '₹1,68,000', ''],
+          ['2401', 'To Aarav Capital A/c (IoC + Share)', '', '₹1,00,800'],
+          ['2402', 'To Meera Capital A/c (IoC + Share)', '', '₹67,200'],
+        ],
+        total: '₹1,68,000',
+      },
+      {
+        code: 'FOLIO XII-B',
+        tab: '02 Goodwill',
+        folio: 'Admission · Sacrificing Ratio',
+        title: 'Premium for Goodwill on Partner Admission',
+        narration: 'Being incoming partner Kabir’s goodwill premium credited in sacrificing ratio 2 : 1.',
+        lines: [
+          ['2490', 'Premium for Goodwill A/c (Dr)', '₹90,000', ''],
+          ['2401', 'To Aarav Capital A/c', '', '₹60,000'],
+          ['2402', 'To Meera Capital A/c', '', '₹30,000'],
+        ],
+        total: '₹90,000',
+      },
+      {
+        code: 'FOLIO XII-C',
+        tab: '03 Forfeiture',
+        folio: 'Company Accounts · Share Capital',
+        title: 'Share Forfeiture & Pro-Rata Reissue',
+        narration: 'Being 400 defaulted shares forfeited and surplus transferred to Capital Reserve.',
+        lines: [
+          ['2001', 'Share Capital A/c (Dr)', '₹40,000', ''],
+          ['2014', 'To Calls-in-Arrears A/c', '', '₹12,000'],
+          ['2019', 'To Share Forfeiture A/c', '', '₹28,000'],
+        ],
+        total: '₹40,000',
+      },
+    ];
+  }
+  return [
+    {
+      code: 'FOLIO XI-01',
+      tab: '01 Capital',
+      folio: 'Books of Original Entry · J.F. 01',
+      title: 'Commencement of Business with Cash & Bank',
+      narration: 'Being capital introduced by proprietor into cash chest and current bank account.',
+      lines: [
+        ['1001', 'Cash-in-Hand A/c (Dr)', '₹75,000', ''],
+        ['1002', 'Cash at Bank A/c (Dr)', '₹1,75,000', ''],
+        ['3001', 'To Proprietor Capital A/c', '', '₹2,50,000'],
+      ],
+      total: '₹2,50,000',
+    },
+    {
+      code: 'FOLIO XI-02',
+      tab: '02 GST Trade',
+      folio: 'Purchases Journal · J.F. 04',
+      title: 'Credit Inventory Purchase with Input GST',
+      narration: 'Being traded goods bought from Sharma Traders @ 18% GST (9% CGST + 9% SGST).',
+      lines: [
+        ['4101', 'Purchases A/c (Dr)', '₹50,000', ''],
+        ['1401', 'Input CGST / SGST A/c (Dr)', '₹9,000', ''],
+        ['2104', 'To Sharma Traders A/c', '', '₹59,000'],
+      ],
+      total: '₹59,000',
+    },
+    {
+      code: 'FOLIO XI-03',
+      tab: '03 Closing',
+      folio: 'Year-End Adjustment · J.F. 12',
+      title: 'WDV Depreciation & Accrued Provision',
+      narration: 'Being 10% WDV depreciation charged on machinery before Trial Balance extraction.',
+      lines: [
+        ['5301', 'Depreciation A/c (Dr)', '₹24,000', ''],
+        ['1102', 'To Machinery A/c', '', '₹24,000'],
+      ],
+      total: '₹24,000',
+    },
+  ];
+}
 
-  return h(
-    'aside',
-    { class: 'hero-preview', lang: 'en', 'aria-label': 'Live accounting ledger preview' },
-    h(
-      'div',
-      { class: 'hero-ledger-card' },
+function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
+  const specs = getHeroVouchers(cls, route);
+  let activeIdx = 0;
+  const card = h('div', { class: 'hero-ledger-card' });
+
+  const drawFolio = (animateTally: boolean) => {
+    const cur = (specs[activeIdx] ?? specs[0])!;
+    const tallyFoot = h(
+      'tfoot',
+      {},
+      h(
+        'tr',
+        {},
+        h('th', { scope: 'row', colSpan: 2 }, 'Double-Entry Tally'),
+        h('td', { class: 'num' }, cur.total),
+        h('td', { class: 'num' }, cur.total),
+      ),
+    );
+    mount(
+      card,
       h(
         'div',
         { class: 'hero-ledger-head' },
-        h('span', { class: 'hero-ledger-kicker' }, `CBSE 055 · Class ${cls}`),
+        h('span', { class: 'hero-ledger-kicker' }, `CBSE 055 · CLASS ${cls} · ${cur.code}`),
         h('span', { class: 'hero-ledger-badge' }, icon('check-circle', 14), ' Dr = Cr Verified'),
       ),
-      h('p', { class: 'hero-ledger-title' }, title),
       h(
-        'table',
-        { class: 'hero-ledger-table' },
-        h(
-          'thead',
-          {},
-          h('tr', {}, h('th', { scope: 'col' }, 'Particulars'), h('th', { scope: 'col', class: 'num' }, 'Dr'), h('th', { scope: 'col', class: 'num' }, 'Cr')),
-        ),
-        h(
-          'tbody',
-          {},
-          ...lines.map(([p, dr, cr]) =>
-            h('tr', { class: cr ? 'cr-row' : '' }, h('td', {}, p), h('td', { class: 'num' }, dr || '—'), h('td', { class: 'num' }, cr || '—')),
+        'div',
+        { class: 'hero-folio-tabs', role: 'group', 'aria-label': 'Sample accounting vouchers' },
+        ...specs.map((sp, idx) =>
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'hero-folio-tab' + (idx === activeIdx ? ' on' : ''),
+              'aria-pressed': String(idx === activeIdx),
+              onclick: () => {
+                if (activeIdx === idx) return;
+                activeIdx = idx;
+                drawFolio(true);
+              },
+            },
+            sp.tab,
           ),
         ),
+      ),
+      h('div', { class: 'hero-folio-meta' }, h('span', {}, cur.folio), h('p', { class: 'hero-ledger-title' }, cur.title)),
+      h(
+        'div',
+        { class: 'hero-table-scroll' },
         h(
-          'tfoot',
-          {},
-          h('tr', {}, h('th', { scope: 'row' }, 'Trial Balance Tally'), h('td', { class: 'num' }, total), h('td', { class: 'num' }, total)),
+          'table',
+          { class: 'hero-ledger-table' },
+          h(
+            'thead',
+            {},
+            h(
+              'tr',
+              {},
+              h('th', { scope: 'col', class: 'lf-col' }, 'L.F.'),
+              h('th', { scope: 'col' }, 'Particulars'),
+              h('th', { scope: 'col', class: 'num' }, 'Dr (₹)'),
+              h('th', { scope: 'col', class: 'num' }, 'Cr (₹)'),
+            ),
+          ),
+          h(
+            'tbody',
+            {},
+            ...cur.lines.map(([lf, p, dr, cr]) =>
+              h(
+                'tr',
+                { class: cr ? 'cr-row' : 'dr-row' },
+                h('td', { class: 'lf-col' }, lf),
+                h('td', {}, p),
+                h('td', { class: 'num' }, dr || '—'),
+                h('td', { class: 'num' }, cr || '—'),
+              ),
+            ),
+          ),
+          tallyFoot,
         ),
       ),
-    ),
-  );
+      h('p', { class: 'hero-folio-narration' }, cur.narration),
+    );
+    if (animateTally) pulseLedgerConfirmation(tallyFoot);
+  };
+
+  drawFolio(false);
+  return h('aside', { class: 'hero-preview', lang: 'en', 'aria-label': 'Interactive accounting voucher folio' }, card);
 }
 
 export function homePage(rerender: () => void): HTMLElement {
@@ -109,10 +274,19 @@ export function homePage(rerender: () => void): HTMLElement {
   const firstHref = first ? ('href' in first ? first.href : `#/lab/${first.id}`) : `#/class/${cls}`;
   const firstTitle = first ? first.title : `Class ${cls} syllabus`;
 
+  const starterItems = [
+    ...PAGES.filter(p => p.cls === cls && (!p.route || route === p.route))
+      .slice(0, 2)
+      .map(p => ({ id: p.id, href: p.href, title: p.title, summary: p.summary, cls: p.cls })),
+    ...ALL_LABS.filter(l => l.cls === cls && (!l.route || route === l.route))
+      .slice(0, 4)
+      .map(l => ({ id: l.id, href: `#/lab/${l.id}`, title: l.title, summary: l.summary, cls: l.cls })),
+  ];
+
   return h(
     'div',
     { class: 'home' },
-    // HERO: asymmetric editorial split — calm left column for class/action selection, live ledger preview moment on the right.
+    // HERO: Architectural Chartered Folio Masthead + Interactive Live Voucher Specimen
     h(
       'section',
       { class: 'hero hero-split' },
@@ -169,9 +343,7 @@ export function homePage(rerender: () => void): HTMLElement {
                   label,
                 ),
               ),
-              route === 'OPTION_II_COMPUTERISED'
-                ? h('p', { class: 'note info route-note' }, tr('home.route.note'))
-                : null,
+              route === 'OPTION_II_COMPUTERISED' ? h('p', { class: 'note info route-note' }, tr('home.route.note')) : null,
             )
           : null,
         h(
@@ -187,20 +359,27 @@ export function homePage(rerender: () => void): HTMLElement {
 
     todayBox,
 
-    // HOW IT WORKS: what a session looks like, in the learner's words.
+    // HOW IT WORKS: Architectural 3-Column Ledger Protocol Strip
     h(
       'section',
       { class: 'steps3', 'aria-label': tr('home.steps.aria') },
       ...(
         [
-          ['book', tr('home.step1.t'), tr('home.step1.d')],
-          ['flask', tr('home.step2.t'), tr('home.step2.d')],
-          ['check-circle', tr('home.step3.t'), tr('home.step3.d')],
+          ['01', 'book', tr('home.step1.t'), tr('home.step1.d')],
+          ['02', 'flask', tr('home.step2.t'), tr('home.step2.d')],
+          ['03', 'check-circle', tr('home.step3.t'), tr('home.step3.d')],
         ] as const
-      ).map(([ic, title, text]) => h('div', { class: 'step3' }, h('div', { class: 'step3-icon' }, icon(ic, 22)), h('div', {}, h('b', {}, title), h('span', {}, text)))),
+      ).map(([idx, ic, title, text]) =>
+        h(
+          'div',
+          { class: 'step3' },
+          h('div', { class: 'step3-top' }, h('span', { class: 'step3-num', 'aria-hidden': 'true' }, idx), h('div', { class: 'step3-icon' }, icon(ic, 20))),
+          h('div', { class: 'step3-body' }, h('b', {}, title), h('span', {}, text)),
+        ),
+      ),
     ),
 
-    // START HERE: a handful of good first labs for the chosen class.
+    // START HERE: Ledger Folio Index for the Chosen Class
     h(
       'div',
       { class: 'section-head' },
@@ -209,50 +388,60 @@ export function homePage(rerender: () => void): HTMLElement {
     ),
     h(
       'section',
-      { class: 'cards' },
-      ...PAGES.filter(p => p.cls === cls && (!p.route || route === p.route))
-        .slice(0, 2)
-        .map(p =>
-          h('a', { class: 'card', href: p.href }, h('div', { class: 'card-icon' }, icon(iconForLab(p.id, p.title), 22)), h('h3', {}, en(p.title)), h('p', {}, en(p.summary)), h('span', { class: 'chip' }, tr('ui.class', { cls: p.cls }))),
+      { class: 'cards folio-grid' },
+      ...starterItems.map((item, idx) =>
+        h(
+          'a',
+          { class: 'card folio-card', href: item.href },
+          h(
+            'div',
+            { class: 'folio-card-head' },
+            h('div', { class: 'card-icon' }, icon(iconForLab(item.id, item.title), 20)),
+            h('span', { class: 'folio-index', 'aria-hidden': 'true' }, `0${idx + 1}`),
+          ),
+          h('h3', {}, en(item.title)),
+          h('p', {}, en(item.summary)),
+          h('span', { class: 'chip' }, tr('ui.class', { cls: item.cls })),
         ),
-      ...ALL_LABS.filter(l => l.cls === cls && (!l.route || route === l.route))
-        .slice(0, 4)
-        .map(l =>
-          h('a', { class: 'card', href: `#/lab/${l.id}` }, h('div', { class: 'card-icon' }, icon(iconForLab(l.id, l.title), 22)), h('h3', {}, en(l.title)), h('p', {}, en(l.summary)), h('span', { class: 'chip' }, tr('ui.class', { cls: l.cls }))),
-        ),
-    ),
-
-    // VISUAL ACCOUNTING: the chapter-wise simulators — a need, a picture, one challenge, XP.
-    h(
-      'section',
-      { class: 'panel sims-band', 'aria-labelledby': 'sims-band-title' },
-      h('div', {}, h('h3', { id: 'sims-band-title', class: 'flush-top' }, tr('home.sims.t')), h('p', {}, tr('home.sims.body'))),
-      h('a', { class: 'button primary', href: '#/sims' }, tr('home.sims.btn')),
-    ),
-
-    // FOR TEACHERS: a clear door for the other main audience.
-    h(
-      'section',
-      { class: 'panel teacher-band', 'aria-labelledby': 'teacher-band-title' },
-      h('div', { class: 'teacher-band-icon' }, icon('chalkboard', 26)),
-      h(
-        'div',
-        { class: 'teacher-band-text' },
-        h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')),
-        h('p', {}, tr('home.teacher.d')),
       ),
-      h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
     ),
 
-    // WHAT IS COVERED: one honest line and a meter.
+    // VISUAL ACCOUNTING & CLASSROOM DOORS: Editorial Two-Column Ledger Dispatch
+    h(
+      'div',
+      { class: 'editorial-dispatch-grid' },
+      h(
+        'section',
+        { class: 'panel sims-band', 'aria-labelledby': 'sims-band-title' },
+        h('div', {}, h('h3', { id: 'sims-band-title', class: 'flush-top' }, tr('home.sims.t')), h('p', {}, tr('home.sims.body'))),
+        h('a', { class: 'button primary', href: '#/sims' }, tr('home.sims.btn')),
+      ),
+      h(
+        'section',
+        { class: 'panel teacher-band', 'aria-labelledby': 'teacher-band-title' },
+        h('div', { class: 'teacher-band-icon' }, icon('chalkboard', 24)),
+        h(
+          'div',
+          { class: 'teacher-band-text' },
+          h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')),
+          h('p', {}, tr('home.teacher.d')),
+        ),
+        h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
+      ),
+    ),
+
+    // WHAT IS COVERED: Audited Syllabus Coverage Ledger Bar
     h(
       'section',
-      { class: 'panel' },
+      { class: 'panel coverage-folio' },
       h('h3', { class: 'flush-top' }, tr('home.cover.t', { cls })),
       h('p', { class: 'muted-line' }, tr('home.cover.line', { a: cov.interactive, b: cov.total, c: cov.cardsOnly, d: cov.none })),
-      h('div', { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) }, h('div', { class: 'meterfill', style: `width:${pct}%` })),
+      h(
+        'div',
+        { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) },
+        h('div', { class: 'meterfill', style: `width:${pct}%` }),
+      ),
       h('div', { class: 'actions' }, h('a', { class: 'button', href: '#/cards' }, tr('home.cards')), h('a', { class: 'button', href: '#/rescue' }, tr('home.rescue'))),
     ),
-
   );
 }

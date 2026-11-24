@@ -119,6 +119,10 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+
 # Firebase cache directory
 .firebase/
 
