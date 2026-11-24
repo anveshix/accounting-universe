@@ -350,8 +350,8 @@ export function simsIndex(): HTMLElement {
               h(
                 'div',
                 {},
-                h('p', { class: 'eyebrow' }, 'Interactive CBSE Workbenches · Beginner → Practice → Challenge → Master'),
-                h('h3', { id: 'flagship-sim-h', class: 'flush-top' }, 'CBSE Class XI & XII Simulator & Visualiser Suite'),
+                h('p', { class: 'eyebrow' }, 'Interactive CBSE Workbenches · Beginner to Master'),
+                h('h3', { id: 'flagship-sim-h', class: 'flush-top' }, 'Class XI & XII Simulator Workbenches'),
               ),
               h(
                 'div',
@@ -399,43 +399,40 @@ export function simsIndex(): HTMLElement {
             ),
             h(
               'div',
-              { class: 'simlab-hub-progress' },
-              h(
-                'span',
-                {},
-                h('b', {}, `${coreProg.totalMissionsCompleted} of ${coreProg.totalMissionsAvailable} missions cleared`),
-                ` · ${coreProg.earnedBadges.length} of ${SIM_ACHIEVEMENT_BADGES.length} Simulator Badges earned`,
-              ),
-              h(
-                'div',
-                { class: 'simlab-badge-strip' },
-                ...SIM_ACHIEVEMENT_BADGES.map(b => {
-                  const earned = coreProg.earnedBadges.some(eb => eb.id === b.id);
-                  return h(
-                    'span',
-                    {
-                      class: 'simlab-hub-badge' + (earned ? ' earned' : ''),
-                      title: b.description,
-                      'data-sim-badge': b.id,
-                    },
-                    icon(earned ? 'medal' : 'lock', 15),
-                    ' ',
-                    b.title,
-                  );
-                }),
-              ),
+              { class: 'simlab-hub-kpis' },
+              h('div', { class: 'simlab-kpi-box' }, h('span', {}, 'Workbench Missions'), h('b', {}, `${coreProg.totalMissionsCompleted} / ${coreProg.totalMissionsAvailable}`)),
+              h('div', { class: 'simlab-kpi-box' }, h('span', {}, 'Workbench Badges'), h('b', {}, `${coreProg.earnedBadges.length} / ${SIM_ACHIEVEMENT_BADGES.length}`)),
+              h('div', { class: 'simlab-kpi-box' }, h('span', {}, 'Chapter Visualisers'), h('b', {}, `${done} / ${all.length}`)),
+            ),
+            h(
+              'div',
+              { class: 'simlab-badge-strip' },
+              ...SIM_ACHIEVEMENT_BADGES.map(b => {
+                const earned = coreProg.earnedBadges.some(eb => eb.id === b.id);
+                return h(
+                  'span',
+                  {
+                    class: 'simlab-hub-badge' + (earned ? ' earned' : ''),
+                    title: b.description,
+                    'data-sim-badge': b.id,
+                  },
+                  icon(earned ? 'medal' : 'lock', 15),
+                  ' ',
+                  b.title,
+                );
+              }),
             ),
             h(
               'div',
               { class: 'cards simlab-core-grid' },
-              ...[...coreSims, ...xiCasExposure].map(cs => {
+              ...[...coreSims, ...xiCasExposure].map((cs, idx) => {
                 const clearedTiers = cs.missions.filter(m => coreProg.completedMissions.has(`${cs.id}:${m.tier}`)).length;
                 const unitTitle = unitById(cs.unit)?.title ?? cs.unit;
                 const isExposure = filterCls === 'XI' && cs.id === 'computerised-accounting-lab';
                 return h(
                   'a',
                   {
-                    class: 'card simlab-core-card',
+                    class: 'card simlab-core-card' + (idx === 0 ? ' featured' : ''),
                     href: `#/sim-lab/${cs.id}`,
                     'data-core-card': cs.id,
                   },
@@ -443,11 +440,12 @@ export function simsIndex(): HTMLElement {
                     'div',
                     { class: 'simlab-card-top' },
                     h('span', { class: 'simlab-code-pill' }, `Lab ${cs.code} · ${isExposure ? 'XI Exposure / XII CAS' : `Class ${cs.cls}`}`),
-                    h('span', { class: 'chip' + (clearedTiers > 0 ? ' solved' : '') }, `${clearedTiers}/4 missions`),
+                    h('span', { class: 'simlab-meta-count' }, `${clearedTiers} / 4 missions`),
                   ),
                   h('h4', { class: 'simlab-card-title' }, cs.title),
                   h('p', { class: 'simlab-card-sub' }, cs.subtitle),
                   h('p', {}, cs.summary),
+                  h('div', { class: 'simlab-tier-dots', 'aria-hidden': 'true' }, ...cs.missions.map(m => h('i', { class: coreProg.completedMissions.has(`${cs.id}:${m.tier}`) ? 'done' : '' }))),
                   h('small', { class: 'hint' }, `${unitTitle} · ${cs.titleHi}`),
                 );
               }),

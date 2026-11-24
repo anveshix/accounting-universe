@@ -6,6 +6,7 @@ import { SIM_DIFFICULTIES, clauseById, coreSimMissionLabId, summariseCoreSimProg
 import { TERM_HI, accountHi } from '../../../../packages/curriculum/src/i18n';
 import { h, mount, svg } from '../dom';
 import { icon } from '../icons';
+import { pulseLedgerConfirmation } from '../motion';
 import { drawHud, notify } from '../rewards-ui';
 import { recordSeen, seen } from '../store';
 import { announce } from '../ui';
@@ -172,7 +173,9 @@ export function mountSimulatorShell(root: HTMLElement, spec: CoreSimulatorSpec, 
         }
       }
     }
-    mount(statusBanner, h('div', { class: 'note good simlab-win' }, icon('check-circle', 18), h('div', {}, h('b', {}, `${difficulty} Mission Verified — `), reason)));
+    const winNode = h('div', { class: 'note good simlab-win' }, icon('check-circle', 18), h('div', {}, h('b', {}, `${difficulty} Mission Verified — `), reason));
+    mount(statusBanner, winNode);
+    pulseLedgerConfirmation(winNode);
     announce(`Mission verified: ${reason}`);
     drawMissionBar();
   };

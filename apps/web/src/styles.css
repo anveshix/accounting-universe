@@ -990,7 +990,7 @@ nav.simnav a.button { max-width: 100%; white-space: normal; overflow-wrap: anywh
 .simlab-hub-badge.earned { background: var(--good-bg); color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); font-weight: 600; }
 .simlab-core-card { display: flex; flex-direction: column; gap: .45rem; }
 .simlab-card-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem; }
-.simlab-code-pill { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--eyebrow); }
+.simlab-code-pill { font-family: var(--mono); font-size: .75rem; font-weight: 500; letter-spacing: 0; color: var(--eyebrow); }
 .simlab-card-title { margin: 0; font-size: 1.05rem; }
 .simlab-card-sub { margin: 0; font-size: .84rem; font-weight: 500; color: var(--brand); }
 
@@ -1052,7 +1052,7 @@ a.btn:hover { border-color: var(--line-strong); background: var(--surface-2); }
 .t-side.dr { border-right: 1px solid var(--line); }
 .t-row, .t-foot { display: flex; justify-content: space-between; gap: .35rem; font-variant-numeric: tabular-nums; }
 .t-row span { overflow-wrap: anywhere; }
-.t-row.bal-cd { color: var(--accent-2); font-style: italic; }
+.t-row.bal-cd { color: var(--accent-2); font-weight: 500; }
 .t-row.bal-bd { color: var(--good); font-weight: 600; }
 .t-foot { border-top: 1px solid var(--line); border-bottom: 3px double var(--line-strong); padding: .2rem 0; margin-top: auto; }
 
@@ -1106,3 +1106,156 @@ table.simtable tfoot th, table.simtable tfoot td { background: var(--surface-2);
   .compare-arrow { display: none; }
   .simlab-step-pill { margin-left: 0; width: 100%; }
 }
+
+/* ==========================================================================
+   AI-Era Editorial & Frosted-Glass Design Pass (unslop + Anime.js)
+   World: Indian Chartered Ledger Paper, Deep Brand Teal, Double-Rule Amber.
+   Restrained frosted glass on sticky chrome & floating overlays only;
+   asymmetric hero split with live ledger preview; 4px grid & nested radii.
+   ========================================================================== */
+
+/* 1. App proportions & fluid workbench container */
+main { max-width: 1280px; padding: 1.75rem clamp(1rem, 3vw, 2rem) 3.5rem; }
+
+/* 2. Frosted-glass sticky chrome (header, navigation bar, floating panels) */
+header.top {
+  background: color-mix(in srgb, var(--brand) 92%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+@media (prefers-color-scheme: dark) {
+  header.top {
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+}
+nav#nav {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: saturate(150%) blur(12px);
+  -webkit-backdrop-filter: saturate(150%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+nav#nav a { z-index: 1; transition: color var(--t-fast) var(--ease); }
+nav#nav a:hover { background: color-mix(in srgb, var(--info-bg) 70%, transparent); border-radius: 8px 8px 0 0; }
+.nav-glide {
+  position: absolute; bottom: 0; left: 0; height: 2px; width: 0; opacity: 0;
+  background: var(--accent); pointer-events: none; z-index: 2; border-radius: 2px 2px 0 0;
+  will-change: transform, width;
+}
+@media (min-width: 721px) {
+  nav#nav a[aria-current="page"] { border-bottom-color: transparent; }
+}
+@media (max-width: 720px) {
+  .nav-glide { display: none; }
+  nav#nav { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+.display-panel {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(150%) blur(16px);
+  -webkit-backdrop-filter: saturate(150%) blur(16px);
+}
+.toast {
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+}
+.projector nav#nav, .projector .display-panel, .projector .toast {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 3. Asymmetric Split Hero + Live Ledger Moment */
+.hero.hero-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .95fr);
+  gap: 2rem;
+  align-items: center;
+  padding: 2.25rem clamp(1.25rem, 3.5vw, 2.5rem);
+  border-radius: var(--r-lg);
+}
+.hero-copy { min-width: 0; }
+.hero-preview { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.hero-ledger-card {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 1.25rem;
+  box-shadow: 0 16px 36px rgba(15, 25, 26, .18);
+}
+@media (prefers-color-scheme: dark) {
+  .hero-ledger-card {
+    background: var(--surface-2);
+    box-shadow: none;
+    border-color: var(--line-strong);
+  }
+}
+.projector .hero-ledger-card { box-shadow: none; border: 1.5px solid var(--brand); }
+.hero-ledger-head {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem;
+  padding-bottom: .65rem; margin-bottom: .65rem; border-bottom: 1px solid var(--line);
+}
+.hero-ledger-kicker { font-family: var(--mono); font-size: .75rem; color: var(--muted); font-weight: 500; }
+.hero-ledger-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .75rem; font-weight: 600; color: var(--good);
+  background: var(--good-bg); padding: .2rem .55rem; border-radius: var(--pill);
+}
+.hero-ledger-title { font-size: .95rem; font-weight: 600; color: var(--ink); margin: 0 0 .75rem; }
+.hero-ledger-table { width: 100%; border-collapse: collapse; font-size: .82rem; background: transparent; }
+.hero-ledger-table th, .hero-ledger-table td {
+  padding: .45rem .5rem; border: 0; border-bottom: 1px solid var(--line-2);
+  color: var(--ink); background: transparent;
+}
+.hero-ledger-table thead th {
+  font-size: .75rem; font-weight: 500; color: var(--muted);
+  border-bottom: 1px solid var(--line); background: transparent;
+}
+.hero-ledger-table tr.cr-row td:first-child { padding-left: 1.25rem; color: var(--ink-2); }
+.hero-ledger-table tfoot th, .hero-ledger-table tfoot td {
+  font-weight: 600; color: var(--ink); background: var(--surface-2);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 3px double var(--accent);
+}
+@media (max-width: 960px) {
+  .hero.hero-split { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
+/* 4. Class Page & Unit Header Clean-up (replaces inline gradients) */
+.panel.unit { border-top: 2px solid var(--brand); }
+.panel.unit.dim { border-top-color: var(--line); }
+.unit-row-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: .6rem; margin-bottom: .35rem; }
+.unit-row-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.unit-other-note { margin: .4rem 0 .75rem; padding: .5rem .75rem; background: var(--accent-soft); border: 1px solid var(--line-2); border-radius: 8px; }
+
+/* 5. Simulator Hub Bento Rhythm & Signature Double-Rule Totals */
+.simlab-hub-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .75rem;
+}
+.simlab-kpi-box {
+  padding: .75rem 1rem;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: .15rem;
+}
+.simlab-kpi-box span { font-size: .8rem; color: var(--muted); }
+.simlab-kpi-box b { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.15; }
+.simlab-meta-count { font-family: var(--mono); font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.simlab-tier-dots { display: flex; gap: 4px; margin-top: auto; padding-top: .25rem; }
+.simlab-tier-dots i { display: block; height: 4px; flex: 1; border-radius: 2px; background: var(--line); }
+.simlab-tier-dots i.done { background: var(--good); }
+@media (min-width: 900px) {
+  .simlab-core-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .simlab-core-card.featured { grid-column: span 2; background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%); border-color: color-mix(in srgb, var(--brand) 32%, var(--line)); }
+}
+table.simtable tfoot th, table.simtable tfoot td, table.data tfoot th, table.data tfoot td {
+  border-bottom: 3px double var(--accent);
+}
+.card {
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.card:hover { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .card:hover { transform: none; } }
