@@ -29,7 +29,7 @@ export function animatePageEntrance(container: HTMLElement): void {
   if (!canAnimate()) return;
   const targets = Array.from(
     container.querySelectorAll<HTMLElement>(
-      ':scope > .hero, :scope > .labhead, :scope > .panel, :scope > .steps3 > .step3, :scope > .cards > .card, .simlab-core-grid > .card, .simlab-page > .panel, .simlab-stage .simlab-card',
+      ':scope > .hero, :scope > .labhead, :scope > .panel, :scope > .steps3 > .step3, :scope > .cards > .card, :scope > .editorial-dispatch-grid > .panel, .simlab-core-grid > .card, .simlab-page > .panel, .simlab-stage .simlab-card',
     ),
   ).slice(0, 14);
   if (targets.length === 0) return;
