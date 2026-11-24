@@ -157,17 +157,7 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
 
   const drawFolio = (animateTally: boolean) => {
     const cur = (specs[activeIdx] ?? specs[0])!;
-    const tallyFoot = h(
-      'tfoot',
-      {},
-      h(
-        'tr',
-        {},
-        h('th', { scope: 'row', colSpan: 2 }, 'Double-Entry Tally'),
-        h('td', { class: 'num' }, cur.total),
-        h('td', { class: 'num' }, cur.total),
-      ),
-    );
+    const tallyFoot = h('tfoot', {}, h('tr', {}, h('th', { scope: 'row', colspan: 2 }, 'Double-Entry Tally'), h('td', { class: 'num' }, cur.total), h('td', { class: 'num' }, cur.total)));
     mount(
       card,
       h(
@@ -219,14 +209,7 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
             'tbody',
             {},
             ...cur.lines.map(([lf, p, dr, cr]) =>
-              h(
-                'tr',
-                { class: cr ? 'cr-row' : 'dr-row' },
-                h('td', { class: 'lf-col' }, lf),
-                h('td', {}, p),
-                h('td', { class: 'num' }, dr || '—'),
-                h('td', { class: 'num' }, cr || '—'),
-              ),
+              h('tr', { class: cr ? 'cr-row' : 'dr-row' }, h('td', { class: 'lf-col' }, lf), h('td', {}, p), h('td', { class: 'num' }, dr || '—'), h('td', { class: 'num' }, cr || '—')),
             ),
           ),
           tallyFoot,
@@ -265,12 +248,7 @@ export function homePage(rerender: () => void): HTMLElement {
   })();
 
   // The one thing a new visitor should do first, per class (and per Class XII option).
-  const first =
-    cls === 'XI'
-      ? PAGES.find(p => p.id === 'xi-ledger')
-      : route === 'OPTION_II_COMPUTERISED'
-        ? PAGES.find(p => p.id === 'xii-cas')
-        : ALL_LABS.find(l => l.cls === 'XII' && !l.route);
+  const first = cls === 'XI' ? PAGES.find(p => p.id === 'xi-ledger') : route === 'OPTION_II_COMPUTERISED' ? PAGES.find(p => p.id === 'xii-cas') : ALL_LABS.find(l => l.cls === 'XII' && !l.route);
   const firstHref = first ? ('href' in first ? first.href : `#/lab/${first.id}`) : `#/class/${cls}`;
   const firstTitle = first ? first.title : `Class ${cls} syllabus`;
 
@@ -380,12 +358,7 @@ export function homePage(rerender: () => void): HTMLElement {
     ),
 
     // START HERE: Ledger Folio Index for the Chosen Class
-    h(
-      'div',
-      { class: 'section-head' },
-      h('h3', {}, tr('home.popular', { cls })),
-      h('a', { class: 'button small', href: '#/labs' }, tr('home.allLabs')),
-    ),
+    h('div', { class: 'section-head' }, h('h3', {}, tr('home.popular', { cls })), h('a', { class: 'button small', href: '#/labs' }, tr('home.allLabs'))),
     h(
       'section',
       { class: 'cards folio-grid' },
@@ -420,12 +393,7 @@ export function homePage(rerender: () => void): HTMLElement {
         'section',
         { class: 'panel teacher-band', 'aria-labelledby': 'teacher-band-title' },
         h('div', { class: 'teacher-band-icon' }, icon('chalkboard', 24)),
-        h(
-          'div',
-          { class: 'teacher-band-text' },
-          h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')),
-          h('p', {}, tr('home.teacher.d')),
-        ),
+        h('div', { class: 'teacher-band-text' }, h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')), h('p', {}, tr('home.teacher.d'))),
         h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
       ),
     ),
@@ -436,11 +404,7 @@ export function homePage(rerender: () => void): HTMLElement {
       { class: 'panel coverage-folio' },
       h('h3', { class: 'flush-top' }, tr('home.cover.t', { cls })),
       h('p', { class: 'muted-line' }, tr('home.cover.line', { a: cov.interactive, b: cov.total, c: cov.cardsOnly, d: cov.none })),
-      h(
-        'div',
-        { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) },
-        h('div', { class: 'meterfill', style: `width:${pct}%` }),
-      ),
+      h('div', { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) }, h('div', { class: 'meterfill', style: `width:${pct}%` })),
       h('div', { class: 'actions' }, h('a', { class: 'button', href: '#/cards' }, tr('home.cards')), h('a', { class: 'button', href: '#/rescue' }, tr('home.rescue'))),
     ),
   );
