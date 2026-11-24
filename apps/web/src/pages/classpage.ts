@@ -14,27 +14,20 @@ export function classPage(cls: ClassLevel): HTMLElement {
     const interactiveCount = clauses.filter(c => labsOfClause(c.id).some(id => !isCard(id))).length;
     return h(
       'section',
-      { class: 'panel unit' + (inRoute ? '' : ' dim'), style: 'position:relative;overflow:hidden' },
-      h('div', { style: `position:absolute;top:0;left:0;right:0;height:3px;background:${inRoute ? 'linear-gradient(90deg,var(--brand),var(--accent))' : 'var(--line)'};opacity:${inRoute ? 1 : 0.4}` }),
+      { class: 'panel unit' + (inRoute ? '' : ' dim') },
       h(
         'div',
-        { style: 'display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:.6rem;margin-bottom:.2rem' },
-        h('h3', { style: 'margin:0' }, tr(`unit.${u.id}` as Key)),
+        { class: 'unit-row-head' },
+        h('h3', { class: 'flush-top' }, tr(`unit.${u.id}` as Key)),
         h(
           'div',
-          { style: 'display:flex;gap:.4rem;flex-wrap:wrap' },
+          { class: 'unit-row-chips' },
           h('span', { class: 'chip' }, tr('ui.marks', { n: u.marks })),
           u.route !== 'COMMON' ? h('span', { class: 'chip alt' }, tr(u.route === 'OPTION_I_ANALYSIS' ? 'ui.optionI' : 'ui.optionII')) : null,
-          h(
-            'span',
-            { class: 'chip', style: 'background:var(--good-bg);color:var(--good);border-color:color-mix(in srgb,var(--good) 16%, transparent)' },
-            tr('cls.labsOf', { a: interactiveCount, b: clauses.length }),
-          ),
+          h('span', { class: 'chip solved' }, tr('cls.labsOf', { a: interactiveCount, b: clauses.length })),
         ),
       ),
-      !inRoute
-        ? h('p', { class: 'hint', style: 'margin:.4rem 0 .6rem;padding:.5rem .7rem;background:var(--accent-soft);border:1px solid var(--line-2);border-radius:8px' }, tr('cls.otherOption'))
-        : null,
+      !inRoute ? h('p', { class: 'hint unit-other-note' }, tr('cls.otherOption')) : null,
       h(
         'ul',
         { class: 'clauselist' },

@@ -17,6 +17,7 @@ import { homePage } from './pages/home';
 import { classPage, labsIndex } from './pages/classpage';
 import { labPage } from './pages/lab';
 import { simPage, simsIndex } from './pages/simulators';
+import { disposeActiveSimLab, simLabPage } from './sim-labs';
 import { ledgerPage } from './pages/ledger';
 import { practicePage } from './pages/practice';
 import { progressPage } from './pages/progress';
@@ -36,9 +37,11 @@ import { casPage } from './pages/cas';
 import { projectPage } from './pages/project';
 import { rescuePage } from './pages/rescue';
 import { assignmentPage } from './pages/assignment';
+import { animatePageEntrance, syncNavIndicator } from './motion';
 import { CARDS } from '../../../packages/curriculum/src';
 
 const main = h('main', { id: 'main', tabindex: -1 });
+const navPill = h('span', { class: 'nav-glide', 'aria-hidden': 'true' });
 const nav = h('nav', { id: 'nav', 'aria-label': 'Main' });
 const net = h('span', { class: 'net', role: 'status' });
 const langBtn = h('button', { type: 'button', class: 'lang', 'data-lang-toggle': '', onclick: () => { void setLang(state.lang === 'hi' ? 'en' : 'hi'); } });
@@ -60,7 +63,9 @@ const draftBanner = hindiBanner();
 
 function drawNav(active: string | null) {
   clear(nav);
+  nav.appendChild(navPill);
   for (const n of NAV) nav.appendChild(h('a', { href: n.hash, ...(n.key === active ? { 'aria-current': 'page' } : {}) }, tr(`nav.${n.key}` as Key)));
+  requestAnimationFrame(() => syncNavIndicator(nav, navPill));
 }
 
 // --- Display menu: projector mode (high contrast, larger type) lives here, out of the way of the main header ---
@@ -115,6 +120,7 @@ function drawNet() {
 
 function render() {
   runDisposers();                                         // stop timers / ignore late results of the page we are leaving
+  disposeActiveSimLab();
   const { path } = parseHash(), r = resolve(path);
   drawNav(r.nav);
   clear(main); main.setAttribute('data-route', r.id);
@@ -127,6 +133,7 @@ function render() {
       case 'labs': page = labsIndex(); break;
       case 'sims': page = simsIndex(); break;
       case 'sim': page = a ? simPage(a) : notFound(); break;
+      case 'sim-lab': { const box = h('div'); if (a) simLabPage(box, a); else box.appendChild(notFound()); page = box; break; }
       case 'lab': { const lab = a ? labById(a) : undefined; page = lab ? labPage(lab, 'learn', b) : notFound(); break; }
       case 'ledger': page = ledgerPage(); break;
       case 'practice': page = practicePage(a, b, c); break;
@@ -157,6 +164,7 @@ function render() {
   if (englishOnly) main.setAttribute('lang', 'en'); else main.removeAttribute('lang');
   if (englishOnly) main.appendChild(h('p', { class: 'note warn english-only-note', lang: 'hi', 'data-english-only': '' }, tr('ui.englishOnly')));
   main.appendChild(page);
+  animatePageEntrance(page);
   document.title = (path.length ? (document.querySelector('main h2')?.textContent ?? 'Accounting Universe') + ' · ' : '') + 'Accounting Universe';
   window.scrollTo(0, 0);
 }
@@ -199,6 +207,7 @@ async function boot() {
   if (p) { state.profile = p; state.lang = p.lang ?? 'en'; } else await setProfile(state.profile);
   drawLang();
   window.addEventListener('hashchange', () => { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); render(); });
+  window.addEventListener('resize', () => syncNavIndicator(nav, navPill), { passive: true });
   window.addEventListener('online', drawNet); window.addEventListener('offline', drawNet);
   drawNet(); render(); initRewards();
   boot_.send('BOOTED');

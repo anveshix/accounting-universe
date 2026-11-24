@@ -9,6 +9,73 @@ import { en, tr } from '../i18n';
 import { currentRewards } from '../rewards-ui';
 import { todayPanel } from '../review-ui';
 
+function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
+  const isXII = cls === 'XII';
+  const isCas = isXII && route === 'OPTION_II_COMPUTERISED';
+  const title = isCas
+    ? 'VCH-104 · Maker–Checker Verified'
+    : isXII
+      ? 'P&L Appropriation & Partner Capital'
+      : 'Journal → Ledger → Trial Balance';
+  const lines: readonly [string, string, string][] = isCas
+    ? [
+        ['5201 · Salaries A/c (Dr)', '₹18,000', ''],
+        ['1202 · To Cash at Bank A/c', '', '₹18,000'],
+        ['1101 · Machinery A/c (Dr)', '₹60,000', ''],
+        ['1202 · To Cash at Bank A/c', '', '₹60,000'],
+      ]
+    : isXII
+      ? [
+          ['Interest on Capital · A & B (Dr)', '₹48,000', ''],
+          ['Divisible Profit · 3 : 2 (Dr)', '₹1,20,000', ''],
+          ['To P&L Net Profit b/d', '', '₹1,68,000'],
+        ]
+      : [
+          ['Cash A/c · Capital Introduced (Dr)', '₹1,00,000', ''],
+          ['Stock A/c · Credit Purchase (Dr)', '₹45,000', ''],
+          ['To Capital A/c', '', '₹1,00,000'],
+          ['To Sundry Creditors A/c', '', '₹45,000'],
+        ];
+  const total = isCas ? '₹78,000' : isXII ? '₹1,68,000' : '₹1,45,000';
+
+  return h(
+    'aside',
+    { class: 'hero-preview', lang: 'en', 'aria-label': 'Live accounting ledger preview' },
+    h(
+      'div',
+      { class: 'hero-ledger-card' },
+      h(
+        'div',
+        { class: 'hero-ledger-head' },
+        h('span', { class: 'hero-ledger-kicker' }, `CBSE 055 · Class ${cls}`),
+        h('span', { class: 'hero-ledger-badge' }, icon('check-circle', 14), ' Dr = Cr Verified'),
+      ),
+      h('p', { class: 'hero-ledger-title' }, title),
+      h(
+        'table',
+        { class: 'hero-ledger-table' },
+        h(
+          'thead',
+          {},
+          h('tr', {}, h('th', { scope: 'col' }, 'Particulars'), h('th', { scope: 'col', class: 'num' }, 'Dr'), h('th', { scope: 'col', class: 'num' }, 'Cr')),
+        ),
+        h(
+          'tbody',
+          {},
+          ...lines.map(([p, dr, cr]) =>
+            h('tr', { class: cr ? 'cr-row' : '' }, h('td', {}, p), h('td', { class: 'num' }, dr || '—'), h('td', { class: 'num' }, cr || '—')),
+          ),
+        ),
+        h(
+          'tfoot',
+          {},
+          h('tr', {}, h('th', { scope: 'row' }, 'Trial Balance Tally'), h('td', { class: 'num' }, total), h('td', { class: 'num' }, total)),
+        ),
+      ),
+    ),
+  );
+}
+
 export function homePage(rerender: () => void): HTMLElement {
   const cls = state.profile.cls;
   const choose = (c: ClassLevel) => {
@@ -45,72 +112,77 @@ export function homePage(rerender: () => void): HTMLElement {
   return h(
     'div',
     { class: 'home' },
-    // HERO: what this is, who it is for, one obvious first step. No decoration behind the text.
+    // HERO: asymmetric editorial split — calm left column for class/action selection, live ledger preview moment on the right.
     h(
       'section',
-      { class: 'hero' },
-      h('p', { class: 'eyebrow' }, tr('home.eyebrow')),
-      h('h2', {}, tr('home.h2a'), h('span', { class: 'hero-accent' }, tr('home.h2b')), tr('home.h2c')),
-      h('p', { class: 'lead' }, tr('home.lead')),
+      { class: 'hero hero-split' },
       h(
         'div',
-        { class: 'classpick', role: 'radiogroup', 'aria-label': tr('home.chooseClass') },
-        ...(['XI', 'XII'] as ClassLevel[]).map(c =>
-          h(
-            'button',
-            {
-              type: 'button',
-              role: 'radio',
-              'aria-checked': String(c === cls),
-              class: 'bigchoice' + (c === cls ? ' on' : ''),
-              onclick: () => choose(c),
-            },
-            h('b', {}, tr('ui.class', { cls: c })),
-            h('span', {}, tr(c === 'XI' ? 'home.xi.sub' : 'home.xii.sub')),
+        { class: 'hero-copy' },
+        h('p', { class: 'eyebrow' }, tr('home.eyebrow')),
+        h('h2', {}, tr('home.h2a'), h('span', { class: 'hero-accent' }, tr('home.h2b')), tr('home.h2c')),
+        h('p', { class: 'lead' }, tr('home.lead')),
+        h(
+          'div',
+          { class: 'classpick', role: 'radiogroup', 'aria-label': tr('home.chooseClass') },
+          ...(['XI', 'XII'] as ClassLevel[]).map(c =>
+            h(
+              'button',
+              {
+                type: 'button',
+                role: 'radio',
+                'aria-checked': String(c === cls),
+                class: 'bigchoice' + (c === cls ? ' on' : ''),
+                onclick: () => choose(c),
+              },
+              h('b', {}, tr('ui.class', { cls: c })),
+              h('span', {}, tr(c === 'XI' ? 'home.xi.sub' : 'home.xii.sub')),
+            ),
           ),
         ),
-      ),
-      cls === 'XII'
-        ? h(
-            'fieldset',
-            { class: 'routebox' },
-            h('legend', {}, tr('home.route.legend')),
-            ...(
-              [
-                ['OPTION_I_ANALYSIS', tr('home.route.1')],
-                ['OPTION_II_COMPUTERISED', tr('home.route.2')],
-              ] as const
-            ).map(([v, label]) =>
-              h(
-                'label',
-                { class: 'radio' },
-                h('input', {
-                  type: 'radio',
-                  name: 'route',
-                  value: v,
-                  ...(route === v ? { checked: true } : {}),
-                  onchange: () => {
-                    state.profile = { ...state.profile, route: v };
-                    void setProfile(state.profile);
-                    rerender();
-                  },
-                }),
-                ' ',
-                label,
+        cls === 'XII'
+          ? h(
+              'fieldset',
+              { class: 'routebox' },
+              h('legend', {}, tr('home.route.legend')),
+              ...(
+                [
+                  ['OPTION_I_ANALYSIS', tr('home.route.1')],
+                  ['OPTION_II_COMPUTERISED', tr('home.route.2')],
+                ] as const
+              ).map(([v, label]) =>
+                h(
+                  'label',
+                  { class: 'radio' },
+                  h('input', {
+                    type: 'radio',
+                    name: 'route',
+                    value: v,
+                    ...(route === v ? { checked: true } : {}),
+                    onchange: () => {
+                      state.profile = { ...state.profile, route: v };
+                      void setProfile(state.profile);
+                      rerender();
+                    },
+                  }),
+                  ' ',
+                  label,
+                ),
               ),
-            ),
-            route === 'OPTION_II_COMPUTERISED'
-              ? h('p', { class: 'note info route-note' }, tr('home.route.note'))
-              : null,
-          )
-        : null,
-      h(
-        'div',
-        { class: 'actions hero-actions' },
-        h('button', { type: 'button', class: 'primary', 'data-start': '', onclick: () => navigate(firstHref) }, tr('home.start'), en(firstTitle)),
-        h('button', { type: 'button', onclick: () => navigate('#/practice') }, tr('home.practise')),
-        h('button', { type: 'button', class: 'ghost', onclick: () => navigate(`#/class/${cls}`) }, tr('home.map', { cls })),
+              route === 'OPTION_II_COMPUTERISED'
+                ? h('p', { class: 'note info route-note' }, tr('home.route.note'))
+                : null,
+            )
+          : null,
+        h(
+          'div',
+          { class: 'actions hero-actions' },
+          h('button', { type: 'button', class: 'primary', 'data-start': '', onclick: () => navigate(firstHref) }, tr('home.start'), en(firstTitle)),
+          h('button', { type: 'button', onclick: () => navigate('#/practice') }, tr('home.practise')),
+          h('button', { type: 'button', class: 'ghost', onclick: () => navigate(`#/class/${cls}`) }, tr('home.map', { cls })),
+        ),
       ),
+      buildHeroLedgerPreview(cls, route),
     ),
 
     todayBox,

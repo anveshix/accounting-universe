@@ -1,7 +1,8 @@
-import { BADGES, DAILY_GOAL_XP, LEVELS, clauseById, computeRewards, rewardDelta, summariseClauses, type Attempt, type ClassLevel, type RewardInput, type Rewards, type Seen } from '../../../packages/curriculum/src';
+import { BADGES, DAILY_GOAL_XP, LEVELS, SIM_ACHIEVEMENT_BADGES, clauseById, computeRewards, rewardDelta, summariseClauses, summariseCoreSimProgress, type Attempt, type ClassLevel, type RewardInput, type Rewards, type Seen } from '../../../packages/curriculum/src';
 import { h, mount, reducedMotion, svg } from './dom';
 import { icon } from './icons';
 import { labsOfClause } from './labs';
+import { state } from './state';
 import { attempts, seen } from './store';
 import { announce } from './ui';
 
@@ -64,6 +65,7 @@ export function questBoard(r: Rewards, a: readonly Attempt[], s: readonly Seen[]
   const L = r.level, pct = Math.floor((100 * L.into) / L.span), left = L.span - L.into;
   const goalPct = Math.min(100, Math.floor((100 * r.today) / DAILY_GOAL_XP));
   const sum = summariseClauses(labsOfClause, [...a], [...s], cls);
+  const simProg = summariseCoreSimProgress(s, state.profile.route);
   return h('section', { class: 'panel quest', 'data-quest': '', 'aria-labelledby': 'quest-h' },
     h('h3', { id: 'quest-h' }, 'Quest board'),
     h('div', { class: 'quest-top' },
@@ -75,6 +77,7 @@ export function questBoard(r: Rewards, a: readonly Attempt[], s: readonly Seen[]
         h('p', { class: 'hint' }, 'XP rewards correct answers, fewer hints, harder modes and fixing a mistake. Time on the page earns nothing.'))),
     h('h4', {}, 'Last 14 days'), h('div', { class: 'heat', role: 'img', 'aria-label': `XP per day, last 14 days: ${r.days.map(d => d.xp).join(', ')}` }, ...r.days.map(d => h('span', { class: `heat-c h${shade(d.xp)}`, title: `${d.day}: ${d.xp} XP` }))),
     h('h4', {}, `Badges · ${r.badges.length} of ${BADGES.length}`), h('ul', { class: 'badges' }, ...BADGES.map(b => { const on = r.badges.includes(b.id); return h('li', { class: 'badge' + (on ? ' on' : ''), 'data-badge': b.id, 'data-earned': String(on), title: b.how }, h('span', { class: 'bi', 'aria-hidden': 'true' }, on ? b.icon : icon('lock', 20)), h('b', {}, b.title), h('small', {}, on ? 'Earned' : b.how)); })),
+    h('h4', {}, `Simulator Workbench Badges · ${simProg.earnedBadges.length} of ${SIM_ACHIEVEMENT_BADGES.length}`), h('ul', { class: 'badges' }, ...SIM_ACHIEVEMENT_BADGES.map(b => { const on = simProg.earnedBadges.some(eb => eb.id === b.id); return h('li', { class: 'badge' + (on ? ' on' : ''), 'data-sim-badge': b.id, 'data-earned': String(on), title: b.description }, h('span', { class: 'bi', 'aria-hidden': 'true' }, on ? icon('medal', 20) : icon('lock', 20)), h('b', {}, b.title), h('small', {}, on ? 'Earned' : b.description)); })),
     h('h4', {}, `Mastery map · Class ${cls}`), h('div', { class: 'mmap', role: 'list' }, ...sum.map(c => h('a', { role: 'listitem', class: `mcell l${c.level}${c.weak ? ' weak' : ''}`, href: `#/rescue`, 'data-level': String(c.level), title: `${clauseById(c.clause)?.title ?? c.clause}: ${LEVELS[c.level]}${c.weak ? ' (needs attention)' : ''}` }, String(c.level)))),
     h('p', { class: 'hint' }, 'Each tile is one syllabus topic, from 0 (not started) to 5 (independent mastery). Hover a tile for its name; red-edged tiles need attention.'));
 }
