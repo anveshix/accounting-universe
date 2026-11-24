@@ -540,10 +540,21 @@ textarea {
   border: 1px solid var(--line-strong);
   background: var(--surface);
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-size: 0.95rem;
   transition:
     border-color var(--t-fast) var(--ease),
     box-shadow var(--t-fast) var(--ease);
+}
+input[type='file'] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+input[type='file'][hidden] {
+  display: none;
 }
 input[type='text']:focus,
 input[type='search']:focus,
@@ -619,6 +630,13 @@ textarea[aria-invalid='true'] {
   padding: 1.35rem 1.5rem;
   margin: 0 0 1.15rem;
   box-shadow: var(--shadow-1);
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 560px) {
+  .panel {
+    padding: 1rem 1.05rem;
+  }
 }
 .panel.dim {
   opacity: 0.76;
@@ -1676,6 +1694,7 @@ table.mini {
   font-weight: 500;
   font-size: 0.9rem;
   color: var(--ink-2);
+  min-width: 0;
 }
 @media (max-width: 560px) {
   .formgrid {
@@ -2053,6 +2072,8 @@ fieldset {
   margin: 0 0 0.9rem;
   padding: 0.6rem 1.1rem;
   background: var(--surface-2);
+  min-width: 0;
+  max-width: 100%;
 }
 fieldset legend {
   font-weight: 600;

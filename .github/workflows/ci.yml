@@ -40,12 +40,7 @@ jobs:
           npm i -g playwright http-server
           npx playwright install --with-deps chromium
       - name: Browser - web app
-        run: |
-          set -o pipefail
-          NODE_PATH="$(npm root -g)" node e2e/web-app.cjs | tee /tmp/e2e.log || {
-            grep "✗" /tmp/e2e.log | head -n 10 | while IFS= read -r line; do echo "::error title=e2e-fail::$line"; done
-            exit 1
-          }
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app.cjs
       - name: Browser - web app (extra)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-extra.cjs
       - name: Browser - lab UX
@@ -59,19 +54,9 @@ jobs:
       - name: Browser - Trial Balance Crisis challenge
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-crisis.cjs
       - name: Browser - Phase 1 look (home, labs index, header, icons)
-        run: |
-          set -o pipefail
-          NODE_PATH="$(npm root -g)" node e2e/web-app-polish.cjs | tee /tmp/e2e-polish.log || {
-            grep "✗" /tmp/e2e-polish.log | head -n 10 | while IFS= read -r line; do echo "::error title=polish-fail::$line"; done
-            exit 1
-          }
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-polish.cjs
       - name: Browser - one language switch (English / Hindi draft)
-        run: |
-          set -o pipefail
-          NODE_PATH="$(npm root -g)" node e2e/web-app-lang.cjs | tee /tmp/e2e-lang.log || {
-            grep "✗" /tmp/e2e-lang.log | head -n 10 | while IFS= read -r line; do echo "::error title=lang-fail::$line"; done
-            exit 1
-          }
+        run: NODE_PATH="$(npm root -g)" node e2e/web-app-lang.cjs
       - name: Browser - study guide (all 54 topics)
         run: NODE_PATH="$(npm root -g)" node e2e/web-app-study.cjs
       - name: Browser - practice paper
