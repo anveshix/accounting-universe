@@ -330,7 +330,7 @@ export function labsIndex(): HTMLElement {
         'div',
         { class: 'folio-card-head' },
         h('div', { class: 'card-icon' }, icon(iconForLab(t.id, t.title), 20)),
-        h('span', { class: 'folio-index', 'aria-hidden': 'true' }, visited ? icon('check-circle', 13) : null, visited ? ' ' : '', String(idx + 1).padStart(2, '0')),
+        h('span', { class: 'folio-index', 'aria-hidden': 'true' }, String(idx + 1).padStart(2, '0')),
       ),
       h('h3', {}, en(t.title)),
       h('p', {}, en(t.summary)),
