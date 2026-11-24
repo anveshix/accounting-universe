@@ -10,6 +10,7 @@ fi
 echo "== engine";      (cd packages/engine && npm run check)
 echo "== curriculum";  (cd packages/curriculum && npm run check)
 echo "== tutor proxy"; (cd apps/tutor-proxy && npm test)
+echo "== materials pipeline"; npm run test:tools && node tools/materials/cli.mjs validate
 echo "== web build";   (cd apps/web && npm run build)
 export NODE_PATH="$(npm root -g)"
 echo "== browser: web app";   node e2e/web-app.cjs
@@ -25,6 +26,7 @@ echo "== browser: study guide (all 54 topics)"; node e2e/web-app-study.cjs
 echo "== browser: practice paper"; node e2e/web-app-paper.cjs
 echo "== browser: progress backup and restore"; node e2e/web-app-restore.cjs
 echo "== browser: Bloom practice"; node e2e/web-app-bloom.cjs
+echo "== browser: chapter materials"; node e2e/web-app-materials.cjs
 echo "== browser: published site layout (/ and /legacy/)"; node e2e/web-app-site.cjs
 echo "== browser: legacy";    node e2e/legacy-smoke.cjs && node e2e/legacy-simulator-regression.cjs
 echo "ALL CHECKS PASSED"

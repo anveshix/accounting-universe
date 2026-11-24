@@ -1,11 +1,12 @@
 import { CLAUSES, SKILLS, STUDY_STATUS, UNITS, outcomesOf, OUTCOME_MAPPING_STATUS, studyOf, studyHiOf, titleHiOf, type ClassLevel } from '../../../../packages/curriculum/src';
 import type { Key } from '../../../../packages/curriculum/src/i18n';
-import { h } from '../dom';
+import { h, mount } from '../dom';
 import { en, tr } from '../i18n';
 import { icon } from '../icons';
 import { hrefOf, isCard, labsOfClause, titleOf } from '../labs';
 import { state } from '../state';
 import { attempts, recordSeen } from '../store';
+import { itemsForTopic, materialCard } from './materials';
 
 /** Hash of the study page for a topic or a class. */
 export const studyHref = (id: string) => `#/study/${id}`;
@@ -144,6 +145,21 @@ function topicPage(id: string): HTMLElement {
     }
   });
 
+  // Notes, slides and worksheets filed under this chapter (published ones and any added on this device); hidden when there are none.
+  const materialsList = h('ul', { class: 'materials' });
+  const materialsSection = h(
+    'section',
+    { class: 'panel study-sec materials-sec no-print', 'data-study-materials': '', lang: 'en', hidden: true },
+    h('h3', {}, 'Notes and slides for this chapter'),
+    materialsList,
+    h('p', {}, h('a', { href: `#/materials/${clause.id}` }, 'All materials for this chapter, and add your own →')),
+  );
+  void itemsForTopic(clause.id).then(items => {
+    if (!items.length) return;
+    mount(materialsList, ...items.map(m => materialCard(m)));
+    materialsSection.removeAttribute('hidden');
+  });
+
   const section = (title: string, body: Node | null, cls = '') => (body ? h('section', { class: `panel study-sec ${cls}` }, h('h3', {}, title), body) : null);
   const [outPre = '', outPost = ''] = tr('study.outcomes.note', { status: '\u0000' }).split('\u0000');
 
@@ -211,6 +227,7 @@ function topicPage(id: string): HTMLElement {
         labs.length + skills.length === 0 ? h('li', {}, tr('study.none')) : null,
       ),
     ),
+    materialsSection,
     h(
       'nav',
       { class: 'study-pager no-print', 'aria-label': tr('study.pager.aria') },

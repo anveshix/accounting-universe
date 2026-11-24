@@ -1,0 +1,77 @@
+# Chapter-wise materials: files dropped in incoming/ (or a Drive link given here) are checked, filed under their chapter and proposed as a pull request.
+# Needs: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". See docs/MATERIALS_PIPELINE.md.
+name: materials-ingest
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Chapter id, e.g. XI.2.depreciation (needed with a Drive link)'
+        required: false
+      kind:
+        description: 'Kind (leave empty to guess)'
+        required: false
+        type: choice
+        options: ['', NOTES, PPT, LESSON_PLAN, WORKSHEET]
+      title:
+        description: 'Title (optional)'
+        required: false
+      drive_url:
+        description: 'Public Google Drive / Docs / Slides link ("Anyone with the link")'
+        required: false
+  push:
+    branches: [main]
+    paths: ['incoming/**']
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: materials-ingest
+  cancel-in-progress: false
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Add the Drive link given to this run
+        if: ${{ inputs.drive_url != '' }}
+        env:
+          TOPIC: ${{ inputs.topic }}
+          KIND: ${{ inputs.kind }}
+          TITLE: ${{ inputs.title }}
+          URL: ${{ inputs.drive_url }}
+        run: |
+          # inputs reach the shell only through env vars, and the field separator and line breaks are removed from them
+          clean() { printf '%s' "$1" | tr -d '|\r\n'; }
+          [ -n "$(clean "$TOPIC")" ] || { echo "::error::Give the chapter id with a Drive link."; exit 1; }
+          printf '%s | %s | %s | %s\n' "$(clean "$TOPIC")" "$(clean "$KIND")" "$(clean "$TITLE")" "$(clean "$URL")" >> incoming/drive-links.txt
+      - name: Check, file and catalogue everything in incoming/
+        id: ingest
+        run: |
+          set +e
+          node tools/materials/cli.mjs incoming --report "$RUNNER_TEMP/report.md"
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          # 0 all good, 3 some refused, 1 everything refused or nothing to do; 2 is a usage error
+          [ "$code" -le 3 ] && [ "$code" -ne 2 ] || exit "$code"
+      - name: Validate the result
+        run: node tools/materials/cli.mjs validate
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then echo "Nothing to publish."; exit 0; fi
+          branch="materials/run-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -A apps/web/public/materials incoming
+          git commit -m "Add chapter materials (ingest run ${{ github.run_id }})"
+          git push origin "$branch"
+          [ -f "$RUNNER_TEMP/report.md" ] || echo "Materials ingest run ${{ github.run_id }}" > "$RUNNER_TEMP/report.md"
+          gh pr create --base main --head "$branch" --title "Add chapter materials" --body-file "$RUNNER_TEMP/report.md" \
+            || echo "::warning::Could not open the pull request (enable 'Allow GitHub Actions to create and approve pull requests' in Settings → Actions). The branch $branch is pushed."
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"

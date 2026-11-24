@@ -17,4 +17,4 @@ export * from './rewards';
 export * from './review';
 export * from './journal';
 export * from './simulators';
-export * from './core-simulators';
+export * from './materials';
