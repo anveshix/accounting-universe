@@ -164,7 +164,10 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}]/u;
   srv.kill();
   console.log(`web-app-polish: ${pass} passed, ${fails.length} failed`);
   if (fails.length) {
-    for (const f of fails) console.log(' -', f);
+    for (const f of fails) {
+      console.log(' -', f);
+      console.log(`::error title=web-app-polish::${String(f).replace(/\r?\n/g, ' ')}`);
+    }
     process.exit(1);
   }
 })();
