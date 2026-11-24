@@ -91,7 +91,6 @@ packages/curriculum/test/questions.test.ts
 packages/curriculum/test/rewards.test.ts
 packages/curriculum/test/syllabus.test.ts
 packages/curriculum/test/trainer-generated.test.ts
-packages/curriculum/test/web-routes.test.ts
 packages/curriculum/tsconfig.json
 packages/engine/src/accounts.ts
 packages/engine/src/accountsExtended.ts

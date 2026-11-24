@@ -17,6 +17,7 @@ import { homePage } from './pages/home';
 import { classPage, labsIndex } from './pages/classpage';
 import { labPage } from './pages/lab';
 import { simPage, simsIndex } from './pages/simulators';
+import { disposeActiveSimLab, simLabPage } from './sim-labs';
 import { ledgerPage } from './pages/ledger';
 import { practicePage } from './pages/practice';
 import { progressPage } from './pages/progress';
@@ -114,6 +115,7 @@ function drawNet() {
 
 function render() {
   runDisposers();                                         // stop timers / ignore late results of the page we are leaving
+  disposeActiveSimLab();
   const { path } = parseHash(), r = resolve(path);
   drawNav(r.nav);
   clear(main); main.setAttribute('data-route', r.id);
@@ -126,6 +128,7 @@ function render() {
       case 'labs': page = labsIndex(); break;
       case 'sims': page = simsIndex(); break;
       case 'sim': page = a ? simPage(a) : notFound(); break;
+      case 'sim-lab': { const box = h('div'); if (a) simLabPage(box, a); else box.appendChild(notFound()); page = box; break; }
       case 'lab': { const lab = a ? labById(a) : undefined; page = lab ? labPage(lab, 'learn', b) : notFound(); break; }
       case 'ledger': page = ledgerPage(); break;
       case 'practice': page = practicePage(a, b, c); break;

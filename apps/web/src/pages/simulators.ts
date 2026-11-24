@@ -7,7 +7,23 @@
  * All numbers come from `packages/curriculum/src/simulators.ts`; this file only draws. The picture is plain HTML bars
  * (no <canvas>, no library): it scales on a phone, prints, and a screen reader gets the exact figure as text.
  */
-import { clauseById, simLabId, simulatorById, simulatorsByChapter, SIMULATORS, SIM_BADGE_AT, type SimControl, type Simulator, type SimVisual } from '../../../../packages/curriculum/src';
+import {
+  CORE_SIMULATORS,
+  SIM_ACHIEVEMENT_BADGES,
+  SIM_BADGE_AT,
+  SIMULATORS,
+  clauseById,
+  coreSimulatorsFor,
+  simLabId,
+  simulatorById,
+  simulatorsByChapter,
+  summariseCoreSimProgress,
+  unitById,
+  type ClassLevel,
+  type SimControl,
+  type Simulator,
+  type SimVisual,
+} from '../../../../packages/curriculum/src';
 import { h, mount, reducedMotion } from '../dom';
 import { onDispose } from '../machine-dom';
 import { announce } from '../ui';
@@ -287,66 +303,220 @@ export function simPage(id: string): HTMLElement {
 
 export function simsIndex(): HTMLElement {
   const root = h('div', { class: 'sims' });
+  let filterCls: ClassLevel | 'ALL' = state.profile.cls;
+
   loadInto(
     root,
     seen,
     s => {
-      const solved = solvedSet(s);
-      const groups = simulatorsByChapter(state.profile.cls, state.profile.route);
-      const all = groups.flatMap(g => g.sims);
-      const done = all.filter(x => solved.has(x.id)).length;
-      mount(
-        root,
-        h(
-          'header',
-          { class: 'labhead' },
-          h('p', { class: 'eyebrow' }, `Class ${state.profile.cls} · ${groups.length} chapters · ${all.length} pictures`),
-          h('h2', {}, 'Visual simulators'),
+      const drawGallery = () => {
+        const solved = solvedSet(s);
+        const groups = simulatorsByChapter(state.profile.cls, state.profile.route);
+        const all = groups.flatMap(g => g.sims);
+        const done = all.filter(x => solved.has(x.id)).length;
+
+        const coreProg = summariseCoreSimProgress(s, state.profile.route);
+        const coreSims =
+          filterCls === 'ALL' ? CORE_SIMULATORS.filter(cs => cs.cls === 'XI' || cs.route === 'COMMON' || cs.route === state.profile.route) : coreSimulatorsFor(filterCls, state.profile.route);
+
+        // Also surface Computerised Accounting Lab as compulsory Class XI exposure when viewing Class XI
+        const xiCasExposure = filterCls === 'XI' ? CORE_SIMULATORS.filter(cs => cs.id === 'computerised-accounting-lab') : [];
+
+        mount(
+          root,
           h(
-            'p',
-            { class: 'lead' },
-            'One picture per chapter: change the numbers and watch the accounting move. Each page ends with one challenge, because seeing it once is not the same as being able to do it.',
+            'header',
+            { class: 'labhead' },
+            h('p', { class: 'eyebrow' }, `CBSE 2026–27 (Code 055) · Class ${state.profile.cls} · Interactive Simulator & Visualiser`),
+            h('h2', {}, 'Visual simulators'),
+            h(
+              'p',
+              { class: 'lead' },
+              'Learn accounting by doing accounting: step through CBSE Class XI and Class XII interactive simulators with progressive missions, live double-entry validation, What-if controls, and chapter-wise visualisers.',
+            ),
           ),
-        ),
-        h(
-          'section',
-          { class: 'panel simprogress' },
-          h('div', { class: 'simportop' }, h('b', {}, `${done} of ${all.length} solved`), h('span', { class: 'hint' }, 'each solved challenge: +10 XP · five unlock the “Visual Thinker” badge')),
+
+          // ── Flagship Interactive Simulator & Visualiser Section (Experiences A–J) ──
           h(
-            'div',
-            { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': all.length || 1, 'aria-valuenow': done, 'aria-label': `${done} of ${all.length} simulators solved` },
-            h('div', { class: 'meterfill', style: `width:${all.length ? Math.round((100 * done) / all.length) : 0}%` }),
-          ),
-        ),
-        groups.length === 0
-          ? h('p', { class: 'empty' }, `No visual simulators for Class ${state.profile.cls} on this route yet.`)
-          : h(
+            'section',
+            {
+              class: 'panel simlab-hub-section',
+              'data-flagship-hub': '',
+              'aria-labelledby': 'flagship-sim-h',
+            },
+            h(
               'div',
-              { class: 'simchapters' },
-              ...groups.map(g =>
+              { class: 'simlab-hub-head' },
+              h(
+                'div',
+                {},
+                h('p', { class: 'eyebrow' }, 'Interactive CBSE Workbenches · Beginner → Practice → Challenge → Master'),
+                h('h3', { id: 'flagship-sim-h', class: 'flush-top' }, 'CBSE Class XI & XII Simulator & Visualiser Suite'),
+              ),
+              h(
+                'div',
+                { class: 'modes', role: 'group', 'aria-label': 'Filter simulators by syllabus class' },
                 h(
-                  'section',
-                  { class: 'simchapter', 'aria-labelledby': `ch-${g.unit}` },
-                  h('div', { class: 'section-head' }, h('h3', { id: `ch-${g.unit}` }, g.title), h('span', { class: 'chip' }, `${g.sims.length} simulator${g.sims.length === 1 ? '' : 's'}`)),
+                  'button',
+                  {
+                    type: 'button',
+                    class: filterCls === 'XI' ? 'on' : 'secondary',
+                    'data-sim-cls': 'XI',
+                    onclick: () => {
+                      filterCls = 'XI';
+                      drawGallery();
+                    },
+                  },
+                  'Class XI (6 Labs)',
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    class: filterCls === 'XII' ? 'on' : 'secondary',
+                    'data-sim-cls': 'XII',
+                    onclick: () => {
+                      filterCls = 'XII';
+                      drawGallery();
+                    },
+                  },
+                  `Class XII (${state.profile.route === 'OPTION_II_COMPUTERISED' ? 'Option II · CAS' : 'Option I · Analysis'})`,
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    class: filterCls === 'ALL' ? 'on' : 'secondary',
+                    'data-sim-cls': 'ALL',
+                    onclick: () => {
+                      filterCls = 'ALL';
+                      drawGallery();
+                    },
+                  },
+                  'Both Classes',
+                ),
+              ),
+            ),
+            h(
+              'div',
+              { class: 'simlab-hub-progress' },
+              h(
+                'span',
+                {},
+                h('b', {}, `${coreProg.totalMissionsCompleted} of ${coreProg.totalMissionsAvailable} missions cleared`),
+                ` · ${coreProg.earnedBadges.length} of ${SIM_ACHIEVEMENT_BADGES.length} Simulator Badges earned`,
+              ),
+              h(
+                'div',
+                { class: 'simlab-badge-strip' },
+                ...SIM_ACHIEVEMENT_BADGES.map(b => {
+                  const earned = coreProg.earnedBadges.some(eb => eb.id === b.id);
+                  return h(
+                    'span',
+                    {
+                      class: 'simlab-hub-badge' + (earned ? ' earned' : ''),
+                      title: b.description,
+                      'data-sim-badge': b.id,
+                    },
+                    icon(earned ? 'medal' : 'lock', 15),
+                    ' ',
+                    b.title,
+                  );
+                }),
+              ),
+            ),
+            h(
+              'div',
+              { class: 'cards simlab-core-grid' },
+              ...[...coreSims, ...xiCasExposure].map(cs => {
+                const clearedTiers = cs.missions.filter(m => coreProg.completedMissions.has(`${cs.id}:${m.tier}`)).length;
+                const unitTitle = unitById(cs.unit)?.title ?? cs.unit;
+                const isExposure = filterCls === 'XI' && cs.id === 'computerised-accounting-lab';
+                return h(
+                  'a',
+                  {
+                    class: 'card simlab-core-card',
+                    href: `#/sim-lab/${cs.id}`,
+                    'data-core-card': cs.id,
+                  },
                   h(
                     'div',
-                    { class: 'cards' },
-                    ...g.sims.map(sim =>
-                      h(
-                        'a',
-                        { class: 'card simcard', href: `#/sim/${sim.id}`, 'data-sim': sim.id, 'data-solved': String(solved.has(sim.id)) },
-                        h('div', { class: 'card-icon' }, icon('flask', 22)),
-                        h('h3', {}, sim.title),
-                        h('p', {}, sim.need),
-                        h('span', { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') }, solved.has(sim.id) ? '✓ Solved' : sim.play ? '▶ Play it · challenge inside' : 'Challenge inside · +10 XP'),
+                    { class: 'simlab-card-top' },
+                    h('span', { class: 'simlab-code-pill' }, `Lab ${cs.code} · ${isExposure ? 'XI Exposure / XII CAS' : `Class ${cs.cls}`}`),
+                    h('span', { class: 'chip' + (clearedTiers > 0 ? ' solved' : '') }, `${clearedTiers}/4 missions`),
+                  ),
+                  h('h4', { class: 'simlab-card-title' }, cs.title),
+                  h('p', { class: 'simlab-card-sub' }, cs.subtitle),
+                  h('p', {}, cs.summary),
+                  h('small', { class: 'hint' }, `${unitTitle} · ${cs.titleHi}`),
+                );
+              }),
+            ),
+          ),
+
+          // ── Quick Chapter-Wise Visualisers (kept 100% compatible with existing progress & tests) ──
+          h(
+            'section',
+            { class: 'panel simprogress' },
+            h(
+              'div',
+              { class: 'simportop' },
+              h('b', {}, `${done} of ${all.length} solved`),
+              h('span', { class: 'hint' }, 'each solved chapter challenge: +10 XP · five unlock the “Visual Thinker” badge'),
+            ),
+            h(
+              'div',
+              {
+                class: 'meter',
+                role: 'progressbar',
+                'aria-valuemin': 0,
+                'aria-valuemax': all.length || 1,
+                'aria-valuenow': done,
+                'aria-label': `${done} of ${all.length} simulators solved`,
+              },
+              h('div', { class: 'meterfill', style: `width:${all.length ? Math.round((100 * done) / all.length) : 0}%` }),
+            ),
+          ),
+          groups.length === 0
+            ? h('p', { class: 'empty' }, `No visual simulators for Class ${state.profile.cls} on this route yet.`)
+            : h(
+                'div',
+                { class: 'simchapters' },
+                ...groups.map(g =>
+                  h(
+                    'section',
+                    { class: 'simchapter', 'aria-labelledby': `ch-${g.unit}` },
+                    h('div', { class: 'section-head' }, h('h3', { id: `ch-${g.unit}` }, g.title), h('span', { class: 'chip' }, `${g.sims.length} simulator${g.sims.length === 1 ? '' : 's'}`)),
+                    h(
+                      'div',
+                      { class: 'cards' },
+                      ...g.sims.map(sim =>
+                        h(
+                          'a',
+                          {
+                            class: 'card simcard',
+                            href: `#/sim/${sim.id}`,
+                            'data-sim': sim.id,
+                            'data-solved': String(solved.has(sim.id)),
+                          },
+                          h('div', { class: 'card-icon' }, icon('flask', 22)),
+                          h('h3', {}, sim.title),
+                          h('p', {}, sim.need),
+                          h(
+                            'span',
+                            { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') },
+                            solved.has(sim.id) ? '✓ Solved' : sim.play ? '▶ Play it · challenge inside' : 'Challenge inside · +10 XP',
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-        h('p', { class: 'hint' }, 'Bar lengths are geometry; every rupee figure is computed by the exact money engine with an explicit rounding mode.'),
-      );
+          h('p', { class: 'hint' }, 'Bar lengths are geometry; every rupee figure is computed by the exact money engine with an explicit rounding mode.'),
+        );
+      };
+      drawGallery();
     },
     'the simulators',
   );

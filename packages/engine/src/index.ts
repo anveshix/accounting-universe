@@ -13,3 +13,4 @@ export * from './cashflow';
 export * from './extras';
 export * from './machine';
 export * from './accountsExtended';
+export * from './equation';

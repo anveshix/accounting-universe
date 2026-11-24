@@ -73,7 +73,9 @@ export function computeRewards(i: RewardInput): Rewards {
   // A solved simulator challenge pays once per simulator. It is a real answer to a real question, so it earns XP —
   // but it is NOT an Attempt: it has no seed or marks, and must not pollute practice accuracy or the review queue.
   const simSolved = new Map<string, number>();
-  for (const ev of [...i.seen].sort((a, b) => a.t - b.t)) if (ev.tab === 'example' && ev.lab.startsWith('sim:') && !simSolved.has(ev.lab)) simSolved.set(ev.lab, ev.t);
+  for (const ev of [...i.seen].sort((a, b) => a.t - b.t)) {
+    if (ev.tab === 'example' && (ev.lab.startsWith('sim:') || ev.lab.startsWith('sim-core:')) && !simSolved.has(ev.lab)) simSolved.set(ev.lab, ev.t);
+  }
   for (const t of simSolved.values()) events.push({ t, xp: XP_SIM_SOLVED });
   const perDay = new Map<string, number>();
   for (const e of events) { const d = dayKey(e.t, i.tzOffsetMin); perDay.set(d, (perDay.get(d) ?? 0) + e.xp); }
