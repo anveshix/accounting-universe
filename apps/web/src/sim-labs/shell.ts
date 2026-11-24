@@ -212,7 +212,8 @@ export function mountSimulatorShell(root: HTMLElement, spec: CoreSimulatorSpec, 
                   listeners.forEach(fn => fn());
                 },
               },
-              done ? '✓ ' : '',
+              done ? icon('check-circle', 14) : null,
+              done ? ' ' : '',
               bilingual ? d.labelHi : d.label,
             );
           }),

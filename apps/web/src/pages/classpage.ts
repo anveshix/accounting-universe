@@ -185,7 +185,13 @@ export function classPage(cls: ClassLevel): HTMLElement {
                       { class: 'labs', style: 'margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.35rem' },
                       ...coreMatches.map(cs => h('a', { class: 'pill workbench-pill', href: `#/sim-lab/${cs.id}` }, en(`Lab ${cs.code}: ${cs.title}`))),
                       ...labs.map(id =>
-                        h('a', { class: 'pill' + (isCard(id) ? ' card-pill' : '') + (seenLabIds.has(id) ? ' seen-pill' : ''), href: hrefOf(id) }, seenLabIds.has(id) ? '✓ ' : '', en(titleOf(id))),
+                        h(
+                          'a',
+                          { class: 'pill' + (isCard(id) ? ' card-pill' : '') + (seenLabIds.has(id) ? ' seen-pill' : ''), href: hrefOf(id) },
+                          seenLabIds.has(id) ? icon('check-circle', 12) : null,
+                          seenLabIds.has(id) ? ' ' : '',
+                          en(titleOf(id)),
+                        ),
                       ),
                     )
                   : h('span', { class: 'pill none' }, tr('cls.notBuilt'));
@@ -295,7 +301,7 @@ export function labsIndex(): HTMLElement {
 
   const searchBox = h('input', { type: 'search', id: 'labsearch', placeholder: tr('labs.placeholder'), autocomplete: 'off', 'aria-describedby': 'labcount' });
   const count = h('p', { id: 'labcount', class: 'status', role: 'status', 'aria-live': 'polite' });
-  const workbenchesShowcase = h('section', { class: 'panel labs-workbenches-showcase' });
+  const workbenchesShowcase = h('section', { class: 'panel labs-workbenches-showcase', 'aria-labelledby': 'labs-wb-heading' });
   const body = h('div', { class: 'labs-body' });
   const filterBtns = (['MINE', 'ALL'] as const).map(v =>
     h(
@@ -324,7 +330,7 @@ export function labsIndex(): HTMLElement {
         'div',
         { class: 'folio-card-head' },
         h('div', { class: 'card-icon' }, icon(iconForLab(t.id, t.title), 20)),
-        h('span', { class: 'folio-index', 'aria-hidden': 'true' }, (visited ? '✓ ' : '') + String(idx + 1).padStart(2, '0')),
+        h('span', { class: 'folio-index', 'aria-hidden': 'true' }, visited ? icon('check-circle', 13) : null, visited ? ' ' : '', String(idx + 1).padStart(2, '0')),
       ),
       h('h3', {}, en(t.title)),
       h('p', {}, en(t.summary)),
@@ -345,7 +351,7 @@ export function labsIndex(): HTMLElement {
       h(
         'div',
         { class: 'section-head flush-top' },
-        h('div', {}, h('h3', { class: 'flush-top' }, tr('labs.workbenches.t')), h('p', { class: 'muted-line flush-bottom' }, tr('labs.workbenches.sub'))),
+        h('div', {}, h('h3', { id: 'labs-wb-heading', class: 'flush-top' }, tr('labs.workbenches.t')), h('p', { class: 'muted-line flush-bottom' }, tr('labs.workbenches.sub'))),
         h('a', { class: 'button small primary', href: '#/sims' }, tr('labs.sims.link')),
       ),
       h(

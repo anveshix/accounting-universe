@@ -519,7 +519,7 @@ export function simsIndex(): HTMLElement {
                           h(
                             'span',
                             { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') },
-                            solved.has(sim.id) ? '✓ Solved' : sim.play ? '▶ Play it · challenge inside' : 'Challenge inside · +10 XP',
+                            solved.has(sim.id) ? [icon('check-circle', 13), ' Solved'] : sim.play ? 'Play it · challenge inside' : 'Challenge inside · +10 XP',
                           ),
                         ),
                       ),

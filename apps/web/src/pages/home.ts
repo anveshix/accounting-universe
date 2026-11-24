@@ -258,9 +258,9 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
         'div',
         { class: 'hero-sandbox-controls' },
         h(
-          'label',
-          { class: 'hero-scale-label', for: 'hero-scale-range' },
-          h('span', {}, `Scale transaction (${scalePct}%)`),
+          'div',
+          { class: 'hero-scale-label' },
+          h('label', { for: 'hero-scale-range' }, `Scale transaction (${scalePct}%)`),
           h('input', {
             id: 'hero-scale-range',
             type: 'range',
@@ -268,7 +268,6 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
             max: 200,
             step: 25,
             value: scalePct,
-            'aria-label': 'Scale voucher transaction amount',
             oninput: (e: Event) => {
               scalePct = Number((e.target as HTMLInputElement).value) || 100;
               drawFolio(false);
@@ -338,7 +337,7 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
   };
 
   drawFolio(false);
-  return h('aside', { class: 'hero-preview', lang: 'en', 'aria-label': 'Interactive accounting voucher folio' }, card);
+  return h('div', { class: 'hero-preview', lang: 'en' }, card);
 }
 
 export function homePage(rerender: () => void): HTMLElement {
@@ -391,7 +390,7 @@ export function homePage(rerender: () => void): HTMLElement {
             h('span', { class: 'simlab-code-pill' }, en(`Lab ${cs.code}`)),
             h('span', { class: 'simlab-meta-count' }, tr('home.workbenches.missions', { done: cleared })),
           ),
-          h('h3', {}, titleNode),
+          h('h4', { class: 'home-wb-title' }, titleNode),
           h('p', { class: 'simlab-card-sub' }, en(cs.subtitle)),
           h('div', { class: 'simlab-tier-dots', 'aria-hidden': 'true' }, ...cs.missions.map(m => h('i', { class: completedSet.has(`${cs.id}:${m.tier}`) ? 'done' : '' }))),
           h('div', { class: 'home-workbench-foot' }, h('small', { class: 'hint' }, en(unitTitle)), h('span', { class: 'home-workbench-cta' }, tr('home.workbenches.open'), ' →')),
