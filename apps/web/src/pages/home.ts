@@ -1,14 +1,23 @@
-import type { ClassLevel } from '../../../../packages/curriculum/src';
+import { CORE_SIMULATORS, coreSimulatorsFor, summariseCoreSimProgress, unitById, type ClassLevel, type CoreSimId } from '../../../../packages/curriculum/src';
+import { Money } from '../../../../packages/engine/src';
 import { h, mount } from '../dom';
 import { icon, iconForLab } from '../icons';
 import { ALL_LABS, PAGES, coverage } from '../labs';
 import { pulseLedgerConfirmation } from '../motion';
 import { state } from '../state';
-import { attempts, setProfile } from '../store';
+import { attempts, seen, setProfile } from '../store';
 import { navigate } from '../router';
 import { en, tr } from '../i18n';
 import { currentRewards } from '../rewards-ui';
 import { todayPanel } from '../review-ui';
+import { renderBalanceBeamSvg } from '../sim-labs/shell';
+
+interface HeroVoucherLine {
+  readonly lf: string;
+  readonly particulars: string;
+  readonly side: 'Dr' | 'Cr';
+  readonly baseRupees: number;
+}
 
 interface HeroVoucherSpec {
   readonly code: string;
@@ -16,8 +25,13 @@ interface HeroVoucherSpec {
   readonly folio: string;
   readonly title: string;
   readonly narration: string;
-  readonly lines: readonly [string, string, string, string][];
-  readonly total: string;
+  readonly targetLab: CoreSimId;
+  readonly errorDeltaRupees: number;
+  readonly lines: readonly HeroVoucherLine[];
+}
+
+function fmtRupees(amount: number): string {
+  return Money.rupees(Math.max(0, Math.round(amount))).format();
 }
 
 function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSpec[] {
@@ -31,12 +45,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'CAS · Payment Voucher',
         title: 'Maker–Checker Verified Payroll Run',
         narration: 'Being monthly establishment salaries & statutory TDS posted via CAS voucher pipeline.',
+        targetLab: 'computerised-accounting-lab',
+        errorDeltaRupees: 6400,
         lines: [
-          ['5201', 'Salaries & Wages A/c (Dr)', '₹64,000', ''],
-          ['2108', 'To TDS Payable A/c', '', '₹6,400'],
-          ['1202', 'To HDFC Bank A/c', '', '₹57,600'],
+          { lf: '5201', particulars: 'Salaries & Wages A/c (Dr)', side: 'Dr', baseRupees: 64000 },
+          { lf: '2108', particulars: 'To TDS Payable A/c', side: 'Cr', baseRupees: 6400 },
+          { lf: '1202', particulars: 'To HDFC Bank A/c', side: 'Cr', baseRupees: 57600 },
         ],
-        total: '₹64,000',
       },
       {
         code: 'VCH-109',
@@ -44,12 +59,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'CAS · Asset Acquisition',
         title: 'Fixed Asset Master + Sub-Ledger Sync',
         narration: 'Being CNC equipment capitalised into Asset Register with automated SLM schedule.',
+        targetLab: 'computerised-accounting-lab',
+        errorDeltaRupees: 18000,
         lines: [
-          ['1104', 'Plant & Machinery A/c (Dr)', '₹1,80,000', ''],
-          ['1409', 'Input IGST A/c (Dr)', '₹32,400', ''],
-          ['1202', 'To HDFC Bank A/c', '', '₹2,12,400'],
+          { lf: '1104', particulars: 'Plant & Machinery A/c (Dr)', side: 'Dr', baseRupees: 180000 },
+          { lf: '1409', particulars: 'Input IGST A/c (Dr)', side: 'Dr', baseRupees: 32400 },
+          { lf: '1202', particulars: 'To HDFC Bank A/c', side: 'Cr', baseRupees: 212400 },
         ],
-        total: '₹2,12,400',
       },
       {
         code: 'VCH-115',
@@ -57,11 +73,12 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'CAS · Period Lock',
         title: 'Closing Adjustment & Audit Hash',
         narration: 'Being annual depreciation batch posted and period locked against back-dated edits.',
+        targetLab: 'computerised-accounting-lab',
+        errorDeltaRupees: 3000,
         lines: [
-          ['5402', 'Depreciation Expense A/c (Dr)', '₹18,000', ''],
-          ['1194', 'To Accumulated Depreciation A/c', '', '₹18,000'],
+          { lf: '5402', particulars: 'Depreciation Expense A/c (Dr)', side: 'Dr', baseRupees: 18000 },
+          { lf: '1194', particulars: 'To Accumulated Depreciation A/c', side: 'Cr', baseRupees: 18000 },
         ],
-        total: '₹18,000',
       },
     ];
   }
@@ -73,12 +90,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'Partnership · P&L Appropriation',
         title: 'Interest on Capital & Divisible Profit (3 : 2)',
         narration: 'Being net profit appropriated between Aarav & Meera as per Partnership Deed.',
+        targetLab: 'partnership-lab',
+        errorDeltaRupees: 12000,
         lines: [
-          ['3101', 'P&L Appropriation A/c (Dr)', '₹1,68,000', ''],
-          ['2401', 'To Aarav Capital A/c (IoC + Share)', '', '₹1,00,800'],
-          ['2402', 'To Meera Capital A/c (IoC + Share)', '', '₹67,200'],
+          { lf: '3101', particulars: 'P&L Appropriation A/c (Dr)', side: 'Dr', baseRupees: 168000 },
+          { lf: '2401', particulars: 'To Aarav Capital A/c (IoC + Share)', side: 'Cr', baseRupees: 100800 },
+          { lf: '2402', particulars: 'To Meera Capital A/c (IoC + Share)', side: 'Cr', baseRupees: 67200 },
         ],
-        total: '₹1,68,000',
       },
       {
         code: 'FOLIO XII-B',
@@ -86,12 +104,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'Admission · Sacrificing Ratio',
         title: 'Premium for Goodwill on Partner Admission',
         narration: 'Being incoming partner Kabir’s goodwill premium credited in sacrificing ratio 2 : 1.',
+        targetLab: 'partnership-lab',
+        errorDeltaRupees: 15000,
         lines: [
-          ['2490', 'Premium for Goodwill A/c (Dr)', '₹90,000', ''],
-          ['2401', 'To Aarav Capital A/c', '', '₹60,000'],
-          ['2402', 'To Meera Capital A/c', '', '₹30,000'],
+          { lf: '2490', particulars: 'Premium for Goodwill A/c (Dr)', side: 'Dr', baseRupees: 90000 },
+          { lf: '2401', particulars: 'To Aarav Capital A/c', side: 'Cr', baseRupees: 60000 },
+          { lf: '2402', particulars: 'To Meera Capital A/c', side: 'Cr', baseRupees: 30000 },
         ],
-        total: '₹90,000',
       },
       {
         code: 'FOLIO XII-C',
@@ -99,12 +118,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
         folio: 'Company Accounts · Share Capital',
         title: 'Share Forfeiture & Pro-Rata Reissue',
         narration: 'Being 400 defaulted shares forfeited and surplus transferred to Capital Reserve.',
+        targetLab: 'company-lab',
+        errorDeltaRupees: 4000,
         lines: [
-          ['2001', 'Share Capital A/c (Dr)', '₹40,000', ''],
-          ['2014', 'To Calls-in-Arrears A/c', '', '₹12,000'],
-          ['2019', 'To Share Forfeiture A/c', '', '₹28,000'],
+          { lf: '2001', particulars: 'Share Capital A/c (Dr)', side: 'Dr', baseRupees: 40000 },
+          { lf: '2014', particulars: 'To Calls-in-Arrears A/c', side: 'Cr', baseRupees: 12000 },
+          { lf: '2019', particulars: 'To Share Forfeiture A/c', side: 'Cr', baseRupees: 28000 },
         ],
-        total: '₹40,000',
       },
     ];
   }
@@ -115,12 +135,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
       folio: 'Books of Original Entry · J.F. 01',
       title: 'Commencement of Business with Cash & Bank',
       narration: 'Being capital introduced by proprietor into cash chest and current bank account.',
+      targetLab: 'equation-lab',
+      errorDeltaRupees: 25000,
       lines: [
-        ['1001', 'Cash-in-Hand A/c (Dr)', '₹75,000', ''],
-        ['1002', 'Cash at Bank A/c (Dr)', '₹1,75,000', ''],
-        ['3001', 'To Proprietor Capital A/c', '', '₹2,50,000'],
+        { lf: '1001', particulars: 'Cash-in-Hand A/c (Dr)', side: 'Dr', baseRupees: 75000 },
+        { lf: '1002', particulars: 'Cash at Bank A/c (Dr)', side: 'Dr', baseRupees: 175000 },
+        { lf: '3001', particulars: 'To Proprietor Capital A/c', side: 'Cr', baseRupees: 250000 },
       ],
-      total: '₹2,50,000',
     },
     {
       code: 'FOLIO XI-02',
@@ -128,12 +149,13 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
       folio: 'Purchases Journal · J.F. 04',
       title: 'Credit Inventory Purchase with Input GST',
       narration: 'Being traded goods bought from Sharma Traders @ 18% GST (9% CGST + 9% SGST).',
+      targetLab: 'journal-ledger-lab',
+      errorDeltaRupees: 9000,
       lines: [
-        ['4101', 'Purchases A/c (Dr)', '₹50,000', ''],
-        ['1401', 'Input CGST / SGST A/c (Dr)', '₹9,000', ''],
-        ['2104', 'To Sharma Traders A/c', '', '₹59,000'],
+        { lf: '4101', particulars: 'Purchases A/c (Dr)', side: 'Dr', baseRupees: 50000 },
+        { lf: '1401', particulars: 'Input CGST / SGST A/c (Dr)', side: 'Dr', baseRupees: 9000 },
+        { lf: '2104', particulars: 'To Sharma Traders A/c', side: 'Cr', baseRupees: 59000 },
       ],
-      total: '₹59,000',
     },
     {
       code: 'FOLIO XI-03',
@@ -141,11 +163,12 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
       folio: 'Year-End Adjustment · J.F. 12',
       title: 'WDV Depreciation & Accrued Provision',
       narration: 'Being 10% WDV depreciation charged on machinery before Trial Balance extraction.',
+      targetLab: 'depreciation-lab',
+      errorDeltaRupees: 4000,
       lines: [
-        ['5301', 'Depreciation A/c (Dr)', '₹24,000', ''],
-        ['1102', 'To Machinery A/c', '', '₹24,000'],
+        { lf: '5301', particulars: 'Depreciation A/c (Dr)', side: 'Dr', baseRupees: 24000 },
+        { lf: '1102', particulars: 'To Machinery A/c', side: 'Cr', baseRupees: 24000 },
       ],
-      total: '₹24,000',
     },
   ];
 }
@@ -153,28 +176,60 @@ function getHeroVouchers(cls: ClassLevel, route: string): readonly HeroVoucherSp
 function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
   const specs = getHeroVouchers(cls, route);
   let activeIdx = 0;
+  let scalePct = 100;
+  let injectError = false;
   const card = h('div', { class: 'hero-ledger-card' });
 
   const drawFolio = (animateTally: boolean) => {
     const cur = (specs[activeIdx] ?? specs[0])!;
+    const lastCreditIdx = cur.lines.reduce((acc, l, idx) => (l.side === 'Cr' ? idx : acc), -1);
+
+    let drSum = 0;
+    let crSum = 0;
+    const computedRows = cur.lines.map((line, idx) => {
+      let amt = Math.round((line.baseRupees * scalePct) / 100);
+      if (injectError && idx === lastCreditIdx) {
+        amt = Math.max(0, amt - Math.round((cur.errorDeltaRupees * scalePct) / 100));
+      }
+      if (line.side === 'Dr') drSum += amt;
+      else crSum += amt;
+      return { ...line, amt, isTampered: injectError && idx === lastCreditIdx };
+    });
+
+    const balanced = drSum === crSum;
+    const diffFormatted = fmtRupees(Math.abs(drSum - crSum));
+    const drTotalText = fmtRupees(drSum);
+    const crTotalText = fmtRupees(crSum);
+
     const tallyFoot = h(
       'tfoot',
       {},
       h(
         'tr',
-        {},
-        h('th', { scope: 'row', colSpan: 2 }, 'Double-Entry Tally'),
-        h('td', { class: 'num' }, cur.total),
-        h('td', { class: 'num' }, cur.total),
+        { class: balanced ? '' : 'tally-mismatch' },
+        h('th', { scope: 'row', colspan: 2 }, balanced ? 'Double-Entry Tally' : `Suspense Diff (${diffFormatted})`),
+        h('td', { class: 'num' }, drTotalText),
+        h('td', { class: 'num' }, crTotalText),
       ),
     );
+
+    const beamSvg = renderBalanceBeamSvg({
+      leftLabel: 'Total Debit (Dr)',
+      leftAmount: drTotalText,
+      leftValue: drSum,
+      rightLabel: 'Total Credit (Cr)',
+      rightAmount: crTotalText,
+      rightValue: crSum,
+      balanced,
+    });
+
     mount(
       card,
       h(
         'div',
         { class: 'hero-ledger-head' },
         h('span', { class: 'hero-ledger-kicker' }, `CBSE 055 · CLASS ${cls} · ${cur.code}`),
-        h('span', { class: 'hero-ledger-badge' }, icon('check-circle', 14), ' Dr = Cr Verified'),
+        h('span', { class: 'hero-ledger-badge' + (balanced ? '' : ' bad') }, icon(balanced ? 'check-circle' : 'scale', 14), ' ', balanced ? 'Dr = Cr Verified' : `Mismatch ${diffFormatted}`),
       ),
       h(
         'div',
@@ -189,6 +244,8 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
               onclick: () => {
                 if (activeIdx === idx) return;
                 activeIdx = idx;
+                injectError = false;
+                scalePct = 100;
                 drawFolio(true);
               },
             },
@@ -197,6 +254,43 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
         ),
       ),
       h('div', { class: 'hero-folio-meta' }, h('span', {}, cur.folio), h('p', { class: 'hero-ledger-title' }, cur.title)),
+      h(
+        'div',
+        { class: 'hero-sandbox-controls' },
+        h(
+          'div',
+          { class: 'hero-scale-label' },
+          h('label', { for: 'hero-scale-range' }, `Scale transaction (${scalePct}%)`),
+          h('input', {
+            id: 'hero-scale-range',
+            type: 'range',
+            min: 50,
+            max: 200,
+            step: 25,
+            value: scalePct,
+            oninput: (e: Event) => {
+              scalePct = Number((e.target as HTMLInputElement).value) || 100;
+              drawFolio(false);
+            },
+          }),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            class: 'hero-error-toggle' + (injectError ? ' active' : ''),
+            'aria-pressed': String(injectError),
+            onclick: () => {
+              injectError = !injectError;
+              drawFolio(true);
+            },
+          },
+          icon(injectError ? 'check-circle' : 'flame', 13),
+          ' ',
+          injectError ? 'Restore Dr = Cr' : 'Test Unbalanced Error',
+        ),
+      ),
+      h('div', { class: 'hero-beam-wrap' }, beamSvg),
       h(
         'div',
         { class: 'hero-table-scroll' },
@@ -218,27 +312,32 @@ function buildHeroLedgerPreview(cls: ClassLevel, route: string): HTMLElement {
           h(
             'tbody',
             {},
-            ...cur.lines.map(([lf, p, dr, cr]) =>
+            ...computedRows.map(row =>
               h(
                 'tr',
-                { class: cr ? 'cr-row' : 'dr-row' },
-                h('td', { class: 'lf-col' }, lf),
-                h('td', {}, p),
-                h('td', { class: 'num' }, dr || '—'),
-                h('td', { class: 'num' }, cr || '—'),
+                { class: (row.side === 'Cr' ? 'cr-row' : 'dr-row') + (row.isTampered ? ' row-error' : '') },
+                h('td', { class: 'lf-col' }, row.lf),
+                h('td', {}, row.particulars),
+                h('td', { class: 'num' }, row.side === 'Dr' ? fmtRupees(row.amt) : '—'),
+                h('td', { class: 'num' }, row.side === 'Cr' ? fmtRupees(row.amt) : '—'),
               ),
             ),
           ),
           tallyFoot,
         ),
       ),
-      h('p', { class: 'hero-folio-narration' }, cur.narration),
+      h(
+        'div',
+        { class: 'hero-folio-foot' },
+        h('p', { class: 'hero-folio-narration' }, cur.narration),
+        h('a', { class: 'hero-workbench-link', href: `#/sim-lab/${cur.targetLab}` }, 'Open Full Workbench →'),
+      ),
     );
     if (animateTally) pulseLedgerConfirmation(tallyFoot);
   };
 
   drawFolio(false);
-  return h('aside', { class: 'hero-preview', lang: 'en', 'aria-label': 'Interactive accounting voucher folio' }, card);
+  return h('div', { class: 'hero-preview', lang: 'en' }, card);
 }
 
 export function homePage(rerender: () => void): HTMLElement {
@@ -264,13 +363,54 @@ export function homePage(rerender: () => void): HTMLElement {
     }
   })();
 
+  // Interactive Flagship Accounting Workbenches (A–J) for the selected Class & Option
+  const coreSims = coreSimulatorsFor(cls, route);
+  const xiExposure = cls === 'XI' ? CORE_SIMULATORS.filter(s => s.id === 'computerised-accounting-lab') : [];
+  const workbenchSpecs = [...coreSims, ...xiExposure];
+  const workbenchGrid = h('div', { class: 'cards home-workbench-grid' });
+
+  const renderWorkbenches = (completedSet: ReadonlySet<string>) => {
+    mount(
+      workbenchGrid,
+      ...workbenchSpecs.map(cs => {
+        const cleared = cs.missions.filter(m => completedSet.has(`${cs.id}:${m.tier}`)).length;
+        const unitTitle = unitById(cs.unit)?.title ?? cs.unit;
+        const titleNode = state.lang === 'hi' ? cs.titleHi : cs.title;
+        return h(
+          'a',
+          {
+            class: 'card home-workbench-card',
+            href: `#/sim-lab/${cs.id}`,
+            'data-home-workbench': cs.id,
+          },
+          h(
+            'div',
+            { class: 'folio-card-head' },
+            h('div', { class: 'card-icon' }, icon(iconForLab(cs.id, cs.title), 18)),
+            h('span', { class: 'simlab-code-pill' }, en(`Lab ${cs.code}`)),
+            h('span', { class: 'simlab-meta-count' }, tr('home.workbenches.missions', { done: cleared })),
+          ),
+          h('h4', { class: 'home-wb-title' }, titleNode),
+          h('p', { class: 'simlab-card-sub' }, en(cs.subtitle)),
+          h('div', { class: 'simlab-tier-dots', 'aria-hidden': 'true' }, ...cs.missions.map(m => h('i', { class: completedSet.has(`${cs.id}:${m.tier}`) ? 'done' : '' }))),
+          h('div', { class: 'home-workbench-foot' }, h('small', { class: 'hint' }, en(unitTitle)), h('span', { class: 'home-workbench-cta' }, tr('home.workbenches.open'), ' →')),
+        );
+      }),
+    );
+  };
+  renderWorkbenches(new Set());
+  void (async () => {
+    try {
+      const s = await seen();
+      const prog = summariseCoreSimProgress(s, route);
+      renderWorkbenches(prog.completedMissions);
+    } catch {
+      /* keep initial zero-progress state in restricted storage */
+    }
+  })();
+
   // The one thing a new visitor should do first, per class (and per Class XII option).
-  const first =
-    cls === 'XI'
-      ? PAGES.find(p => p.id === 'xi-ledger')
-      : route === 'OPTION_II_COMPUTERISED'
-        ? PAGES.find(p => p.id === 'xii-cas')
-        : ALL_LABS.find(l => l.cls === 'XII' && !l.route);
+  const first = cls === 'XI' ? PAGES.find(p => p.id === 'xi-ledger') : route === 'OPTION_II_COMPUTERISED' ? PAGES.find(p => p.id === 'xii-cas') : ALL_LABS.find(l => l.cls === 'XII' && !l.route);
   const firstHref = first ? ('href' in first ? first.href : `#/lab/${first.id}`) : `#/class/${cls}`;
   const firstTitle = first ? first.title : `Class ${cls} syllabus`;
 
@@ -359,6 +499,19 @@ export function homePage(rerender: () => void): HTMLElement {
 
     todayBox,
 
+    // FLAGSHIP INTERACTIVE ACCOUNTING WORKBENCHES (A–J) — Surfaced right on Home!
+    h(
+      'section',
+      { class: 'home-workbenches-sec', 'aria-labelledby': 'home-workbenches-title' },
+      h(
+        'div',
+        { class: 'section-head' },
+        h('div', {}, h('h3', { id: 'home-workbenches-title' }, tr('home.workbenches.t', { cls })), h('p', { class: 'muted-line flush-bottom' }, tr('home.workbenches.sub'))),
+        h('a', { class: 'button small primary', href: '#/sims' }, tr('home.workbenches.all')),
+      ),
+      workbenchGrid,
+    ),
+
     // HOW IT WORKS: Architectural 3-Column Ledger Protocol Strip
     h(
       'section',
@@ -380,12 +533,7 @@ export function homePage(rerender: () => void): HTMLElement {
     ),
 
     // START HERE: Ledger Folio Index for the Chosen Class
-    h(
-      'div',
-      { class: 'section-head' },
-      h('h3', {}, tr('home.popular', { cls })),
-      h('a', { class: 'button small', href: '#/labs' }, tr('home.allLabs')),
-    ),
+    h('div', { class: 'section-head' }, h('h3', {}, tr('home.popular', { cls })), h('a', { class: 'button small', href: '#/labs' }, tr('home.allLabs'))),
     h(
       'section',
       { class: 'cards folio-grid' },
@@ -420,12 +568,7 @@ export function homePage(rerender: () => void): HTMLElement {
         'section',
         { class: 'panel teacher-band', 'aria-labelledby': 'teacher-band-title' },
         h('div', { class: 'teacher-band-icon' }, icon('chalkboard', 24)),
-        h(
-          'div',
-          { class: 'teacher-band-text' },
-          h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')),
-          h('p', {}, tr('home.teacher.d')),
-        ),
+        h('div', { class: 'teacher-band-text' }, h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')), h('p', {}, tr('home.teacher.d'))),
         h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
       ),
     ),
@@ -436,11 +579,7 @@ export function homePage(rerender: () => void): HTMLElement {
       { class: 'panel coverage-folio' },
       h('h3', { class: 'flush-top' }, tr('home.cover.t', { cls })),
       h('p', { class: 'muted-line' }, tr('home.cover.line', { a: cov.interactive, b: cov.total, c: cov.cardsOnly, d: cov.none })),
-      h(
-        'div',
-        { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) },
-        h('div', { class: 'meterfill', style: `width:${pct}%` }),
-      ),
+      h('div', { class: 'meter', role: 'img', 'aria-label': tr('home.cover.aria', { a: cov.interactive, b: cov.total, pct }) }, h('div', { class: 'meterfill', style: `width:${pct}%` })),
       h('div', { class: 'actions' }, h('a', { class: 'button', href: '#/cards' }, tr('home.cards')), h('a', { class: 'button', href: '#/rescue' }, tr('home.rescue'))),
     ),
   );

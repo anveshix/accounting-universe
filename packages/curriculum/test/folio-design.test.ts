@@ -53,10 +53,30 @@ describe('Chartered Ledger Folio UI/UX Pro Max invariants (Home, Labs Index, Cla
     const tabs = home.querySelectorAll<HTMLButtonElement>('.hero-folio-tab');
     expect(tabs.length).toBe(3);
     expect(home.querySelector('.hero-ledger-table tfoot')?.textContent).toContain('₹2,50,000');
+    expect(home.querySelector('.hero-beam-wrap svg.simlab-beam-svg')).not.toBeNull();
+
+    // Live transaction scale slider updates exact INR amounts and balance beam
+    const slider = home.querySelector<HTMLInputElement>('#hero-scale-range');
+    expect(slider).not.toBeNull();
+    slider!.value = '150';
+    slider!.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(home.querySelector('.hero-ledger-table tfoot')?.textContent).toContain('₹3,75,000');
+
+    // Posting error toggle tilts the SVG balance beam and flags Suspense difference
+    const errBtn = home.querySelector<HTMLButtonElement>('.hero-error-toggle');
+    expect(errBtn).not.toBeNull();
+    errBtn!.click();
+    expect(home.querySelector('.hero-ledger-badge.bad')?.textContent).toContain('Mismatch');
+    expect(home.querySelector('.hero-ledger-table tfoot tr.tally-mismatch')).not.toBeNull();
+
+    // Switching voucher tabs resets scale & restores balanced tally
     tabs[1]!.click();
     expect(home.querySelector('.hero-ledger-table tfoot')?.textContent).toContain('₹59,000');
     tabs[2]!.click();
     expect(home.querySelector('.hero-ledger-table tfoot')?.textContent).toContain('₹24,000');
+
+    // Flagship Interactive Workbenches (A–F + CAS exposure) are surfaced right on Home
+    expect(home.querySelectorAll('[data-home-workbench]').length).toBeGreaterThanOrEqual(6);
 
     // Class XII toggle triggers rerender and updates hero vouchers
     const xiiBtn = Array.from(home.querySelectorAll<HTMLButtonElement>('.bigchoice')).find(b => b.textContent?.includes('Class XII'));
@@ -64,6 +84,19 @@ describe('Chartered Ledger Folio UI/UX Pro Max invariants (Home, Labs Index, Cla
     xiiBtn!.click();
     expect(rerendered).toBe(1);
     expect(state.profile.cls).toBe('XII');
+  });
+
+  it('supports interactive topic filtering and Part B Option switching on Class Map', () => {
+    const clsXII = classPage('XII');
+    document.body.replaceChildren(clsXII);
+    expect(clsXII.querySelectorAll('[data-cls-workbench]').length).toBeGreaterThanOrEqual(3);
+
+    const search = clsXII.querySelector<HTMLInputElement>('#class-search-XII');
+    expect(search).not.toBeNull();
+    search!.value = 'forfeiture';
+    search!.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(clsXII.querySelectorAll('.clauselist li').length).toBeGreaterThanOrEqual(1);
+    expect(clsXII.textContent?.toLowerCase()).toContain('forfeiture');
   });
 
   it('keeps zero untagged English words on Home, Labs Index, and Class Map when switched to Hindi mode', () => {

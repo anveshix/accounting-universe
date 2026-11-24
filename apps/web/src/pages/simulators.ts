@@ -304,23 +304,38 @@ export function simPage(id: string): HTMLElement {
 export function simsIndex(): HTMLElement {
   const root = h('div', { class: 'sims' });
   let filterCls: ClassLevel | 'ALL' = state.profile.cls;
+  let searchQuery = '';
+  const searchInput = h('input', {
+    type: 'search',
+    id: 'sim-hub-search',
+    placeholder: 'Search workbenches or chapter visualisers (e.g. BRS, Goodwill, Depreciation, Ratio)…',
+    autocomplete: 'off',
+  }) as HTMLInputElement;
 
   loadInto(
     root,
     seen,
     s => {
       const drawGallery = () => {
+        const q = searchQuery.trim().toLowerCase();
         const solved = solvedSet(s);
-        const groups = simulatorsByChapter(state.profile.cls, state.profile.route);
-        const all = groups.flatMap(g => g.sims);
+        const rawGroups = simulatorsByChapter(filterCls === 'ALL' ? state.profile.cls : filterCls, state.profile.route);
+        const all = rawGroups.flatMap(g => g.sims);
         const done = all.filter(x => solved.has(x.id)).length;
+        const groups = rawGroups
+          .map(g => ({
+            ...g,
+            sims: g.sims.filter(sim => !q || `${sim.title} ${sim.need} ${g.title}`.toLowerCase().includes(q)),
+          }))
+          .filter(g => g.sims.length > 0);
 
         const coreProg = summariseCoreSimProgress(s, state.profile.route);
-        const coreSims =
+        const baseCoreSims =
           filterCls === 'ALL' ? CORE_SIMULATORS.filter(cs => cs.cls === 'XI' || cs.route === 'COMMON' || cs.route === state.profile.route) : coreSimulatorsFor(filterCls, state.profile.route);
 
         // Also surface Computerised Accounting Lab as compulsory Class XI exposure when viewing Class XI
         const xiCasExposure = filterCls === 'XI' ? CORE_SIMULATORS.filter(cs => cs.id === 'computerised-accounting-lab') : [];
+        const visibleCore = [...baseCoreSims, ...xiCasExposure].filter(cs => !q || `${cs.title} ${cs.titleHi} ${cs.subtitle} ${cs.summary}`.toLowerCase().includes(q));
 
         mount(
           root,
@@ -422,10 +437,11 @@ export function simsIndex(): HTMLElement {
                 );
               }),
             ),
+            h('div', { class: 'sim-hub-search-row' }, h('label', { class: 'sr-only', for: 'sim-hub-search' }, 'Search simulators and visualisers'), searchInput),
             h(
               'div',
               { class: 'cards simlab-core-grid' },
-              ...[...coreSims, ...xiCasExposure].map((cs, idx) => {
+              ...visibleCore.map((cs, idx) => {
                 const clearedTiers = cs.missions.filter(m => coreProg.completedMissions.has(`${cs.id}:${m.tier}`)).length;
                 const unitTitle = unitById(cs.unit)?.title ?? cs.unit;
                 const isExposure = filterCls === 'XI' && cs.id === 'computerised-accounting-lab';
@@ -503,7 +519,7 @@ export function simsIndex(): HTMLElement {
                           h(
                             'span',
                             { class: 'chip' + (solved.has(sim.id) ? ' solved' : '') },
-                            solved.has(sim.id) ? '✓ Solved' : sim.play ? '▶ Play it · challenge inside' : 'Challenge inside · +10 XP',
+                            solved.has(sim.id) ? [icon('check-circle', 13), ' Solved'] : sim.play ? 'Play it · challenge inside' : 'Challenge inside · +10 XP',
                           ),
                         ),
                       ),
@@ -513,6 +529,14 @@ export function simsIndex(): HTMLElement {
               ),
           h('p', { class: 'hint' }, 'Bar lengths are geometry; every rupee figure is computed by the exact money engine with an explicit rounding mode.'),
         );
+      };
+      searchInput.oninput = () => {
+        searchQuery = searchInput.value;
+        drawGallery();
+        if (document.activeElement !== searchInput) {
+          searchInput.focus();
+          searchInput.setSelectionRange(searchQuery.length, searchQuery.length);
+        }
       };
       drawGallery();
     },

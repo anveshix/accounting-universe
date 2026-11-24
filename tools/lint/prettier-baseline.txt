@@ -22,7 +22,6 @@ apps/web/src/notes-bodies.ts
 apps/web/src/pages/assignment.ts
 apps/web/src/pages/cards.ts
 apps/web/src/pages/cas.ts
-apps/web/src/pages/home.ts
 apps/web/src/pages/lab.ts
 apps/web/src/pages/ledger.ts
 apps/web/src/pages/notes.ts
@@ -40,7 +39,6 @@ apps/web/src/routes.ts
 apps/web/src/rules.ts
 apps/web/src/spec.ts
 apps/web/src/store.ts
-apps/web/src/styles.css
 apps/web/src/ui.ts
 apps/web/tsconfig.json
 apps/web/vite.config.ts
