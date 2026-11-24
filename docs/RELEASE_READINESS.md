@@ -84,6 +84,12 @@ One switch for the whole app is in and tested. Hindi pages: header, navigation, 
 * **Answer-length cue reduced**: the correct option was the strictly longest in 71 % of items; after rewriting wrong options it is 25 % (a test caps it at 30 %). Remaining skew: the correct option is rarely the shortest of the four (about 10 % of items), because the wrong options were lengthened rather than the right ones shortened.
 * **Honest limits**: these are auto-marked choice questions, so "Create" means choosing the best design, plan or entry, not constructing one; free construction is practised in the numerical generators and the paper. Not reviewed by a subject teacher (D11). Per-topic counts are small for exam stamina (12 to about 15 each); the numerical topics add thousands more from the generators.
 
+## Chapter materials pipeline (2026-11-24)
+* **What exists**: `tools/materials` (ingest from a file or a public Google Drive link, drop folder `incoming/`, catalogue, validate, remove, coverage), the `#/materials` page (all 54 chapters, filters, search, open/download), a "Notes and slides for this chapter" section on study pages, on-device upload (private, IndexedDB), the `materials-ingest` workflow, CI validation. Guide: `docs/MATERIALS_PIPELINE.md`.
+* **Tests**: `packages/curriculum/test/materials.test.ts` (file rules, Drive link parsing, catalogue rules), `tools/materials/test/materials.test.mjs` (12 tests: zip reading on real zips, ingest, refusals, deterministic catalogue, tamper detection, incoming folder, Drive responses incl. the big-file page), `e2e/web-app-materials.cjs` (41 checks: listing, filters, real file download byte for byte, device add/refuse/reload/remove, not in the progress backup, axe).
+* **Not verified**: live Google Drive (the sandbox cannot reach it, so Drive is tested on recorded responses); the GitHub workflow itself has not run (its tested parts are the CLI commands). No real material has been published yet: the library is empty until someone adds some.
+* **Limits**: public site, so no protection for paid files; English-only page; search covers titles and summaries only; folders of Drive files are not supported.
+
 ## Owner decisions
 D1 strangler stack (assumed) · D2 omit redemption (assumed) · D3 Option II after Option I (done) · **D4 deploy the tutor proxy and supply a key** · D5 backend/minors' data · D6 repository licence · D7 Class XI sample paper to validate against.
 

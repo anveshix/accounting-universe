@@ -6,3 +6,6 @@
 - All current entries are SAMPLES. Replace with your own.
 - Lock = UI gate only (`canOpen`). Anyone can read bundled files/text. Before charging money, serve Pro files from a server behind login or signed URLs, and replace `redeemCode` with a licence check. Payment is not implemented.
 - Tests: `packages/curriculum/test/notes.test.ts`, `e2e/web-app-notes.cjs`.
+
+## Chapter materials (the real library)
+The catalogue above is a sample. Real, chapter-wise notes, slides, lesson plans and worksheets go through the materials pipeline: see `docs/MATERIALS_PIPELINE.md` (upload or Google Drive link, checked, reviewed, published under `#/materials`).

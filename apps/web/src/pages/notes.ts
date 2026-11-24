@@ -55,6 +55,7 @@ export function notesPage(id?: string): HTMLElement {
   return h('div', { 'data-plan': plan() },
     h('header', { class: 'hero notes-hero' }, h('p', { class: 'eyebrow' }, 'Notes & teaching resources'), h('h2', {}, 'Notes that teach. Slides that save your Sunday.'),
       h('p', { class: 'lead' }, 'Chapter-wise notes for Accountancy, Business Studies and Entrepreneurship (Class XI & XII), plus ready PPTs and lesson plans for teachers. Start free; unlock the full library when you are ready.'), h('div', { class: 'notes-search' }, search)),
+    h('p', { class: 'note info' }, 'Looking for material by syllabus chapter? ', h('a', { href: '#/materials' }, 'Chapter materials →'), ' (notes, slides and worksheets filed under the 54 CBSE chapters).'),
     bar, status, grid,
     h('section', { class: 'panel pricing', id: 'pricing', 'aria-labelledby': 'pricing-h' }, h('h3', { id: 'pricing-h' }, 'Pricing'),
       h('p', { class: 'note warn' }, 'Pre-launch preview: prices are illustrative and online payment is not live yet. Have an access code? Unlock below.'),

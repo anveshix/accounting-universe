@@ -1259,3 +1259,19 @@ table.simtable tfoot th, table.simtable tfoot td, table.data tfoot th, table.dat
 }
 .card:hover { transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) { .card:hover { transform: none; } }
+
+/* ── chapter materials (#/materials and the study page) ── */
+.materials { list-style: none; margin: .5rem 0; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); }
+.material { border: 1px solid var(--line, #d0d7de); border-radius: var(--radius, 10px); padding: .75rem .875rem; background: var(--panel, transparent); display: flex; flex-direction: column; gap: .25rem; }
+.material-head { display: flex; flex-wrap: wrap; gap: .25rem; align-items: center; }
+.material-head .chip { margin-left: 0; }
+.material-title, .material-summary, .material-meta { margin: 0; }
+.material-foot { margin-top: auto; padding-top: .5rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.material-actions { display: inline-flex; gap: .5rem; flex-wrap: wrap; }
+.material-topic { border-top: 1px solid var(--line, #d0d7de); padding: .5rem 0; }
+.material-topic > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; min-height: 2.75rem; }
+.material-topic .topic-meta { margin-left: auto; display: inline-flex; gap: .25rem; flex-wrap: wrap; }
+.material-form { display: grid; gap: .75rem; max-width: 36rem; }
+.material-form label { display: grid; gap: .25rem; font-weight: 600; }
+.material-form input, .material-form select { font: inherit; padding: .5rem; min-height: 2.75rem; }
+.chip.warn { background: var(--accent-bg); color: var(--warn); }
