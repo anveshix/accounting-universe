@@ -93,6 +93,7 @@ export function classPage(cls: ClassLevel): HTMLElement {
             h(
               'div',
               { class: 'folio-card-head' },
+              h('div', { class: 'card-icon' }, icon(iconForLab(cs.id, cs.title), 18)),
               h('span', { class: 'simlab-code-pill' }, en(`Lab ${cs.code}`)),
               h('span', { class: 'simlab-meta-count' }, tr('home.workbenches.missions', { done: cleared })),
             ),
@@ -349,15 +350,16 @@ export function labsIndex(): HTMLElement {
       ),
       h(
         'div',
-        { class: 'cards home-workbench-grid' },
+        { class: 'labs-wb-grid' },
         ...filtered.map(cs => {
           const cleared = cs.missions.filter(m => completedMissions.has(`${cs.id}:${m.tier}`)).length;
           return h(
             'a',
-            { class: 'card home-workbench-card', href: `#/sim-lab/${cs.id}`, 'data-labs-workbench': cs.id },
+            { class: 'labs-wb-tile', href: `#/sim-lab/${cs.id}`, 'data-labs-workbench': cs.id },
             h(
               'div',
               { class: 'folio-card-head' },
+              h('div', { class: 'card-icon' }, icon(iconForLab(cs.id, cs.title), 18)),
               h('span', { class: 'simlab-code-pill' }, en(`Lab ${cs.code} · Class ${cs.cls}`)),
               h('span', { class: 'simlab-meta-count' }, tr('home.workbenches.missions', { done: cleared })),
             ),

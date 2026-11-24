@@ -387,6 +387,7 @@ export function homePage(rerender: () => void): HTMLElement {
           h(
             'div',
             { class: 'folio-card-head' },
+            h('div', { class: 'card-icon' }, icon(iconForLab(cs.id, cs.title), 18)),
             h('span', { class: 'simlab-code-pill' }, en(`Lab ${cs.code}`)),
             h('span', { class: 'simlab-meta-count' }, tr('home.workbenches.missions', { done: cleared })),
           ),
