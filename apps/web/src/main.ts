@@ -21,6 +21,7 @@ import { ledgerPage } from './pages/ledger';
 import { practicePage } from './pages/practice';
 import { progressPage } from './pages/progress';
 import { hudElement, initRewards } from './rewards-ui';
+import { materialsPage } from './pages/materials';
 import { notesPage } from './pages/notes';
 import { teacherPage } from './pages/teacher';
 import { tutorPage } from './pages/tutor';
@@ -144,6 +145,7 @@ function render() {
       case 'progress': page = progressPage(); break;
       case 'teacher': page = teacherPage(); break;
       case 'notes': page = notesPage(a); break;
+      case 'materials': page = materialsPage(a); break;
       default: page = notFound();
     }
   } catch (e) {
