@@ -8,7 +8,9 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
-    "check": "npm run typecheck && npm test",
+    "check": "npm run typecheck && npm test && npm run test:tools",
+    "test:tools": "node --test tools/materials/test/materials.test.mjs",
+    "materials": "node tools/materials/cli.mjs",
     "build": "npm run build -w @accounting-universe/web",
     "lint": "npm --prefix tools/lint run lint",
     "format:check": "npm --prefix tools/lint run format:check",

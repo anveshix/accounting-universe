@@ -1,0 +1,4 @@
+# One line per Google Drive file:   chapter | kind | title | link
+# kind and title may be left empty.  The file must be shared as "Anyone with the link".
+# Example:
+# XI.2.depreciation | PPT | SLM and WDV | https://drive.google.com/file/d/FILE_ID/view

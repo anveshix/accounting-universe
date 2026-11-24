@@ -10,6 +10,7 @@ Accounting Universe: CBSE Class XI/XII Accountancy (2026-27), learned by doing. 
 | `apps/web` | Vite + TypeScript, vanilla DOM, no framework. Labs in `src/labs`, pages in `src/pages`, routes in `src/routes.ts` | `cd apps/web && npm run build` |
 | `apps/tutor-proxy` | Optional AI tutor server (key stays server-side) | `cd apps/tutor-proxy && npm test` |
 | `index.html` (root) | Legacy single-file app, shipped separately — **do not refactor it** | `e2e/legacy-*.cjs` |
+| `tools/materials` | Chapter materials pipeline: ingest files / Drive links, catalogue, validate (`docs/MATERIALS_PIPELINE.md`) | `npm run test:tools && node tools/materials/cli.mjs validate` |
 | `e2e/` | Playwright scripts (`NODE_PATH="$(npm root -g)" node e2e/<file>.cjs`; build the web app first) | `tools/check-all.sh` runs everything |
 
 ## Setup and commands (npm workspaces)
