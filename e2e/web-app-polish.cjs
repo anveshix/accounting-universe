@@ -51,7 +51,7 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}]/u;
     const home = await text('main');
     ok(!/bigint|paise|engine computes|apps\/|proxy|D4\b/i.test(home), 'home: no developer jargon in the visible text');
     ok(!EMOJI.test(home), 'home: no emoji (an icon set is used instead)');
-    ok((await page.$$eval('.step3', e => e.length)) === 3, 'home: three-step "how a session works" row');
+    ok((await page.$$eval('.step3, .home-metric-tile', e => e.length)) === 0, 'home: decorative how-it-works row and marketing stat ribbon are gone');
     ok((await page.$$eval('.card .icon svg', e => e.length)) >= 4, 'home: cards carry SVG icons');
     ok((await page.$('.hero-scene')) === null && (await page.$('.hero canvas')) === null, 'home: no decorative 3D layer behind the text');
     ok(/Start here: Journal → Ledger → Trial Balance/.test(await text('[data-start]')), 'home: Class XI first step is named on the button: ' + (await text('[data-start]')));
@@ -68,12 +68,18 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}]/u;
     ok(true, 'home: Option II first step opens the simulator');
     await go('#/');
     await page.click('.bigchoice:has-text("Class XI")');
-    ok((await page.getAttribute('.teacher-band a.button', 'href')) === '#/teacher', 'home: teachers have their own entry');
+    ok(
+      (await page.getAttribute('.teacher-band a.button', 'href')) === '#/teacher' && (await page.getAttribute('[data-home-tlm]', 'href')) === '#/tlm',
+      'home: teachers have their own entry and the Classroom TLM factory',
+    );
     await axe('home');
 
     // ── nav and header
     const nav = await page.$$eval('nav a', as => as.map(a => a.textContent));
-    ok(nav.includes('Help') && !nav.includes('AI tutor'), 'nav: "AI TUTOR" is now "HELP": ' + nav.join(','));
+    ok(
+      nav.length === 6 && !nav.includes('AI tutor') && (await page.getAttribute('footer a[href="#/tutor"]', 'href')) === '#/tutor',
+      'nav: six items; Help (no "AI tutor" claim) lives in the footer: ' + nav.join(','),
+    );
     ok(await page.isHidden('#display-panel'), 'header: Display panel starts closed');
     await page.click('.display-btn');
     ok((await page.isVisible('#display-panel')) && (await page.getAttribute('.display-btn', 'aria-expanded')) === 'true', 'header: Display button opens the panel and says so (aria-expanded)');

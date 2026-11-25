@@ -105,3 +105,13 @@ Progress is stored on the device (IndexedDB, memory fallback). Nothing is upload
 - Added 6 step-wise numerical problems (depreciation and sale, admission goodwill, retirement, cash from operations, forfeiture and re-issue, adjusted profit), 6 case-based sets with computed options (equation, depreciation, BRS, admission, forfeiture, cash-flow classification) and 11 assertion-reason banks in the standard four-option format (concepts, errors, depreciation, BRS, adjustments, final accounts, admission, retirement, forfeiture, debentures, ratios, cash flow).
 - Assertion-reason answers are derived from truth flags, never typed. Tests: packages/curriculum/test/questions-v3.test.ts, e2e/web-app-questions.cjs.
 - NOT verified: the live CBSE 2026-27 sample paper could not be fetched (host returned 503), so the exact count and marks of each question type in the board paper are not encoded. The repo only relies on what the syllabus PDF states (typology 40/30/30). Compare these formats with the official sample paper and marking scheme before claiming board-paper parity.
+
+## Nov 2026 upgrade (see docs/UX_AUDIT_AND_UPGRADE_2026-11.md)
+| Feature | Test | Status |
+|---|---|---|
+| Visits earn no XP/streak; "Own Brain" needs ≥ half marks | `rewards.test.ts`, `simulators.test.ts`, `web-app-tlm.cjs` | Verified |
+| Six-item navigation, all old URLs resolve | `web-routes.test.ts`, `web-app.cjs`, `web-app-tlm.cjs` | Verified |
+| Classroom TLM kits (hand-worked set 7 + 1,000-seed independent re-aggregation) | `tlm.test.ts`, `web-app-tlm.cjs` (incl. A4 print visibility) | Verified; teacher review pending |
+| Smartboard stage state machine | `machines.test.ts`, `web-app-tlm.cjs` | Verified |
+| Error Detective | `detective.test.ts`, `web-app-tlm.cjs` | Verified; teacher review pending |
+| QR-linked activities, Escape Room, Business simulation, Final-accounts journey | — | **Not built** |

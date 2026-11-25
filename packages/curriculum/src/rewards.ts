@@ -6,7 +6,8 @@ import type { Attempt, Seen } from './progress';
 
 export const DAILY_GOAL_XP = 30;
 const MODE_HALVES = { BEGINNER: 2, PRACTICE: 3, BOARD: 4 } as const;   // x1, x1.5, x2 in halves: integer maths only
-export const XP_FIRST_SEEN = 5, XP_PERFECT = 5, XP_COMEBACK = 10, HINT_COST = 2;
+/** Opening a page earns nothing (it used to pay 5 XP and extend the streak: 54 study pages = 270 XP for scrolling). Only answers do. */
+export const XP_FIRST_SEEN = 0, XP_PERFECT = 5, XP_COMEBACK = 10, HINT_COST = 2;
 /** Each visual-simulator challenge solved (a `sim:<id>` seen event with tab 'example') earns this once. */
 export const XP_SIM_SOLVED = 10;
 /** How many simulator challenges unlock the Visual Thinker badge. */
@@ -44,7 +45,7 @@ export const BADGES: readonly BadgeDef[] = [
   { id: 'streak-3', title: 'On a Roll', how: 'Learn 3 days in a row', icon: '🔥' },
   { id: 'streak-7', title: 'Week Warrior', how: 'Learn 7 days in a row', icon: '🏆' },
   { id: 'explorer', title: 'Explorer', how: 'Open 10 different labs or cards', icon: '🧭' },
-  { id: 'hint-free-10', title: 'Own Brain', how: '10 hint-free attempts', icon: '🧠' },
+  { id: 'hint-free-10', title: 'Own Brain', how: '10 attempts with no hints and at least half the marks', icon: '🧠' },
   { id: 'master', title: 'Board Ready', how: 'Reach level 5 on any topic', icon: '🎓' },
   { id: 'visual-thinker', title: 'Visual Thinker', how: `Solve ${SIM_BADGE_AT} visual-simulator challenges (chapter-wise “show me” pages)`, icon: '🔭' },
 ];
@@ -65,11 +66,8 @@ export function computeRewards(i: RewardInput): Rewards {
     const r = attemptXp(a, sorted.slice(0, k)); events.push({ t: a.t, xp: r.xp });
     if (r.comeback) comebacks++;
     if (a.marks === a.outOf && a.outOf > 0 && a.hintsUsed === 0) perfect++;
-    if (a.hintsUsed === 0) hintFree++;
+    if (a.hintsUsed === 0 && 2 * a.marks >= a.outOf && a.outOf > 0) hintFree++;   // hint-free AND at least half right: wrong guesses are not "own brain"
   });
-  const firstSeen = new Map<string, number>();
-  for (const s of [...i.seen].sort((a, b) => a.t - b.t)) { const k = s.lab + '|' + s.tab; if (!firstSeen.has(k)) firstSeen.set(k, s.t); }
-  for (const t of firstSeen.values()) events.push({ t, xp: XP_FIRST_SEEN });
   // A solved simulator challenge pays once per simulator. It is a real answer to a real question, so it earns XP —
   // but it is NOT an Attempt: it has no seed or marks, and must not pollute practice accuracy or the review queue.
   const simSolved = new Map<string, number>();

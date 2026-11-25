@@ -13,6 +13,8 @@ export * from './study';
 export * from './paper';
 export * from './study-hi';
 export * from './notes';
+export * from './tlm';
+export * from './detective';
 export * from './rewards';
 export * from './review';
 export * from './journal';

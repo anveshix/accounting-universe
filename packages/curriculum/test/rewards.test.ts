@@ -27,9 +27,13 @@ describe('streaks and daily goal', () => {
     expect(computeRewards({ attempts: a, seen: [], now: T0 + 4 * DAY, tzOffsetMin: 0 }).streak).toBe(0);
     expect(computeRewards({ attempts: [a[0]!, a[2]!], seen: [], now: T0 + 2 * DAY, tzOffsetMin: 0 })).toMatchObject({ streak: 1, bestStreak: 1 });
   });
-  it('daily goal met at 30 XP; seen events give 5 once per lab+tab', () => {
+  it('daily goal met at 30 XP; merely opening pages earns nothing and never extends a streak', () => {
     const r = computeRewards({ attempts: [at()], seen: [{ lab: 'l', tab: 'learn', t: T0 }, { lab: 'l', tab: 'learn', t: T0 + 5 }], now: T0, tzOffsetMin: 0 });
-    expect(r.xp).toBe(30); expect(r.goalMet).toBe(true); expect(r.days).toHaveLength(14); expect(r.days[13]!.xp).toBe(30);
+    expect(r.xp).toBe(25); expect(r.goalMet).toBe(false); expect(r.days).toHaveLength(14); expect(r.days[13]!.xp).toBe(25);
+    const visitsOnly = computeRewards({ attempts: [], seen: [{ lab: 'l', tab: 'learn', t: T0 }, { lab: 'm', tab: 'example', t: T0 }], now: T0, tzOffsetMin: 0 });
+    expect(visitsOnly).toMatchObject({ xp: 0, streak: 0, bestStreak: 0, goalMet: false });
+    const wrong = Array.from({ length: 10 }, (_, k) => at({ t: T0 + k, marks: 0, hintsUsed: 0 }));
+    expect(computeRewards({ attempts: wrong, seen: [], now: T0 + 20, tzOffsetMin: 0 }).badges).not.toContain('hint-free-10');   // ten wrong guesses are not "Own Brain"
   });
 });
 describe('badges and delta', () => {

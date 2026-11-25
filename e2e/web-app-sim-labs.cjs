@@ -60,7 +60,7 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     // 2. Experience A: Accounting Equation & Rules Lab
     await page.click('[data-core-card="equation-lab"]');
     await page.waitForSelector('[data-core-sim="equation-lab"]');
-    ok((await page.textContent('nav a[aria-current="page"]')) === 'Visual labs', 'sim-lab highlights Visual labs nav');
+    ok((await page.textContent('nav a[aria-current="page"]')) === 'Explore', 'sim-lab highlights Explore nav');
     await page.click('[data-tier="PRACTICE"]');
     await page.click('[data-eq-model]');
     await page.click('[data-eq-verify]');

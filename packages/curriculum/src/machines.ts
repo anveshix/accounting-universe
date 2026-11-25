@@ -193,6 +193,18 @@ export function shareStages(f: ShareFacts): { name: string; state: StageState }[
   ];
 }
 
+// ───────────────────────── Classroom TLM: teacher-led smartboard stage ─────────────────────────
+export type TlmStageState = 'PREDICT' | 'REVEALED' | 'SUMMARY';
+export type TlmStageEvent = 'REVEAL' | 'HIDE' | 'NEXT' | 'FINISH' | 'BACK' | 'RESTART';
+export const TLM_STAGE: MachineSpec<TlmStageState, TlmStageEvent> = {
+  id: 'tlm-stage', doc: 'The smartboard demonstration: the class predicts first, the teacher reveals, then moves on. The UI keeps the frame number; the machine decides what is allowed.', initial: 'PREDICT',
+  states: {
+    PREDICT: { doc: 'A transaction is shown; the class predicts the debit and credit before the answer appears.', on: { REVEAL: 'REVEALED', BACK: 'PREDICT' }, blocked: { NEXT: 'Let the class predict first, then reveal the answer.', FINISH: 'Reveal this answer before finishing.', HIDE: 'The answer is not showing yet.' } },
+    REVEALED: { doc: 'The answer and the reason are on the board.', on: { HIDE: 'PREDICT', NEXT: 'PREDICT', FINISH: 'SUMMARY', BACK: 'PREDICT' }, blocked: { REVEAL: 'The answer is already showing.' } },
+    SUMMARY: { doc: 'All frames shown; the ledger balances and the trial balance are on the board.', on: { RESTART: 'PREDICT', BACK: 'REVEALED' }, blocked: { REVEAL: 'Every answer has been revealed.', NEXT: 'That was the last frame — restart or go back.' } },
+  },
+};
+
 /** Registry used by tests and by the generated documentation. */
 export const MACHINES = [
   { spec: LEDGER_PLAYER, where: 'apps/web/src/pages/ledger.ts', kind: 'UI' }, { spec: PRACTICE_QUESTION, where: 'apps/web/src/pages/practice.ts', kind: 'UI' }, { spec: TRAINER_ROUND, where: 'apps/web/src/pages/trainer.ts', kind: 'UI' },
@@ -200,4 +212,5 @@ export const MACHINES = [
   { spec: CARD_CHECK, where: 'apps/web/src/pages/cards.ts', kind: 'UI' }, { spec: ASYNC_RESOURCE, where: 'apps/web/src/async.ts (progress, rescue, assignment pages)', kind: 'UI' }, { spec: STORAGE, where: 'apps/web/src/store.ts', kind: 'UI' },
   { spec: APP_BOOT, where: 'apps/web/src/main.ts', kind: 'UI' }, { spec: NETWORK, where: 'apps/web/src/main.ts', kind: 'UI' }, { spec: CAS_VOUCHER, where: 'apps/web/src/pages/cas.ts', kind: 'UI' }, { spec: CAS_YEAR, where: 'apps/web/src/pages/cas.ts', kind: 'UI' },
   { spec: AI_ASK, where: 'apps/web/src/pages/tutor.ts', kind: 'UI' }, { spec: LAB_RUN, where: 'apps/web/src/pages/lab.ts', kind: 'UI' }, { spec: SHARE_LIFECYCLE, where: 'packages/curriculum/src/machines.ts → apps/web/src/labs/company.ts', kind: 'domain' },
+  { spec: TLM_STAGE, where: 'apps/web/src/pages/tlm.ts', kind: 'UI' },
 ] as const;

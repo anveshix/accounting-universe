@@ -56,7 +56,7 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
         /Chapter-wise study guide/i.test(await page.textContent('.eyebrow')) && /not yet reviewed/i.test(await page.textContent('.study-status')),
         `Class ${cls} index: title and the honest review status`,
       );
-      ok((await page.$eval('nav a[aria-current="page"]', a => a.textContent)) === `Class ${cls}`, `Class ${cls} index highlights its own navigation item`);
+      ok((await page.$eval('nav a[aria-current="page"]', a => a.textContent)) === 'Learn', `Class ${cls} index highlights Learn`);
     }
     await go('#/study');
     ok(/Class XI/.test(await page.textContent('main h2')), '#/study opens the learner’s own class');
@@ -112,7 +112,7 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     await go(`#/study/${ids.XI.at(-1)}`);
     ok((await page.$('a[rel="next"]')) === null, 'last topic of the class has no next link');
     await go('#/study/XII.1.admission');
-    ok((await page.$eval('nav a[aria-current="page"]', a => a.textContent)) === 'Class XII', 'a Class XII topic highlights Class XII');
+    ok((await page.$eval('nav a[aria-current="page"]', a => a.textContent)) === 'Learn', 'a Class XII topic highlights Learn');
     await go('#/study/XI.9.nothing');
     ok(/Topic not found/.test(await page.textContent('main')), 'an unknown topic says so');
     await go('#/study/foo');
