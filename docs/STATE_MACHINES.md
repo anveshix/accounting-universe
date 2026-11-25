@@ -413,4 +413,29 @@ stateDiagram-v2
 | `FORFEITED` | Shares cancelled; amount received is kept in Share Forfeited A/c. | `REISSUE`→`REISSUED` |
 | `REISSUED` (final) | Forfeited shares issued again; any gain goes to Capital Reserve. | — |
 
+### `tlm-stage` — UI
+
+The smartboard demonstration: the class predicts first, the teacher reveals, then moves on. The UI keeps the frame number; the machine decides what is allowed.
+
+Implemented in: `apps/web/src/pages/tlm.ts`
+
+```mermaid
+stateDiagram-v2
+  [*] --> PREDICT
+  PREDICT --> REVEALED: REVEAL
+  PREDICT --> PREDICT: BACK
+  REVEALED --> PREDICT: HIDE
+  REVEALED --> PREDICT: NEXT
+  REVEALED --> SUMMARY: FINISH
+  REVEALED --> PREDICT: BACK
+  SUMMARY --> PREDICT: RESTART
+  SUMMARY --> REVEALED: BACK
+```
+
+| State | Meaning | Events |
+|---|---|---|
+| `PREDICT` | A transaction is shown; the class predicts the debit and credit before the answer appears. | `REVEAL`→`REVEALED`, `BACK`→`PREDICT` |
+| `REVEALED` | The answer and the reason are on the board. | `HIDE`→`PREDICT`, `NEXT`→`PREDICT`, `FINISH`→`SUMMARY`, `BACK`→`PREDICT` |
+| `SUMMARY` | All frames shown; the ledger balances and the trial balance are on the board. | `RESTART`→`PREDICT`, `BACK`→`REVEALED` |
+
 <!-- END GENERATED -->

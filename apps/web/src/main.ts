@@ -1,5 +1,5 @@
 import './styles.css';
-import { clear, h } from './dom';
+import { clear, h, mount } from './dom';
 import { parseHash } from './router';
 import { NAV, resolve } from './routes';
 import { Machine } from '../../../packages/engine/src';
@@ -37,6 +37,8 @@ import { casPage } from './pages/cas';
 import { projectPage } from './pages/project';
 import { rescuePage } from './pages/rescue';
 import { assignmentPage } from './pages/assignment';
+import { tlmPage } from './pages/tlm';
+import { detectivePage } from './pages/detective';
 import { animatePageEntrance, syncNavIndicator } from './motion';
 import { CARDS } from '../../../packages/curriculum/src';
 
@@ -64,7 +66,7 @@ const draftBanner = hindiBanner();
 function drawNav(active: string | null) {
   clear(nav);
   nav.appendChild(navPill);
-  for (const n of NAV) nav.appendChild(h('a', { href: n.hash, ...(n.key === active ? { 'aria-current': 'page' } : {}) }, tr(`nav.${n.key}` as Key)));
+  for (const n of NAV) nav.appendChild(h('a', { href: n.key === 'Learn' ? `#/class/${state.profile.cls}` : n.hash, ...(n.key === active ? { 'aria-current': 'page' } : {}) }, tr(`nav.${n.key}` as Key)));
   requestAnimationFrame(() => syncNavIndicator(nav, navPill));
 }
 
@@ -148,6 +150,8 @@ function render() {
       case 'project': page = projectPage(a === 'XII' ? 'XII' : 'XI', state.profile.route); break;
       case 'rescue': page = rescuePage(a); break;
       case 'assignment': page = assignmentPage(a!); break;
+      case 'tlm': page = tlmPage(a); break;
+      case 'detective': page = detectivePage(a); break;
       case 'tutor': page = tutorPage(); break;
       case 'progress': page = progressPage(); break;
       case 'teacher': page = teacherPage(); break;
@@ -177,6 +181,10 @@ function brandMark(): HTMLElement {
 }
 function siteFooter(): HTMLElement {
   const syl = h('span', {}), counts = h('span', {}), saved = h('span', {});
+  const more: [string, string][] = [['#/notes', 'foot.notes'], ['#/materials', 'foot.materials'], ['#/tutor', 'foot.help'], ['#/about', 'foot.about']];
+  const moreNav = h('div', { class: 'foot-more', role: 'group', 'aria-label': tr('foot.more') });
+  const drawMore = () => { moreNav.setAttribute('aria-label', tr('foot.more')); mount(moreNav, ...more.map(([href, k]) => h('a', { href }, tr(k as Key)))); };
+  relabel.push(drawMore);
   const link = h('a', { href: SOURCE.url, rel: 'noopener', target: '_blank', lang: 'en' }, SOURCE.document);
   relabel.push(() => {
     syl.textContent = tr('home.foot.syllabus'); counts.textContent = tr('home.foot.counts', { units: UNITS.length, topics: CLAUSES.length });
@@ -184,6 +192,7 @@ function siteFooter(): HTMLElement {
   });
   return h('footer', { class: 'app-footer' },
     h('div', { class: 'foot-inner' },
+      moreNav,
       h('p', { class: 'foot-note' }, syl, link, counts, ' ', saved),
       h('p', { class: 'foot-credit', lang: 'en' }, '© ', String(new Date().getFullYear()), ' ', h('b', {}, 'PP creations'), ' - Paras Pranav')));
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Machine, toMermaid, validateSpec, targetsOf, type MachineSpec } from '../../engine/src';
-import { AI_ASK, ASYNC_RESOURCE, CARD_CHECK, CAS_VOUCHER, CAS_YEAR, LAB_RUN, LEDGER_PLAYER, MACHINES, NETWORK, PRACTICE_QUESTION, SHARE_LIFECYCLE, STORAGE, TRAINER_ROUND, shareStages, type QuestionCtx } from '../src';
+import { TLM_STAGE, AI_ASK, ASYNC_RESOURCE, CARD_CHECK, CAS_VOUCHER, CAS_YEAR, LAB_RUN, LEDGER_PLAYER, MACHINES, NETWORK, PRACTICE_QUESTION, SHARE_LIFECYCLE, STORAGE, TRAINER_ROUND, shareStages, type QuestionCtx } from '../src';
 
 describe('every machine in the registry', () => {
   it('is well-formed: known targets, reachable states, no dead ends, documented', () => { for (const { spec } of MACHINES) expect(validateSpec(spec as MachineSpec<string, string, unknown>), spec.id).toEqual([]); });
@@ -144,5 +144,12 @@ describe('docs/STATE_MACHINES.md', () => {
     const next = file.slice(0, a + BEGIN.length) + '\n\n' + generate() + '\n' + file.slice(b);
     if (process.env.UPDATE_DOCS === '1') writeFileSync(DOC, next);
     else expect(file, 'docs/STATE_MACHINES.md is out of date — run UPDATE_DOCS=1 npx vitest run test/machines.test.ts').toBe(next);
+  });
+  it('smartboard stage: predict first, then reveal, then move on; refusals explain themselves', () => {
+    const m = new Machine(TLM_STAGE);
+    expect(m.why('NEXT')).toMatch(/predict first/); expect(m.send('REVEAL').to).toBe('REVEALED');
+    expect(m.why('REVEAL')).toBe('The answer is already showing.'); expect(m.send('HIDE').to).toBe('PREDICT');
+    m.send('REVEAL'); expect(m.send('FINISH').to).toBe('SUMMARY'); expect(m.why('NEXT')).toMatch(/last frame/);
+    expect(m.send('BACK').to).toBe('REVEALED'); m.send('FINISH'); expect(m.send('RESTART').to).toBe('PREDICT');
   });
 });

@@ -165,9 +165,9 @@ describe('the accounting cycle (entry → journal → ledger → trial balance)'
 
 describe('the incentive', () => {
   const T = Date.UTC(2026, 0, 10, 12);
-  it('a solved challenge pays 10 XP once, on top of the 5 for first seeing the page', () => {
+  it('a solved challenge pays 10 XP once; opening the page pays nothing', () => {
     const one = computeRewards({ attempts: [], seen: [{ lab: 'sim:sim-brs', tab: 'example', t: T }], now: T, tzOffsetMin: 0 });
-    expect(one.xp).toBe(5 + XP_SIM_SOLVED);
+    expect(one.xp).toBe(XP_SIM_SOLVED);
     expect(one.simsSolved).toBe(1);
     const twice = computeRewards({
       attempts: [],
@@ -178,7 +178,7 @@ describe('the incentive', () => {
       now: T,
       tzOffsetMin: 0,
     });
-    expect(twice.xp).toBe(5 + XP_SIM_SOLVED);
+    expect(twice.xp).toBe(XP_SIM_SOLVED);
   });
   it('only the example tab counts as solved; simply opening the page does not', () => {
     const r = computeRewards({ attempts: [], seen: [{ lab: 'sim:sim-brs', tab: 'try', t: T }], now: T, tzOffsetMin: 0 });

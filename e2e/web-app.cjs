@@ -24,7 +24,7 @@ const ok = (c, m) => { if (c) pass++; else { fails.push(m); console.log('  ✗',
     // ── shell & navigation
     await page.goto(BASE); await page.waitForSelector('.hero');
     const navLabels = await page.$$eval('nav a', as => as.map(a => a.textContent));
-    ok(JSON.stringify(navLabels) === JSON.stringify(['Home', 'Class XI', 'Class XII', 'Visual labs', 'Practice', 'Notes', 'Help', 'My progress', 'Teacher dashboard']), 'nav labels: ' + navLabels);
+    ok(JSON.stringify(navLabels) === JSON.stringify(['Home', 'Learn', 'Explore', 'Challenge', 'My progress', 'Classroom TLM']), 'nav labels: ' + navLabels);
     ok(await page.$eval('h2', e => e.textContent).then(t => t.includes('Learn Accounting by Doing Accounting')), 'tagline');
     await shot('home-desktop');
 

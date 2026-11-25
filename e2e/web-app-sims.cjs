@@ -49,7 +49,7 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     await go('#/');
     ok((await page.getAttribute('.sims-band a', 'href')) === '#/sims', 'home links to the simulator gallery');
     await go('#/sims');
-    ok((await page.textContent('nav a[aria-current="page"]')) === 'Visual labs', 'the gallery lives under the Visual labs navigation item');
+    ok((await page.textContent('nav a[aria-current="page"]')) === 'Explore', 'the gallery lives under the Explore navigation item');
     ok((await page.$$eval('.labhead h2', h => h.map(x => x.textContent))).join() === 'Visual simulators', 'gallery heading');
     ok((await page.$$eval('.simchapter > .section-head h3', h => h.map(x => x.textContent))).length === 2, 'Class XI gallery is grouped into 2 chapters');
     ok((await page.$$eval('.simcard', c => c.length)) === 4, 'Class XI has 4 chapter simulators');
@@ -90,10 +90,10 @@ const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js', { paths: [pat
     ok(/Correct/.test(await page.textContent('.simchallenge')), 'BRS: the right option is confirmed with its reason');
     ok((await page.$$eval('.simchallenge button', b => b.length)) === 0, 'BRS: options are replaced once solved');
     await page
-      .waitForFunction(() => document.querySelector('.hud')?.getAttribute('data-xp') === '20', null, { timeout: 4000 })
+      .waitForFunction(() => document.querySelector('.hud')?.getAttribute('data-xp') === '10', null, { timeout: 4000 })
       .then(
         () => ok(true, ''),
-        () => ok(false, 'BRS: solving pays 5 (first see the example) + 10 (solved) on top of the visit’s 5'),
+        () => ok(false, 'BRS: solving pays 10 once; merely visiting the page pays nothing'),
       );
 
     // ── it is remembered

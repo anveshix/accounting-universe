@@ -42,7 +42,7 @@ describe('Chartered Ledger Folio UI/UX Pro Max invariants (Home, Labs Index, Cla
     expect(visibleText).not.toMatch(/bigint|paise|engine computes|apps\/|proxy|D4\b/i);
     expect(EMOJI.test(visibleText)).toBe(false);
     expect(home.querySelector('h2')?.textContent).toBe('Learn Accounting by Doing Accounting.');
-    expect(home.querySelectorAll('.step3').length).toBe(3);
+    expect(home.querySelectorAll('.step3').length).toBe(0); // generic "how it works" strip removed in the declutter pass
     expect(home.querySelectorAll('.card .icon svg').length).toBeGreaterThanOrEqual(4);
     expect(home.querySelector('.hero-scene')).toBeNull();
     expect(home.querySelector('.hero canvas')).toBeNull();
@@ -77,7 +77,7 @@ describe('Chartered Ledger Folio UI/UX Pro Max invariants (Home, Labs Index, Cla
 
     // Flagship Interactive Workbenches (A–F + CAS exposure) & Quick Double-Entry Drill are surfaced right on Home
     expect(home.querySelectorAll('[data-home-workbench]').length).toBeGreaterThanOrEqual(6);
-    expect(home.querySelectorAll('.home-metric-tile').length).toBe(4);
+    expect(home.querySelectorAll('.home-metric-tile').length).toBe(0); // marketing stat ribbon removed: duplicated the header and the sections below
     const drillOpt = home.querySelector<HTMLButtonElement>('[data-drill-opt="0"]');
     expect(drillOpt).not.toBeNull();
     drillOpt!.click();

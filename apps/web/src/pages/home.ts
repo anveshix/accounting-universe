@@ -1,4 +1,4 @@
-import { CLAUSES, CORE_SIMULATORS, coreSimulatorsFor, summariseCoreSimProgress, unitById, type ClassLevel, type CoreSimId } from '../../../../packages/curriculum/src';
+import { CORE_SIMULATORS, coreSimulatorsFor, summariseCoreSimProgress, unitById, type ClassLevel, type CoreSimId } from '../../../../packages/curriculum/src';
 import { Money } from '../../../../packages/engine/src';
 import { h, mount } from '../dom';
 import { icon, iconForLab } from '../icons';
@@ -665,27 +665,6 @@ export function homePage(rerender: () => void): HTMLElement {
 
     todayBox,
 
-    // PLATFORM TELEMETRY RIBBON: Scannable Academic Architecture Metrics
-    h(
-      'section',
-      { class: 'home-metrics-ribbon', 'aria-label': tr('home.metrics.aria') },
-      ...(
-        [
-          ['scale', String(CORE_SIMULATORS.length), tr('home.metric.workbenches'), tr('home.metric.workbenches.sub'), '#/sims'],
-          ['flask', `${ALL_LABS.length + PAGES.length}+`, tr('home.metric.labs'), tr('home.metric.labs.sub'), '#/labs'],
-          ['layers', String(CLAUSES.length), tr('home.metric.topics'), tr('home.metric.topics.sub'), `#/class/${cls}`],
-          ['clipboard', '80M', tr('home.metric.paper'), tr('home.metric.paper.sub'), '#/paper'],
-        ] as const
-      ).map(([ic, val, label, sub, href]) =>
-        h(
-          'a',
-          { class: 'home-metric-tile', href },
-          h('div', { class: 'home-metric-icon' }, icon(ic, 20)),
-          h('div', { class: 'home-metric-copy' }, h('b', { lang: 'en' }, val), h('span', {}, label), h('small', {}, sub)),
-        ),
-      ),
-    ),
-
     // FLAGSHIP INTERACTIVE ACCOUNTING WORKBENCHES (A–J) — Surfaced right on Home!
     h(
       'section',
@@ -702,27 +681,6 @@ export function homePage(rerender: () => void): HTMLElement {
     // INSTANT DOUBLE-ENTRY DRILL — Hands-on interactive verification right on Home
     buildQuickDrillWidget(cls),
 
-    // HOW IT WORKS: Architectural 3-Column Ledger Protocol Strip
-    h(
-      'section',
-      { class: 'steps3', 'aria-label': tr('home.steps.aria') },
-      ...(
-        [
-          ['01', 'book', tr('home.step1.t'), tr('home.step1.d')],
-          ['02', 'flask', tr('home.step2.t'), tr('home.step2.d')],
-          ['03', 'check-circle', tr('home.step3.t'), tr('home.step3.d')],
-        ] as const
-      ).map(([idx, ic, title, text]) =>
-        h(
-          'div',
-          { class: 'step3' },
-          h('div', { class: 'step3-top' }, h('span', { class: 'step3-num', 'aria-hidden': 'true' }, idx), h('div', { class: 'step3-icon' }, icon(ic, 20))),
-          h('div', { class: 'step3-body' }, h('b', {}, title), h('span', {}, text)),
-        ),
-      ),
-    ),
-
-    // START HERE: Ledger Folio Index for the Chosen Class
     h('div', { class: 'section-head' }, h('h3', {}, tr('home.popular', { cls })), h('a', { class: 'button small', href: '#/labs' }, tr('home.allLabs'))),
     h(
       'section',
@@ -756,10 +714,21 @@ export function homePage(rerender: () => void): HTMLElement {
       ),
       h(
         'section',
+        { class: 'panel sims-band detective-band', 'aria-labelledby': 'detective-band-title' },
+        h('div', {}, h('h3', { id: 'detective-band-title', class: 'flush-top' }, tr('home.detective.t')), h('p', {}, tr('home.detective.body'))),
+        h('a', { class: 'button primary', href: '#/detective', 'data-home-detective': '' }, tr('home.detective.btn')),
+      ),
+      h(
+        'section',
         { class: 'panel teacher-band', 'aria-labelledby': 'teacher-band-title' },
         h('div', { class: 'teacher-band-icon' }, icon('chalkboard', 24)),
         h('div', { class: 'teacher-band-text' }, h('h3', { id: 'teacher-band-title' }, tr('home.teacher.t')), h('p', {}, tr('home.teacher.d'))),
-        h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
+        h(
+          'div',
+          { class: 'actions' },
+          h('a', { class: 'button primary', href: '#/teacher' }, tr('home.teacher.btn')),
+          h('a', { class: 'button', href: '#/tlm', 'data-home-tlm': '' }, tr('home.tlm.btn')),
+        ),
       ),
     ),
 

@@ -6225,3 +6225,308 @@ table.data tfoot td {
 .home-drill-trainer-link:hover {
   text-decoration: underline;
 }
+
+/* ---------- Classroom TLM: hub, controls, smartboard stage, A4 print sheets ---------- */
+.tlm-link {
+  flex: 1 1 22rem;
+  min-height: var(--tap);
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.tlm-preds {
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.tlm-sheets {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.sheet {
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  padding: 1.25rem;
+  max-width: 210mm;
+  overflow-x: auto;
+}
+.sheet h4 {
+  margin: 1rem 0 0.4rem;
+}
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 2px solid #000;
+  padding-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+.sheet-name {
+  margin: 0.8rem 0;
+}
+.sheet-task {
+  margin: 0.5rem 0 0.8rem;
+}
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0.8rem;
+}
+.sheet-table th,
+.sheet-table td {
+  border: 1px solid #444;
+  padding: 0.3rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+.sheet-table td.blank {
+  height: 1.9rem;
+}
+.sheet-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sheet-table .indent {
+  padding-left: 1.8rem;
+}
+.sheet-table .narr {
+  font-style: italic;
+}
+.sheet-table tr.total td {
+  font-weight: 700;
+  border-top: 2px solid #000;
+}
+.sheet-why {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+}
+.jentry {
+  break-inside: avoid;
+  margin-bottom: 0.4rem;
+}
+.tgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.tacct {
+  break-inside: avoid;
+}
+.tacct-name {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+.cardgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  margin-top: 0.8rem;
+}
+.cardgrid.cols4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.pcard {
+  border: 1px dashed #666;
+  padding: 0.8rem;
+  min-height: 8rem;
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.pcard.acct {
+  min-height: 5rem;
+  text-align: center;
+}
+.pcard-no {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #333;
+}
+.pcard-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.tlm-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0b1220;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1rem, 3vw, 3rem);
+  overflow: auto;
+}
+.tlm-stage[hidden] {
+  display: none;
+}
+.stage-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.2rem;
+  max-width: 70rem;
+  margin: 0 auto;
+  width: 100%;
+}
+.stage-count {
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  color: #cbd5e1;
+}
+.stage-text,
+.stage-body h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3.4rem);
+  line-height: 1.2;
+  color: #fff;
+}
+.stage-ask,
+.stage-wait {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+  color: #fde68a;
+}
+.stage-answer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.stage-side {
+  border-radius: 1rem;
+  padding: 1.2rem 1.4rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+}
+.stage-side small {
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+}
+.stage-side.dr {
+  background: #14532d;
+}
+.stage-side.cr {
+  background: #1e3a8a;
+}
+.stage-side b {
+  font-size: 1.3em;
+}
+.stage-why,
+.stage-ans {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: clamp(1rem, 1.8vw, 1.5rem);
+  color: #e2e8f0;
+}
+.stage-table {
+  width: 100%;
+  max-width: 48rem;
+  border-collapse: collapse;
+  font-size: clamp(1rem, 1.8vw, 1.5rem);
+}
+.stage-table th,
+.stage-table td {
+  padding: 0.35rem 0.8rem;
+  border-bottom: 1px solid #334155;
+  text-align: left;
+}
+.stage-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.stage-table .total td {
+  font-weight: 700;
+  border-top: 2px solid #f8fafc;
+}
+.stage-msg {
+  min-height: 1.5rem;
+  margin: 0.5rem auto 0;
+  color: #fde68a;
+}
+.stage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  padding-top: 1rem;
+}
+.stage-bar button {
+  min-height: 3.2rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+@media (max-width: 40rem) {
+  .stage-answer,
+  .tgrid,
+  .cardgrid.cols4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body[data-print] header.top,
+  body[data-print] nav,
+  body[data-print] footer,
+  body[data-print] .banner,
+  body[data-print] .skip,
+  body[data-print] .toasts,
+  body[data-print] .tlm-head,
+  body[data-print] .tlm-controls,
+  body[data-print] .tlm > .panel,
+  body[data-print] .tlm-stage,
+  body[data-print] .draft-banner {
+    display: none !important;
+  }
+  body[data-print] .sheet {
+    border: 0;
+    padding: 0;
+    max-width: none;
+    overflow: visible;
+    page-break-after: always;
+    break-after: page;
+  }
+  body[data-print] .sheet:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  body[data-print='worksheet'] .sheet:not([data-sheet='worksheet']),
+  body[data-print='key'] .sheet:not([data-sheet='key']),
+  body[data-print='txncards'] .sheet:not([data-sheet='txncards']),
+  body[data-print='acctcards'] .sheet:not([data-sheet='acctcards']),
+  body[data-print='match'] .sheet:not([data-sheet='txncards']):not([data-sheet='acctcards']) {
+    display: none !important;
+  }
+  body[data-print] {
+    background: #fff;
+  }
+}
+
+.foot-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0 0 0.6rem;
+}
+.foot-more a {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+}
